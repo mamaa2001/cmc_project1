@@ -1,0 +1,203 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1. Lab 0 : Introduction to Python &mdash; Computational Motor Control  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="Exercises" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Computational Motor Control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation/index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../setup/index.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources/index.html">Resources</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Exercises</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">1. Lab 0 : Introduction to Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-python-concepts">1.1. Basic Python Concepts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exercise-1">1.2. Exercise 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exercise-2-plotting-a-function">1.3. Exercise 2 - Plotting a function</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Computational Motor Control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Exercises</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>Lab 0 : Introduction to Python</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/exercises/lab0/lab0.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lab-0-introduction-to-python">
+<h1><span class="section-number">1. </span>Lab 0 : Introduction to Python<a class="headerlink" href="#lab-0-introduction-to-python" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In order to run a Python script, you can use the <span class="math notranslate nohighlight">\(run\)</span> button that all IDEs normally provide.
+Alternatively, you can run the script from the terminal (command prompt on windows) by running the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>my_python_script.py
+</pre></div>
+</div>
+<p>Note that your terminal must be in the same directory for the command to work.
+Also, remember to activate the virtual environment before running the program.</p>
+</div>
+<section id="basic-python-concepts">
+<h2><span class="section-number">1.1. </span>Basic Python Concepts<a class="headerlink" href="#basic-python-concepts" title="Link to this heading"></a></h2>
+<p>In this section we will quickly go over the list of topics given below.
+We suggest you to go through each section
+individually and spend time exploring each of the concepts by making
+changes to the code and observing the outputs.</p>
+<ol class="arabic simple">
+<li><p>HelloWorld</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="ch">#!/usr/bin/env python3</span>
+<span class="linenos"> 2</span><span class="c1"># pylint: disable=invalid-name</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="sd">&quot;&quot;&quot;Hello world!</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="sd">This program runs the traditional Hello, World!</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">)</span>
+<span class="linenos">11</span>
+</pre></div>
+</div>
+<ol class="arabic simple">
+<li><p>Imports</p></li>
+<li><p>Data Types</p></li>
+<li><p>Math</p></li>
+<li><p>Conditional Statements</p></li>
+<li><p>Data Containers : Lists, Tuples and Dictionaries</p></li>
+<li><p>Functions</p></li>
+<li><p>Loops</p></li>
+<li><p>Numpy</p></li>
+<li><p>Matplotlib</p></li>
+<li><p>Classes</p></li>
+</ol>
+<p>While you are executing each of the small exercises, try to learn how to
+use different features of your IDE. Especially the help and debugging
+feature. When you are unsure of any command, use the help service either
+the one built into Python or embedded in your IDE. After familiarizing yourself with
+the above concepts try to solve the following python exercises.</p>
+</section>
+<section id="exercise-1">
+<h2><span class="section-number">1.2. </span>Exercise 1<a class="headerlink" href="#exercise-1" title="Link to this heading"></a></h2>
+<p><strong>Check if the following matrix M is a magic square or not?</strong></p>
+<p><strong>Hint :</strong><em>A magic square is a square matrix which contains distinct
+integers and whose sum along any of its individual rows or columns or
+diagonal is a constant. The constant is called as a magic constant or
+magic sum or magic square</em></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\label{eq:1}
+  M =
+  \begin{bmatrix}
+    16 &amp; 3  &amp; 2  &amp; 13 \\
+    5  &amp; 10 &amp; 11 &amp; 8  \\
+    9  &amp; 6  &amp; 7  &amp; 12 \\
+    4 &amp; 15 &amp; 14 &amp; 1
+  \end{bmatrix}\end{split}\]</div>
+<p><strong>Further Step :</strong><em>Try if you can generalize your script to have a
+function to check any arbitrary matrix if it is a magic square or not.
+Import the function as a module in another script and use it to check
+the matrix M</em></p>
+</section>
+<section id="exercise-2-plotting-a-function">
+<h2><span class="section-number">1.3. </span>Exercise 2 - Plotting a function<a class="headerlink" href="#exercise-2-plotting-a-function" title="Link to this heading"></a></h2>
+<p>Plot the following function <span class="math notranslate nohighlight">\(f(x)\)</span> over an interval [0, 2] with
+proper labels and title</p>
+<div class="math notranslate nohighlight">
+\[f(x) = sin(x - 2)e^{-x^2}\]</div>
+<p>(<a class="reference download internal" download="" href="../../_downloads/2fdb2fc158ba8b632e943f223b504437/lab0-1.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../../_downloads/82a52e02044eedf8d84a95871e86e73d/lab0-1.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../../_downloads/20c280dbfc9b747fb2bfe6fa9003a3b4/lab0-1.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../../_downloads/f9c4fd888c3c57b8f2cb64e7fed87ab3/lab0-1.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<img alt="../../_images/lab0-1.png" class="plot-directive" src="../../_images/lab0-1.png" />
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Exercises" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, BioRob.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

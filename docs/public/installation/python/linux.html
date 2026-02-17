@@ -1,0 +1,318 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linux &mdash; Computational Motor Control  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Computational Motor Control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../setup/index.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources/index.html">Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exercises/index.html">Exercises</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Computational Motor Control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Linux</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/installation/python/linux.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="linux">
+<span id="sec-lin"></span><h1>Linux<a class="headerlink" href="#linux" title="Link to this heading"></a></h1>
+<p><em>These instruction are for Ubuntu or other Debian-based distributions.
+The setup for other Linux distributions should be adapted accordingly.</em></p>
+<section id="python">
+<span id="sec-lin-python"></span><h2>Python<a class="headerlink" href="#python" title="Link to this heading"></a></h2>
+<section id="checking-if-python-exists">
+<span id="sec-lin-checking-if-python"></span><h3>Checking if python exists<a class="headerlink" href="#checking-if-python-exists" title="Link to this heading"></a></h3>
+<p>Before installing please check if you already have python installed on
+your computer. To do so open terminal application. Once terminal is open
+execute the following commands,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>-V
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python3<span class="w"> </span>-V
+</pre></div>
+</div>
+<p>If either of them return <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3</span></code> then you can skip the Python
+installation section and continue with the rest.</p>
+</section>
+<section id="python-installation">
+<span id="sec-lin-installation-python"></span><h3>Python installation<a class="headerlink" href="#python-installation" title="Link to this heading"></a></h3>
+<p>To download and install Python use the link :</p>
+<ul>
+<li><p>Open terminal application</p></li>
+<li><p>Execute the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>python3
+</pre></div>
+</div>
+<p>The above command will ask you to enter your system password before
+beginning the installation process.</p>
+</li>
+</ul>
+<p>After installation to verify if everything is working open terminal
+again and run the commands in section
+<a class="reference external" href="#sec-lin:checking-if-python">4.1.1</a>.</p>
+</section>
+</section>
+<section id="pip">
+<span id="sec-lin-pip"></span><h2>Pip<a class="headerlink" href="#pip" title="Link to this heading"></a></h2>
+<p>Python has a huge repository of packages that are widely used for
+different functions. In order to obtain these packages there are several
+package managers. The one we will be using during this course will be
+the official package installer for Python called <span class="math notranslate nohighlight">\(pip\)</span>.</p>
+<section id="checking-if-pip-exists">
+<span id="sec-lin-checking-if-pip"></span><h3>Checking if pip exists<a class="headerlink" href="#checking-if-pip-exists" title="Link to this heading"></a></h3>
+<p>If you installed Python based on the instructions above then pip should
+be installed by default. Or it may have been already installed on your
+computer if Python had been pre-installed. To check if pip exists, open
+terminal and execute the following command:</p>
+<p><span class="math notranslate nohighlight">\(pip\)</span> or <span class="math notranslate nohighlight">\(pip3\)</span> depends on your system. Typically they
+differentiate ones installed with python2 and python3 respectively.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>--version
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>--version
+</pre></div>
+</div>
+<p>If <span class="math notranslate nohighlight">\(pip\)</span> is already installed then at least one of the above
+commands should print the version of the pip along with the python and
+its version associated with it. <strong>Make sure that the python version is 3</strong></p>
+</section>
+<section id="pip-installation">
+<span id="sec-lin-installation-pip"></span><h3>Pip installation<a class="headerlink" href="#pip-installation" title="Link to this heading"></a></h3>
+<p>If you have verified that pip is not installed on your computer then in
+order to install pip you are expected to have either cloned or
+downloaded the exercise repository by now.</p>
+<ul>
+<li><p>Open terminal application</p></li>
+<li><p>Execute the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>python3-pip
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Check if you have installed everything correctly by referring to
+<a class="reference external" href="#sec-lin:checking-if-pip">4.2.1</a>.</p>
+</section>
+</section>
+<section id="virtual-environment">
+<h2>Virtual Environment<a class="headerlink" href="#virtual-environment" title="Link to this heading"></a></h2>
+<p>Before installing the libraries that will be needed for the lectures, we will set up a virtual environment.
+At its core, the main purpose of Python virtual environments is to create an isolated collection of packages for Python projects.
+This means that each project can have its own dependencies, regardless of those used by every other project.
+Using a virtual environment will allow you to work separately on course-related exercises without the risk of conflicts with
+other projects.</p>
+<p>We will provide a guide for setting up your Python virtual environment, for additional information, check the official <span class="math notranslate nohighlight">\(PyPa\)</span> website
+<a class="reference external" href="https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment/">Installing packages using pip and virtual environments</a></p>
+<section id="virtual-environment-installation">
+<span id="sec-lin-venv-installation"></span><h3>Virtual environment installation<a class="headerlink" href="#virtual-environment-installation" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using Python 3.3 or newer, the <span class="math notranslate nohighlight">\(venv\)</span> module is the preferred way to create and manage virtual environments.
+<span class="math notranslate nohighlight">\(venv\)</span> is included in the Python standard library and requires no additional installation. If you are using <span class="math notranslate nohighlight">\(venv\)</span>, you may skip this section.</p>
+</div>
+<p><span class="math notranslate nohighlight">\(virtualenv\)</span> is an alternative to <span class="math notranslate nohighlight">\(venv\)</span> that should be used for previous version of Python 3 or Python 2.
+To install <span class="math notranslate nohighlight">\(virtualenv\)</span>, open the terminal and run the following commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>virtualenv
+</pre></div>
+</div>
+</section>
+<section id="venv-creation">
+<span id="sec-lin-venv-creation"></span><h3>Venv creation<a class="headerlink" href="#venv-creation" title="Link to this heading"></a></h3>
+<p>To create a virtual environment, go to your project’s directory and run <span class="math notranslate nohighlight">\(venv\)</span>. If you are using <span class="math notranslate nohighlight">\(virtualenv\)</span>, replace <span class="math notranslate nohighlight">\(venv\)</span> with <span class="math notranslate nohighlight">\(virtualenv\)</span> in the below commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>path/to/project/folder
+$<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>my_virtual_environment
+</pre></div>
+</div>
+<p>This will create a folder named my_virtual_environment containing the virtual Python installation.
+Note that, in principle, the virtual environment can be created anywhere in your system’s directories, it is however good practice
+to store the environment together with the project(s) exploiting it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You should exclude your virtual environment directory from your version control system using .gitignore or similar.</p>
+</div>
+</section>
+<section id="venv-activation">
+<h3>Venv activation<a class="headerlink" href="#venv-activation" title="Link to this heading"></a></h3>
+<p>Before you can start installing or using packages in your virtual environment you’ll need to activate it.
+Activating a virtual environment will put the virtual environment-specific python and <span class="math notranslate nohighlight">\(pip\)</span> executables into your shell’s PATH.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>path/to/project/folder
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>my_virtual_environment/bin/activate
+</pre></div>
+</div>
+<p>You can confirm you’re in the virtual environment by checking the location of your Python interpreter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>which<span class="w"> </span>python
+</pre></div>
+</div>
+<p>It should be in the my_virtual_environment directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>path/to/project/folder/my_virtual_environment/bin/python
+</pre></div>
+</div>
+<p>As long as your virtual environment is activated <span class="math notranslate nohighlight">\(pip\)</span> will install packages into that specific environment and you’ll be able to
+import and use packages in your Python application.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using an IDE like Visual Studio Code, make sure that the Python interpreter path corresponds to the
+one of your virtual environment.</p>
+</div>
+</section>
+<section id="venv-deactivation">
+<span id="sec-lin-venv-deactivation"></span><h3>Venv deactivation<a class="headerlink" href="#venv-deactivation" title="Link to this heading"></a></h3>
+<p>If you want to switch projects or otherwise leave your virtual environment, simply run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>deactivate
+</pre></div>
+</div>
+<p>If you want to re-enter the virtual environment just follow the same instructions above about activating a virtual environment.
+There’s no need to re-create the virtual environment.</p>
+</section>
+<section id="installing-packages">
+<span id="sec-lin-venv-installpackages"></span><h3>Installing packages<a class="headerlink" href="#installing-packages" title="Link to this heading"></a></h3>
+<p>When your virtual environment is active, you can easily install packages using <span class="math notranslate nohighlight">\(pip\)</span>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>&lt;packagename&gt;
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>&lt;packagename&gt;
+</pre></div>
+</div>
+<p>Note that you can also specify the version of the package you want to install.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>&lt;packagename&gt;<span class="o">==</span><span class="m">1</span>.15.4
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>&lt;packagename&gt;<span class="o">==</span><span class="m">1</span>.15.4
+</pre></div>
+</div>
+</section>
+<section id="uninstalling-packages">
+<h3>Uninstalling packages<a class="headerlink" href="#uninstalling-packages" title="Link to this heading"></a></h3>
+<p>Uninstalling a package with <span class="math notranslate nohighlight">\(pip\)</span> is as easy as running the following command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>uninstall<span class="w"> </span>numpy
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>uninstall<span class="w"> </span>numpy
+</pre></div>
+</div>
+</section>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<p>The final step before starting of with the exercise is to install a few
+necessary packages. We will be using <span class="math notranslate nohighlight">\(pip\)</span> to this.</p>
+<ul>
+<li><p>Open terminal (command prompt on Windows)</p></li>
+<li><p>Navigate in the terminal to the exercise repository on your computer</p></li>
+<li><p>Activate your virtual environment</p></li>
+<li><p>Execute the following command once you are in the root of the
+repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+<p>Use <span class="math notranslate nohighlight">\(pip\)</span> or <span class="math notranslate nohighlight">\(pip3\)</span> depending on the one that refers to python3</p>
+</li>
+</ul>
+<p>The <em>requirements.txt</em> installs the following packages:</p>
+<ul class="simple">
+<li><p>numpy : Scientific computing package for python</p></li>
+<li><p>matplotlib : Matlab like plotting tool for python</p></li>
+<li><p>farms_pylog : Module for logging messages during code runtime</p></li>
+</ul>
+<p>After successfully completing the installation steps in the previous
+sections, you can now get started with programming Lab0. Python
+is not just a computational tool but a very powerful programming
+language. This means having to learn a few more extra concepts to get
+your job done. There are a ton of references available online for those
+who are interested in learning Python in depth. We will try to provide
+the necessary references to help with the concepts that are useful
+during the course as and when needed.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, BioRob.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

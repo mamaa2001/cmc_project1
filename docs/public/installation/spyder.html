@@ -1,0 +1,161 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction to Spyder &mdash; Computational Motor Control  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Computational Motor Control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/index.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/index.html">Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exercises/index.html">Exercises</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Computational Motor Control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction to Spyder</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/installation/spyder.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction-to-spyder">
+<span id="sec-spyder"></span><h1>Introduction to Spyder<a class="headerlink" href="#introduction-to-spyder" title="Link to this heading"></a></h1>
+<p>Spyder can be run by executing the command <em>spyder</em>.</p>
+<p>Figure <a class="reference external" href="#fig:spyder">6</a> shows the main windows when you first open
+Spyder. As you may have noticed, the layout is similar to Matlab. Spyder
+has very good documentation to get you started. It is recommended to go
+through the steps to get familiarized with the IDE.</p>
+<figure class="align-default" id="fig-spyder">
+<img alt="Spyder IDE overview" src="../_images/Spyder1.png" />
+<figcaption>
+<p><span class="caption-text">Spyder IDE overview</span><a class="headerlink" href="#fig-spyder" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The three essential parts of the screen are outlined.</p>
+<ul class="simple">
+<li><p><strong>The console</strong> (bottom right, marked in blue). You can work
+interactively here. Code run, either interactively or from the
+editor, will output any results here. Error messages will be reported
+here. There are two types of console: a Python console, and an
+IPython console. Both will run Python code, but we recommend the
+IPython console as it offers better visuals for debugging and has
+additional features.</p></li>
+<li><p><strong>The editor</strong> (left, marked in red). You can write code to be saved
+to file or run here. This will suggest problems with syntax and has
+features to help debug and give additional information.</p></li>
+<li><p><strong>The inspector</strong> (top right, marked in green). The Object inspector
+can display detailed help on specific objects (or functions, or…),
+and the Variable inspector can display detailed information on the
+variables that are currently defined. Extremely useful when
+debugging.</p></li>
+<li><p><strong>Python Package Manager</strong> (top toolbar, marked in pink) Use this
+menu to add new paths to the default python package paths. (NOTE :
+The symbol may look slightly different on your machine from the one
+shown in this report)</p></li>
+</ul>
+<p>For an in depth tutorial of Spyder follow the
+<a class="reference external" href="http://www.southampton.ac.uk/~fangohr/blog/spyder-the-python-ide.html#first-steps-with-spyder">link</a>.</p>
+<section id="getting-help">
+<span id="sec-getting-help"></span><h2>Getting Help<a class="headerlink" href="#getting-help" title="Link to this heading"></a></h2>
+<p>In any python console you can get information about a particular python
+object using the <em>help</em> method. For example to get help on the type
+float,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In spyder you can use this method in the console window. The Spyder
+environment also provides a panel in the top right corner (by default)
+which is the Object inspector. If you type float into the empty line in
+the Object inspector window, it will also provide the help string.</p>
+</section>
+<section id="debugging">
+<span id="sec-debugging"></span><h2>Debugging<a class="headerlink" href="#debugging" title="Link to this heading"></a></h2>
+<p>Refer to the link
+<a class="reference external" href="http://www.southampton.ac.uk/~fangohr/blog/spyder-the-python-ide.html#line-by-line-step-execution-of-code">debug</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, BioRob.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

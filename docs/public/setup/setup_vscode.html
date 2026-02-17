@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup VScode &mdash; Computational Motor Control  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Resources" href="../resources/index.html" />
+    <link rel="prev" title="Setup python dependencies" href="setup_requirements.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Computational Motor Control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Setup</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup_git.html">Setup CMC repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_venv.html">Setup Virtual Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_requirements.html">Setup python dependencies</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setup VScode</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-python-interpreter">Debugging Python Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-started-with-cmc">Getting started with CMC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/index.html">Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exercises/index.html">Exercises</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Computational Motor Control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Setup</a></li>
+      <li class="breadcrumb-item active">Setup VScode</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/setup/setup_vscode.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="setup-vscode">
+<span id="sec-setup-vscode"></span><h1>Setup VScode<a class="headerlink" href="#setup-vscode" title="Link to this heading"></a></h1>
+<p>To begin with we recommended the following steps for working with Labs/project (workspace) for CMC:</p>
+<ul>
+<li><p><strong>Open</strong> vscode</p></li>
+<li><p><strong>Goto</strong> <em>Files</em> -&gt; <em>Open Folder</em></p></li>
+<li><p><strong>Select</strong> the folder: Navigate to the correct folder, let’s say I have my Lab0 folder at Desktop-&gt;cmc-&gt;Lab0. Select <em>OK</em>.</p></li>
+<li><p><strong>Observe</strong> VScode will show the content of the selected folder in the <em>Explorer</em> tab (Usually on top-left corner)</p>
+<figure class="align-default" id="fig-vscode-open-lab">
+<img alt="VScode IDE overview" src="../_images/vscode-11.png" />
+</figure>
+</li>
+<li><p><strong>Create</strong> a <em>workspace</em> out of the folder by: <em>Files</em> -&gt; <em>Save Workspace as ..</em>. Observe the new file created in the <em>Explorer</em> window. In this case the name of the workspace is <em>Lab0</em>.</p>
+<figure class="align-default" id="fig-vscode-open-workspace">
+<img alt="VScode IDE workspace" src="../_images/vscode-21.png" />
+</figure>
+</li>
+<li><p><strong>Setup</strong> your python environment for the lab by Going to <em>Settings</em> (on bottom-left corner, shortcut ctrl+,)</p></li>
+<li><p><strong>Select</strong> <em>Workspace</em> tab (right below the search bar). This will ensure that changes are local to the workspace.</p>
+<figure class="align-default" id="fig-vscode-open-settings">
+<img alt="VScode IDE settings" src="../_images/vscode-31.png" />
+</figure>
+</li>
+<li><p><strong>Search</strong> for <em>default interpreter</em>, the setting options will be displayed</p>
+<figure class="align-default" id="fig-vscode-open-default-interpreter">
+<img alt="VScode IDE default interpreter" src="../_images/vscode-41.png" />
+</figure>
+</li>
+<li><p><strong>Change</strong> the path of the default interpreter as with your virtual environment. Use <code class="docutils literal notranslate"><span class="pre">/path/to/virtual/environments/folder/VenvName/Scripts/python.exe</span></code> for Windows and <code class="docutils literal notranslate"><span class="pre">/path/to/virtual/environments/folder/VenvName/bin/python</span></code> for linux,  after making relevant changes to the path.</p>
+<figure class="align-default" id="fig-vscode-set-default-interpreter">
+<img alt="VScode IDE set default interpreter" src="../_images/vscode-51.png" />
+</figure>
+</li>
+<li><p><strong>Observe</strong> the changes reflected in <em>Lab0.code-workspace</em> file.</p></li>
+<li><p><strong>Always</strong> use <em>File</em> -&gt; <em>open/close</em> workspace option to allow default interpreter to be loaded at the beginning of you coding session.</p></li>
+</ul>
+<section id="debugging-python-interpreter">
+<h2>Debugging Python Interpreter<a class="headerlink" href="#debugging-python-interpreter" title="Link to this heading"></a></h2>
+<p><strong>Issues with default interpreter</strong>
+- According to VScode - “Changes to the python.defaultInterpreterPath setting are not picked up after an interpreter has already been selected for a workspace; any changes to the setting will be ignored once an initial interpreter is selected for the workspace”</p>
+<ul class="simple">
+<li><p>Which means, the default interpreter is used when the workspace is opened for the first time in vscode window. Once the workspace is open, and you have made changes to <em>default interpreter</em>. Please <strong>close and open the workspace</strong> again for changes to be reflected</p></li>
+<li><p>Make sure to always <strong>open</strong> and <strong>close</strong> workspace when working with cmc labs.</p></li>
+</ul>
+<p><strong>Python select interpreter method</strong>
+- Another way to change the current interpreter is by using the <em>Settings</em> -&gt; <em>Command Pallet</em> -&gt; <em>Python:select interpreter</em>. Note that this method does not change the default interpreter. Hence when the workspace is closed and opened again. The default interpreter will be selected. <a class="reference external" href="https://code.visualstudio.com/docs/python/environments#_manually-specify-an-interpreter">How to select interpreter</a></p>
+<p><strong>Opening VScode with specific python environment in Windows</strong></p>
+<p>Windows:</p>
+<ul class="simple">
+<li><p>open command prompt <code class="docutils literal notranslate"><span class="pre">WIN+R</span></code> and <code class="docutils literal notranslate"><span class="pre">cmd</span> <span class="pre">+</span> <span class="pre">ENTER</span></code></p></li>
+<li><p>Go to the desired directory:<code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">Path/to/course/directory/cmc-2026-students</span></code></p></li>
+<li><p>Activate desired environment in command prompt: <code class="docutils literal notranslate"><span class="pre">/path/to/virtual/environments/folder/VenvName/Scripts/activate.bat</span></code></p></li>
+<li><p>Launch VScode: <code class="docutils literal notranslate"><span class="pre">code</span></code></p></li>
+</ul>
+</section>
+<section id="getting-started-with-cmc">
+<h2>Getting started with CMC<a class="headerlink" href="#getting-started-with-cmc" title="Link to this heading"></a></h2>
+<p>After successfully completing the installation and setup steps in the previous
+sections, you can now get started with programming Lab0. Python
+is not just a computational tool but a very powerful programming
+language. This means having to learn a few more extra concepts to get
+your job done. There are a ton of references available online for those
+who are interested in learning Python in depth. We will try to provide
+the necessary references to help with the concepts that are useful
+during the course as and when needed.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup_requirements.html" class="btn btn-neutral float-left" title="Setup python dependencies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../resources/index.html" class="btn btn-neutral float-right" title="Resources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, BioRob.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python3 Installation &mdash; Computational Motor Control  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Visual Studio code installation" href="installation_vscode.html" />
+    <link rel="prev" title="Git Installation" href="installation_git.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Computational Motor Control
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Installation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation_git.html">Git Installation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Python3 Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#checking-if-python-exists">Checking if python exists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#python-installation">Python installation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#checking-if-pip-exists">Checking if pip exists</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#macos">MacOS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#checking-if-python3-exists">Checking if python3 exists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sec-mac-installation-python">Python installation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#checking-if-pip3-exists">Checking if pip3 exists</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sec-lin-checking-if-python">Checking if python3 exists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sec-lin-installation-python">Python installation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sec-lin-checking-if-pip">Checking if pip3 exists</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation_vscode.html">Visual Studio code installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/index.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/index.html">Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exercises/index.html">Exercises</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Computational Motor Control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Installation</a></li>
+      <li class="breadcrumb-item active">Python3 Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/installation/installation_python.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python3-installation">
+<span id="sec-python-install"></span><h1>Python3 Installation<a class="headerlink" href="#python3-installation" title="Link to this heading"></a></h1>
+<section id="windows">
+<span id="sec-win-installation-python-windows"></span><h2>Windows<a class="headerlink" href="#windows" title="Link to this heading"></a></h2>
+<section id="checking-if-python-exists">
+<span id="sec-win-checking-if-python"></span><h3>Checking if python exists<a class="headerlink" href="#checking-if-python-exists" title="Link to this heading"></a></h3>
+<p>Before installing please check if you already have python installed on
+your computer. To do so, first open a shell like the command prompt or Git Bash.</p>
+<p>Once the shell is open execute the following commands,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python3<span class="w"> </span>-V
+</pre></div>
+</div>
+<p>If the command returns a <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3</span></code> version, then you can skip the Python
+installation section and continue with the rest.</p>
+</section>
+<section id="python-installation">
+<span id="sec-win-installation-python"></span><h3>Python installation<a class="headerlink" href="#python-installation" title="Link to this heading"></a></h3>
+<p>To download and install Python3 use the link :
+<a class="reference external" href="https://www.python.org/downloads/windows/">Python-Windows</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>During installation, when you see the pop up window figure
+<a class="reference external" href="#fig:win-py-step1">1</a> make sure you check on the box <strong>Add Python
+to PATH</strong> and you click on the customize installation option.</p>
+</div>
+<p>Next, you will see figure <a class="reference external" href="#fig:win-py-step2">2</a> where you need to
+make sure all the check boxes are ticked. Finally in the advanced
+options step like figure <a class="reference external" href="#fig:win-py-step3">3</a> you need to tick the
+choices like shown in the figure unless you are sure you know the
+implications of your choices.</p>
+<figure class="align-default" id="fig-win-py-step1">
+<img alt="Python installation customization - Step 1" src="../_images/python_install_1.png" />
+<figcaption>
+<p><span class="caption-text">Python installation customization - Step 1</span><a class="headerlink" href="#fig-win-py-step1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="fig-win-py-step2">
+<img alt="Python installation customization - Step 2" src="../_images/python_install_2.png" />
+<figcaption>
+<p><span class="caption-text">Python installation customization - Step 2</span><a class="headerlink" href="#fig-win-py-step2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="fig-win-py-step3">
+<img alt="Python installation customization - Step 3" src="../_images/python_install_3.png" />
+<figcaption>
+<p><span class="caption-text">Python installation customization - Step 3</span><a class="headerlink" href="#fig-win-py-step3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><em>Install latest version</em></p>
+<p>After installation, to verify that everything is working open a shell
+again and run the above commands to check the python versions.</p>
+<section id="pip3">
+<span id="sec-win-pip"></span><h4>Pip3<a class="headerlink" href="#pip3" title="Link to this heading"></a></h4>
+<p>Python has a huge repository of packages that are widely used for
+different functions. In order to obtain these packages there are several
+package managers. The one we will be using during this course will be
+the official package installer for Python called <span class="math notranslate nohighlight">\(pip3\)</span>.</p>
+</section>
+</section>
+<section id="checking-if-pip-exists">
+<span id="sec-win-checking-if-pip"></span><h3>Checking if pip exists<a class="headerlink" href="#checking-if-pip-exists" title="Link to this heading"></a></h3>
+<p>If you installed Python based on the instructions above then <span class="math notranslate nohighlight">\(pip3\)</span> should
+be installed by default. Or it may have been already installed on your
+computer if Python had been pre-installed. To check if <span class="math notranslate nohighlight">\(pip3\)</span> exists, open
+Git Bash and execute the following command:</p>
+<p><span class="math notranslate nohighlight">\(pip\)</span> or <span class="math notranslate nohighlight">\(pip3\)</span> depends on your system.
+Typically they differentiate ones installed with python2 and python3 respectively. Since we are using
+python3 in this course, please <em>use pip3 by default</em>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>--version
+</pre></div>
+</div>
+<p>If <span class="math notranslate nohighlight">\(pip3\)</span> is already installed the above
+command should print the version of <span class="math notranslate nohighlight">\(pip\)</span> along with the python and
+its version associated with it. <strong>Make sure that the python version is 3</strong></p>
+</section>
+</section>
+<section id="macos">
+<span id="sec-mac-installation-python-macos"></span><h2>MacOS<a class="headerlink" href="#macos" title="Link to this heading"></a></h2>
+<section id="checking-if-python3-exists">
+<span id="sec-mac-checking-if-python"></span><h3>Checking if python3 exists<a class="headerlink" href="#checking-if-python3-exists" title="Link to this heading"></a></h3>
+<p>Before installing please check if you already have python installed on
+your computer. To do so open terminal application. Once terminal is open
+execute the following commands,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python3<span class="w"> </span>-V
+</pre></div>
+</div>
+<p>If it return a <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3</span></code> version then you can skip the Python
+installation section and continue with the rest.</p>
+</section>
+<section id="sec-mac-installation-python">
+<span id="id1"></span><h3>Python installation<a class="headerlink" href="#sec-mac-installation-python" title="Link to this heading"></a></h3>
+<p>To download and install Python use the link :
+<a class="reference external" href="https://www.python.org/downloads/mac-osx/">MacOS</a></p>
+<p>During installation step make sure you choose customize option like in
+figure <a class="reference external" href="#fig:mac-py-step1">4</a> and then confirm that all the check
+boxes are selected like in figure <a class="reference external" href="#fig:mac-py-step2">5</a></p>
+<figure class="align-default" id="fig-mac-py-step1">
+<img alt="Python installation customization - Step 1" src="../_images/python_install_4.png" />
+<figcaption>
+<p><span class="caption-text">Python installation customization - Step 1</span><a class="headerlink" href="#fig-mac-py-step1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="fig-mac-py-step2">
+<img alt="Python installation customization - Step 2" src="../_images/python_install_5.png" />
+<figcaption>
+<p><span class="caption-text">Python installation customization - Step 2</span><a class="headerlink" href="#fig-mac-py-step2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><em>Install Latest Version</em></p>
+<p>After installation to verify if everything is working open terminal
+again and run the commands in section
+<a class="reference external" href="#sec-mac:checking-if-python">3.1.1</a>.</p>
+<section id="sec-mac-pip">
+<span id="id2"></span><h4>Pip3<a class="headerlink" href="#sec-mac-pip" title="Link to this heading"></a></h4>
+<p>Python has a huge repository of packages that are widely used for
+different functions. In order to obtain these packages there are several
+package managers. The one we will be using during this course will be
+the official package installer for Python3 called <span class="math notranslate nohighlight">\(pip3\)</span>.</p>
+</section>
+</section>
+<section id="checking-if-pip3-exists">
+<span id="sec-mac-checking-if-pip"></span><h3>Checking if pip3 exists<a class="headerlink" href="#checking-if-pip3-exists" title="Link to this heading"></a></h3>
+<p>If you installed Python based on the instructions above then <span class="math notranslate nohighlight">\(pip3\)</span> should
+be installed by default. Or it may have been already installed on your
+computer if Python had been pre-installed. To check if <span class="math notranslate nohighlight">\(pip3\)</span> exists, open
+terminal and execute the following command:</p>
+<p><span class="math notranslate nohighlight">\(pip\)</span> or <span class="math notranslate nohighlight">\(pip3\)</span> depends on your system. Typically they
+differentiate ones installed with python2 and python3 respectively.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>--version
+</pre></div>
+</div>
+<p>If <span class="math notranslate nohighlight">\(pip3\)</span> is already installed then the command above
+will print the version of <span class="math notranslate nohighlight">\(pip3\)</span> along with the python and
+its version associated with it. <strong>Make sure that the python version is 3</strong></p>
+</section>
+</section>
+<section id="linux">
+<span id="sec-lin-installation-python-linux"></span><h2>Linux<a class="headerlink" href="#linux" title="Link to this heading"></a></h2>
+<p><em>These instruction are for Ubuntu or other Debian-based distributions.
+The setup for other Linux distributions should be adapted accordingly.</em></p>
+<section id="sec-lin-checking-if-python">
+<span id="id3"></span><h3>Checking if python3 exists<a class="headerlink" href="#sec-lin-checking-if-python" title="Link to this heading"></a></h3>
+<p>Before installing please check if you already have python installed on
+your computer. To do so open terminal application. Once terminal is open
+execute the following command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python3<span class="w"> </span>-V
+</pre></div>
+</div>
+<p>If the command returns a <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3</span></code> version then you can skip the Python
+installation section and continue with the rest.</p>
+</section>
+<section id="sec-lin-installation-python">
+<span id="id4"></span><h3>Python installation<a class="headerlink" href="#sec-lin-installation-python" title="Link to this heading"></a></h3>
+<p>To download and install Python do the following steps:</p>
+<ul>
+<li><p>Open terminal application</p></li>
+<li><p>Execute the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>python3
+</pre></div>
+</div>
+<p>The above command will ask you to enter your system password before
+beginning the installation process.</p>
+</li>
+</ul>
+<p>After installation to verify if everything is working open terminal
+again and run the commands in section
+<a class="reference external" href="#sec-lin:checking-if-python">4.1.1</a>.</p>
+<section id="sec-lin-pip">
+<span id="id5"></span><h4>Pip3<a class="headerlink" href="#sec-lin-pip" title="Link to this heading"></a></h4>
+<p>Python has a huge repository of packages that are widely used for
+different functions. In order to obtain these packages there are several
+package managers. The one we will be using during this course will be
+the official package installer for Python3 called <span class="math notranslate nohighlight">\(pip3\)</span>.</p>
+</section>
+</section>
+<section id="sec-lin-checking-if-pip">
+<span id="id6"></span><h3>Checking if pip3 exists<a class="headerlink" href="#sec-lin-checking-if-pip" title="Link to this heading"></a></h3>
+<p>If you installed Python based on the instructions above then <span class="math notranslate nohighlight">\(pip3\)</span> should
+be installed by default. Or it may have been already installed on your
+computer if Python had been pre-installed. To check if <span class="math notranslate nohighlight">\(pip3\)</span> exists, open
+terminal and execute the following command:</p>
+<p><span class="math notranslate nohighlight">\(pip\)</span> or <span class="math notranslate nohighlight">\(pip3\)</span> depends on your system. Typically they
+differentiate ones installed with python2 and python3 respectively.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>--version
+</pre></div>
+</div>
+<p>If <span class="math notranslate nohighlight">\(pip3\)</span> is already installed then the above command will print
+the version of <span class="math notranslate nohighlight">\(pip3\)</span> along with the python and
+its version associated with it. <strong>Make sure that the python version is 3</strong></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation_git.html" class="btn btn-neutral float-left" title="Git Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="installation_vscode.html" class="btn btn-neutral float-right" title="Visual Studio code installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, BioRob.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
