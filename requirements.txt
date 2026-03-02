@@ -3,9 +3,9 @@ latex
 numpydoc
 sphinx-rtd-theme
 numpy
-nptyping==1.4.4
+nptyping
 scipy
-matplotlib==3.7.0
+matplotlib
 tqdm
 cython
 PyYAML
