@@ -1,0 +1,12 @@
+[submodule "project_installation/cmc_project_pack/farms/farms_core"]
+	path = project_installation/cmc_project_pack/farms/farms_core
+	url = https://github.com/Chuanfang-Neptune/farms_core
+[submodule "project_installation/cmc_project_pack/farms/farms_mujoco"]
+	path = project_installation/cmc_project_pack/farms/farms_mujoco
+	url = https://github.com/Chuanfang-Neptune/farms_mujoco
+[submodule "project_installation/cmc_project_pack/farms/farms_amphibious"]
+	path = project_installation/cmc_project_pack/farms/farms_amphibious
+	url = https://github.com/Chuanfang-Neptune/farms_amphibious
+[submodule "project_installation/cmc_project_pack/farms/farms_sim"]
+	path = project_installation/cmc_project_pack/farms/farms_sim
+	url = https://github.com/farmsim/farms_sim
