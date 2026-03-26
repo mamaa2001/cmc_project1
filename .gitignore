@@ -7,5 +7,14 @@
 *.fdb_latexmk
 *.synctex.gz
 
+.venv/
+venv/
+
 # Python
-__pycache__/
+**/__pycache__/
+
+Project1/Python/logs/
+Lab0/
+Lab1/
+Lab2/
+Lab3/
