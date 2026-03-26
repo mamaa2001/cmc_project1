@@ -524,7 +524,7 @@ The disruption is applied in the following steps:
     \item For removed couplings, set the caudal and rostral coupling strengths to zero (keep the contralateral coupling).
 \end{itemize}
 
-To study the robustness and redundancy of ipsilateral coupling in the CPG network, we carry out an ablation study with two controller configurations (Tab.~\ref{tab:disruption}) and five disruption probabilities equally distributed between $0\%$ and $20\%$ (Tab.~\ref{tab:disruption_config}).
+To study the robustness and redundancy of ipsilateral coupling in the CPG network, we carry out an ablation study with two controller configurations (Tab.~\ref{tab:disruption}) and five disruption probabilities equally distributed between $0\%$ and $15\%$ (Tab.~\ref{tab:disruption_config}).
 
 \begin{table}[!ht]
 \centering
@@ -532,11 +532,11 @@ To study the robustness and redundancy of ipsilateral coupling in the CPG networ
     \hline
     Name & $disruption\_p\_sensors$ & $disruption\_p\_couplings$ \\
     \hline
-    Muted Sensors & $[0,10\%]$ & $0$ \\
+    Muted Sensors & $[0,15\%]$ & $0$ \\
     \hline
-    Removed Couplings & $0$ & $[0,10\%]$ \\
+    Removed Couplings & $0$ & $[0,15\%]$ \\
     \hline
-    Mixed & \multicolumn{2}{c|}{$[0,10\%]$} \\
+    Mixed & \multicolumn{2}{c|}{$[0,15\%]$} \\
     \hline
 \end{tabular}
 \caption{\label{tab:disruption_config} Different disruption configurations}
