@@ -7,5 +7,24 @@
 *.fdb_latexmk
 *.synctex.gz
 
+.venv/
+venv/
+
 # Python
-__pycache__/
+**/__pycache__/
+
+Project1/Python/logs/
+Lab0/
+Lab1/
+Lab2/
+Lab3/
+
+
+.DS_Store            # Pour les utilisateurs Mac
+Thumbs.db            # Pour Windows
+.vscode/             # Paramètres locaux de VS Code (souvent inutile à partager)
+.idea/               # Si quelqu'un utilise PyCharm
+
+*.npy                # Fichiers de données NumPy (souvent lourds)
+*.mp4                # Vidéos de rendu de simulation
+*.csv                # Si tu génères des exports de données
