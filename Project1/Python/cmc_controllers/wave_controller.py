@@ -55,9 +55,10 @@ class WaveNetwork(NeuralNetwork):
         calling the physics.
 
         """
-
+        # code estelle
         act_left = (1/2)*(self.amp*np.sin(2*np.pi*(self.freq*time - self.twl*(timestep/self.n_body_joints))))+1
         act_right = 2-act_left
+        ################
 
         pylog.warning("TODO:1.1 Use self.freq, self.amp, self.twl and self.n_body_joints to implement a wave controller")
 

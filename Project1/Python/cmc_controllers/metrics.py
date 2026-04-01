@@ -119,7 +119,8 @@ def get_phase_lag(
     xcorr = np.correlate(sig2, sig1, "full")
     n_lag = np.argmax(xcorr) - len(xcorr) // 2
 
-    phase_lag = 0
+    # johanne code
+    phase_lag = 2*np.pi*sig_freq*n_lag*sig_dt
     pylog.warning("TODO: 1.2")
     return phase_lag
 
@@ -250,6 +251,11 @@ def compute_mechanical_speed(links_positions: np.ndarray,
             n_links_pca=n_links,
             step=idx,
         )
+        # johanne code
+        v_com = np.mean(links_vel_xy[idx], axis=0)  
+
+        speed_forward[idx] = np.dot(v_com, direction_fwd)
+        speed_lateral[idx] = np.dot(v_com, direction_left)
 
         pylog.warning("TODO: 1.2 Compute the forward and lateral speed of CoM with")
         # projections on PCA direction
@@ -326,7 +332,10 @@ def compute_mechanical_energy_and_cot(times: np.ndarray,
     """
 
     pylog.warning("TODO: 1.2 Compute energy and CoT")
-    energy = np.inf
-    cot = np.inf
+    # johanne code
+    Power = np.maximum(joints_torques * joints_velocities, 0) 
+    energy = times * np.sum(Power)
+    Dfwd = np.sum(links_positions[-1, :, 0] * LINKS_MASSES) / TOTAL_MASS - np.sum(links_positions[0, :, 0] * LINKS_MASSES) / TOTAL_MASS #différence de position du CoM entre le début et la fin
+    cot = energy / Dfwd
     return energy, cot
 
