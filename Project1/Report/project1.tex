@@ -277,7 +277,7 @@ We define the following metrics in \texttt{metrics.py}.
 }
 
 
-\textbf{\underline{Question 1.3} Explore the effect of different wave controller parameters on the performance metrics of the robot locomotion in \fileref{cmc\_controllers/exercise\_1.2.py}. Simulate the robot swimming and perform a 2D-grid parameter investigation of \underline{$A \in [1.0,4.0]$,} \\ \underline{$TWL \in [0.2,1.5]$   and $f =1.5 Hz$}. Qualitatively analyze the effect on the forward speed, CoT, average $IPL_{neur}$, and average $\phi_{lock}$.
+\textbf{\underline{Question 1.3} Explore the effect of different wave controller parameters on the performance metrics of the robot locomotion in \fileref{cmc\_controllers/exercise\_1.2.py}. Simulate the robot swimming and perform a 2D-grid parameter investigation of \underline{$A \in [1.0,4.0]$,} \\ \underline{$TWL \in [0.2,1.5]$   and $f =1.5 Hz$}. Qualitatively analyze the effect on the forward speed, CoT, and average $IPL_{neur}$.
 }
 
 \textbf{Hint:} For running several controllers with different hyperparameters in parallel, you could use \texttt{run\_multiple()}. Adjust max workers depending on your hardware capacity. This function would be useful in later exercises.
@@ -419,7 +419,7 @@ Finally, the muscle output of an oscillator is defined as a function of oscillat
 \fileref{\nolinkurl{cmc_controllers/exercise2.2.py}}. Run simulations
 with a 2D grid search of
 $d = d_{left} = d_{right} \in [2.0,4.0]$ and
-$PL \in [\frac{\pi}{2n_{joint}}, \frac{3\pi}{n_{joint}}]\,\mathrm{rad}$,
+$PB \in [\frac{\pi}{2n_{joint}}, \frac{3\pi}{n_{joint}}]\,\mathrm{rad}$,
 with other parameters at their default values in
 Tab.~\ref{tab:cpg_params}. How do drives and phase biases affect the
 robot's CoT and forward speed? Run simulations with a 2D grid search of
