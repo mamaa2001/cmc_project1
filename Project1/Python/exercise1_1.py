@@ -49,7 +49,7 @@ def post_processing():
         times=sim_times, signals=neural_signals)
 
     # Metrics computation
-    pylog.warning("TODO: 1.1: Complete metrics implementation in metrics.py")
+    # pylog.warning("TODO: 1.1: Complete metrics implementation in metrics.py")
     freq, _, amp = compute_frequency_amplitude_fft(
         times=sim_times, smooth_signals=neural_signals_smoothed)
 
@@ -77,7 +77,7 @@ def post_processing():
         joints_velocities=sensor_data_joints_velocities,
     )
 
-    pylog.warning("TODO: 1.2: Verify the computed metrics are consistent with the expected values")
+    # pylog.warning("TODO: 1.2: Verify the computed metrics are consistent with the expected values")
     print('Estimated neural metrics:')
     print('Frequencies: ', freq, '\nAmplitudes: ', amp,
           '\nMean phase lags (radians): ', ipls_mean)
@@ -96,7 +96,43 @@ def post_processing():
         '\nCoT: ',
         cot)
 
-    pylog.warning("TODO: 1.2: Plot joint angles + CoM trajectory")
+    # pylog.warning("TODO: 1.2: Plot joint angles + CoM trajectory")
+
+    # Plot joint angles (first 8 joints for example)
+    n_joints = 8
+    min_len = min(len(sim_times), sensor_data_joints_positions.shape[0])
+
+    times = sim_times[:min_len]
+    joints = sensor_data_joints_positions[:min_len, :n_joints]
+
+    plt.figure()
+    for i in range(joints.shape[1]):
+        plt.plot(times, joints[:, i], label=f'Joint {i}')
+
+
+    plt.xlabel("Time [s]")
+    plt.ylabel("Joint angles [rad]")
+    plt.title("Joint Angles Over Time")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # Compute CoM (mean over links)
+    com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
+
+    # Extract x and y (horizontal plane)
+    com_x = com_positions[:, 0]
+    com_y = com_positions[:, 1]
+
+    # Plot trajectory
+    plt.figure()
+    plt.plot(com_x, com_y)
+    plt.xlabel("X position")
+    plt.ylabel("Y position")
+    plt.title("Center of Mass Trajectory")
+    plt.axis('equal')
+    plt.grid()
+    plt.show()
 
 
 def main(**kwargs):

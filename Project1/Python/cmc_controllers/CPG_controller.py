@@ -103,7 +103,7 @@ class CPGNetwork(NeuralNetwork):
     def network_ode(self, _time, state, stretch_value):
         """
         Compute derivatives for the ODE system.
-        state: [phases, amplitudes, dphases_storage, damplitudes_storage, motor_outputs_storage]
+ o      state: [phases, amplitudes, dphases_storage, damplitudes_storage, motor_outputs_storage]
         stretch_value: array of stretch feedback values (or zeros if w_ipsi is None)
         Returns: derivatives for [phases, amplitudes]
         """
@@ -113,6 +113,7 @@ class CPGNetwork(NeuralNetwork):
         dstates = np.zeros_like(state)
 
         pylog.warning("TODO 2.1 CPG ODE implementation")
+        
 
         pylog.warning("TODO 3.1 Stretch feedback")
 
