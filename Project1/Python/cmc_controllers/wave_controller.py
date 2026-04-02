@@ -55,9 +55,13 @@ class WaveNetwork(NeuralNetwork):
         calling the physics.
 
         """
-        # code estelle
-        act_left = (1/2)*(self.amp*np.sin(2*np.pi*(self.freq*time - self.twl*(timestep/self.n_body_joints))))
-        act_right = 2-act_left
+        # code estelle+johanne
+        act_left = np.zeros(self.n_body_joints)
+        act_right = np.zeros(self.n_body_joints)
+        
+        for i in range(self.n_body_joints):
+            act_left[i] = (1/2)*(self.amp*np.sin(2*np.pi*(self.freq*time - self.twl*(i/self.n_body_joints))))+1
+            act_right[i] = 2-act_left[i]
         ################
 
         #pylog.warning("TODO:1.1 Use self.freq, self.amp, self.twl and self.n_body_joints to implement a wave controller")
