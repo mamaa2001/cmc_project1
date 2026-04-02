@@ -42,6 +42,8 @@ class CPGNetwork(NeuralNetwork):
     ):
         super().__init__(data, **kwargs)
 
+        ####### code johanne #######
+
         if a_rate is None:
             a_rate = 3 * np.ones(n_body_joints)
         if offset_freq is None:
@@ -55,6 +57,7 @@ class CPGNetwork(NeuralNetwork):
         if init_phase is None:
             rng = np.random.default_rng(seed=42)
             init_phase = rng.uniform(0, 2 * np.pi, self.n_oscillators)
+        
 
         # indexes
         self.n_body_joints = n_body_joints
@@ -119,6 +122,8 @@ class CPGNetwork(NeuralNetwork):
             oscillator_output[self.right_body_idx])
 
     def network_ode(self, _time, state, stretch_value):
+
+        print('test du print network_ode')
         """
         Compute derivatives for the ODE system.
         state: [phases, amplitudes, dphases_storage, damplitudes_storage, motor_outputs_storage]
@@ -148,17 +153,17 @@ class CPGNetwork(NeuralNetwork):
 
         ####  Phase Lag calculation  ####
         self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
-        PB = np.full((self.n_oscillators, self.n_oscillators), (np.pi/2)/ (self.n_body_joints - 1))
+        self.phase_bias = 2* np.pi / (self.n_body_joints)  #à mediter
 
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
                 if i == j:
                     continue  
                 if j == i + 1: 
-                    self.phase_offset[i, j] = PB[i, j]
+                    self.phase_offset[i, j] = self.phase_bias[i, j]
                 # ipsilateral downward
                 elif j == i - 1:  
-                    self.phase_offset[i, j] = -PB[i, j]
+                    self.phase_offset[i, j] = -self.phase_bias[i, j]
                 # contralateral left->right
                 elif j == self.n_oscillators - i - 1:  # opposite side
                     self.phase_offset[i, j] = np.pi
@@ -171,22 +176,33 @@ class CPGNetwork(NeuralNetwork):
 
         ########################################
 
+        ##### frequency and amplitude calculation #####
+        for i in range(self.n_oscillators):
+            if self.drive_left > self.d_low and self.drive_left < self.d_high:
+                if self.drive_right > self.d_low and self.drive_right < self.d_high:
+                    self.nominal_frequencies[i] = self.offset_freq[i] + self.G_freq[i] * (self.drive_left - self.d_low)
+                    self.nominal_amplitudes[i] = self.offset_amp[i] + self.G_amp[i] * (self.drive_left - self.d_low)
+                else:
+                    self.nominal_frequencies[i] = 0
+                    self.nominal_amplitudes[i] = 0
+
+        ########################################
+
         #### ODE calculation  ####
         for i in range(self.n_oscillators):
-            phase_dot = 2 * np.pi * self.freq[i]
+            phase_dot = 2 * np.pi * self.nominal_frequencies[i]
+            coupling = 0
+            for j in range(self.n_oscillators):
+                if i != j:
+                    coupling += amplitudes[j] * w[i, j] * np.sin(phases[j] - phases[i] - self.phase_offset[i, j])
 
-        coupling = 0
-        for j in range(self.n_oscillators):
-            if i != j:
-                coupling += amplitudes[j] * w[i, j] * np.sin(phases[j] - phases[i] - self.phase_offset[i, j])
-
-        dstates[i] = phase_dot + coupling # phase derivative = 2*pi*f + coupling
+            dstates[i] = phase_dot + coupling # phase derivative = 2*pi*f + coupling
 
         for i in range(self.n_oscillators):
             dstates[self.n_oscillators + i] = self.a_rate[i] * (self.nominal_amplitudes[i] - amplitudes[i])  
         ########################################
 
-
+        print('test du print')
 
         #pylog.warning("TODO 2.1 CPG ODE implementation")
 

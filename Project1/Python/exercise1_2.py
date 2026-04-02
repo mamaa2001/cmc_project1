@@ -10,6 +10,9 @@ import matplotlib.colors as colors
 
 from farms_core import pylog
 
+#pour les courbes
+from exercise1_1 import post_processing
+
 from simulate import run_multiple
 from cmc_controllers.metrics import (
     compute_frequency_amplitude_fft,
@@ -101,7 +104,7 @@ def exercise1_2(**kwargs):
         'config': {
             'freq': 1.5,
             'twl': 1.0,
-            'amp': 1.0}}
+            'amp': 10.0}}
     pylog.warning("TODO: 1.2 Adapt the parameter space according to needs.")
     # Hint: You don't need to test all combinations of parameters with complexity of O(n^3)
     # You can replace range with list of length 1 to keep some parameters fixed
@@ -124,6 +127,7 @@ def exercise1_2(**kwargs):
     )
 
     pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
+    post_processing()
 
 
 if __name__ == '__main__':
