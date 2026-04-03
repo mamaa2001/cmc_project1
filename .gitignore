@@ -19,6 +19,10 @@ Lab0/
 Lab1/
 Lab2/
 Lab3/
+project_installation/cmc_project_pack/farms/farms_core/
+project_installation/cmc_project_pack/farms/farms_mujoco/
+project_installation/cmc_project_pack/farms/farms_amphibious/
+project_installation/cmc_project_pack/farms/farms_sim/
 
 
 .DS_Store            # Pour les utilisateurs Mac
