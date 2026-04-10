@@ -1,0 +1,8 @@
+farms_core
+cython
+numpy
+scipy
+tqdm
+trimesh
+pywavefront
+imageio

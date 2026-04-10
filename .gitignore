@@ -1,35 +1,46 @@
-# Latex
-*.aux
-*.log
-*.out
-*.toc
-*.fls
-*.fdb_latexmk
-*.synctex.gz
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
 
-cmc_env/
-.venv/
+# --- Environnements Virtuels ---
+# (Au cas où tu aurais créé un dossier venv dans le projet)
 venv/
+env/
+.env
 
-# Python
-**/__pycache__/
+# --- IDE (VS Code / PyCharm) ---
+.vscode/
+.idea/
 
-Project1/Python/logs/
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints
+
+# --- Système ---
+.DS_Store
+Thumbs.db
+
+# --- Fichiers de données lourds (Conseillé pour CMC) ---
+# Si tu génères des vidéos de tes simulations ou des gros fichiers de logs
+*.mp4
+*.log
+*.csv
+
+# -- dossier a exclure 
+**/logs/
 Lab0/
 Lab1/
 Lab2/
 Lab3/
-project_installation/cmc_project_pack/farms/farms_core/
-project_installation/cmc_project_pack/farms/farms_mujoco/
-project_installation/cmc_project_pack/farms/farms_amphibious/
-project_installation/cmc_project_pack/farms/farms_sim/
 
-
-.DS_Store            # Pour les utilisateurs Mac
-Thumbs.db            # Pour Windows
-.vscode/             # Paramètres locaux de VS Code (souvent inutile à partager)
-.idea/               # Si quelqu'un utilise PyCharm
-
-*.npy                # Fichiers de données NumPy (souvent lourds)
-*.mp4                # Vidéos de rendu de simulation
-*.csv                # Si tu génères des exports de données
+#-- dossier de simulation
+*.hdf5
+*.pyd
+*.so
+*.obj
+*.lib
+*.exp
+*.pdb
