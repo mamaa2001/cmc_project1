@@ -47,7 +47,7 @@ def main(**kwargs):
                 size=16),
         },
     }
-    w_ipsi = 10.0
+    w_ipsi = 3
     fast = kwargs.pop('fast', False)
     headless = kwargs.pop('headless', False)
 
