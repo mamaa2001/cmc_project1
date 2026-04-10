@@ -21,43 +21,29 @@ class CPGNetwork(NeuralNetwork):
     def __init__(
         self,
         data: AnimatData,
-        drive_left: float = 3,
-        drive_right: float = 3,
-        d_low: float = 1,
-        d_high: float = 5,
-        a_rate: np.ndarray = None,  # (n_joints,)
-        offset_freq: np.ndarray = None,  # (n_joints,)
-        offset_amp: np.ndarray = None,  # (n_joints,)
-        G_freq: np.ndarray = None,  # (n_joints,)
-        G_amp: np.ndarray = None,  # (n_joints,)
-        PL: np.ndarray = None,  # (n_joints,)
-        coupling_weights_rostral: float = 5,
-        coupling_weights_caudal: float = 5,
-        coupling_weights_contra: float = 10,
-        init_phase: np.ndarray = None,  # (2*n_joints,)
-        n_body_joints: int = 8,
-        left_body_idx: slice = None,
-        right_body_idx: slice = None,
+        drive_left: float,
+        drive_right: float,
+        d_low: float,
+        d_high: float,
+        a_rate: np.ndarray ,  # (n_joints,)
+        offset_freq: np.ndarray,  # (n_joints,)
+        offset_amp: np.ndarray,  # (n_joints,)
+        G_freq: np.ndarray,  # (n_joints,)
+        G_amp: np.ndarray,  # (n_joints,)
+        PL: np.ndarray,  # (n_joints,)
+        coupling_weights_rostral: float,
+        coupling_weights_caudal: float,
+        coupling_weights_contra: float,
+        init_phase: np.ndarray,  # (2*n_joints,)
+        n_body_joints: int,
+        left_body_idx: slice,
+        right_body_idx: slice,
         **kwargs,
     ):
         super().__init__(data, **kwargs)
 
         ####### code johanne #######
 
-        if a_rate is None:
-            a_rate = 3 * np.ones(n_body_joints)
-        if offset_freq is None:
-            offset_freq = 1 * np.ones(n_body_joints)
-        if offset_amp is None:
-            offset_amp = 0.5 * np.ones(n_body_joints)
-        if G_freq is None:
-            G_freq = 0.5 * np.ones(n_body_joints)
-        if G_amp is None:
-            G_amp = 0.25 * np.ones(n_body_joints)
-        if init_phase is None:
-            rng = np.random.default_rng(seed=42)
-            init_phase = rng.uniform(0, 2 * np.pi, self.n_oscillators)
-        
 
         # indexes
         self.n_body_joints = n_body_joints
@@ -111,6 +97,24 @@ class CPGNetwork(NeuralNetwork):
         self.drive_left = drive_left
         self.drive_right = drive_right
 
+
+        ##### frequency and amplitude calculation #####
+        if self.d_low < self.drive_left < self.d_high:
+            self.nominal_frequencies[0:self.n_oscillators:2] = self.offset_freq + self.G_freq * (self.drive_left - self.d_low)
+            self.nominal_amplitudes[0:self.n_oscillators:2] = self.offset_amp + self.G_amp * (self.drive_left - self.d_low)
+        else:
+            self.nominal_frequencies[0:self.n_oscillators:2] = 0
+            self.nominal_amplitudes[0:self.n_oscillators:2] = 0
+
+        if self.d_low < self.drive_right < self.d_high:
+            self.nominal_frequencies[1:self.n_oscillators:2] = self.offset_freq + self.G_freq * (self.drive_right - self.d_low)
+            self.nominal_amplitudes[1:self.n_oscillators:2] = self.offset_amp + self.G_amp * (self.drive_right - self.d_low)
+        else:
+            self.nominal_frequencies[1:self.n_oscillators:2] = 0
+            self.nominal_amplitudes[1:self.n_oscillators:2] = 0
+
+        self.phase_bias = (2*np.pi / self.n_body_joints) * np.ones((self.n_oscillators, self.n_oscillators))
+
     def motor_output(self, phase, amplitude):
         pylog.warning("TODO 2.1 CPG motor output implementation")
         oscillator_output = np.zeros_like(phase)
@@ -142,65 +146,68 @@ class CPGNetwork(NeuralNetwork):
             for j in range(self.n_oscillators):
                 if i == j:
                     continue  
-                if j == i + 1:
+                if j == i + 2:
                     w[i, j] = self.coupling_weights_rostral 
-                elif j == i - 1:
+                elif j == i - 2:
                     w[i, j] = self.coupling_weights_caudal
-                elif j == self.n_oscillators - i - 1:
+                elif (i % 2 == 0 and j == i + 1) or (i % 2 == 1 and j == i - 1):
                     w[i, j] = self.coupling_weights_contra
 
         ########################################
+        print("w:", w)
 
         ####  Phase Lag calculation  ####
-        self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
-        self.phase_bias = 2* np.pi / (self.n_body_joints)  #à mediter
-
+        #self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
+        #self.phase_bias = 2* np.pi / (self.n_body_joints) 
+        
+        phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
                 if i == j:
                     continue  
-                if j == i + 1: 
-                    self.phase_offset[i, j] = self.phase_bias
+                if j == i + 2: 
+                    phase_offset[i, j] = self.phase_bias[i, j] 
                 # ipsilateral downward
-                elif j == i - 1:  
-                    self.phase_offset[i, j] = -self.phase_bias
+                elif j == i - 2:  
+                    phase_offset[i, j] = -self.phase_bias[i, j]
                 # contralateral left->right
-                elif j == self.n_oscillators - i - 1:  # opposite side
-                    self.phase_offset[i, j] = np.pi
-                # contralateral right->left
-                elif j == self.n_oscillators - (i + 1):  
-                    self.phase_offset[i, j] = -np.pi
-                # otherwise
+                elif (i % 2 == 0 and j == i + 1):  
+                    phase_offset[i, j] = np.pi
+                
+                elif (i % 2 == 1 and j == i - 1):
+                    phase_offset[i, j] = -np.pi
+
                 else:
-                    self.phase_offset[i, j] = 0
+                    phase_offset[i, j] = 0
 
         ########################################
-
-        ##### frequency and amplitude calculation #####
-        for i in range(self.n_oscillators):
-            if self.drive_left > self.d_low and self.drive_left < self.d_high:
-                if self.drive_right > self.d_low and self.drive_right < self.d_high:
-                    self.nominal_frequencies[i] = self.offset_freq[0] + self.G_freq[0] * (self.drive_left - self.d_low)
-                    self.nominal_amplitudes[i] = self.offset_amp[0] + self.G_amp[0] * (self.drive_left - self.d_low)
-                else:
-                    self.nominal_frequencies[i] = 0
-                    self.nominal_amplitudes[i] = 0
-        ########################################
+        print("phase_offset:", phase_offset)
 
         #### ODE calculation  ####
+        
+        states_calculation = np.zeros(self.n_oscillators)
+
         for i in range(self.n_oscillators):
             phase_dot = 2 * np.pi * self.nominal_frequencies[i]
             coupling = 0
             for j in range(self.n_oscillators):
                 if i != j:
-                    coupling += amplitudes[j] * w[i, j] * np.sin(phases[j] - phases[i] - self.phase_offset[i, j])
+                    coupling += amplitudes[j] * w[i, j] * np.sin(phases[j] - phases[i] - phase_offset[i, j])
 
-            dstates[i] = phase_dot + coupling # phase derivative = 2*pi*f + coupling
+            states_calculation[i] = phase_dot + coupling # phase derivative = 2*pi*f + coupling
 
-        for i in range(self.n_oscillators):
-            dstates[i + self.n_oscillators]  = self.a_rate[i % self.n_body_joints] * (self.nominal_amplitudes[i] - amplitudes[i])  
+        # for i in range(self.n_oscillators):
+        #     dstates[i + self.n_oscillators]  = self.a_rate[i % self.n_body_joints] * (self.nominal_amplitudes[i] - amplitudes[i])  
         ########################################
 
+        dstates[:self.n_oscillators] = states_calculation
+        dstates[self.n_oscillators:2*self.n_oscillators] = np.repeat(self.a_rate, 2) * (self.nominal_amplitudes - amplitudes)
+
+        print("freq:", self.nominal_frequencies)
+        print("amp:", self.nominal_amplitudes)
+        print("phases:", phases)
+        print("coupling:", coupling)
+                
         #pylog.warning("TODO 2.1 CPG ODE implementation")
 
         pylog.warning("TODO 3.1 Stretch feedback")
@@ -246,17 +253,6 @@ class CPGNetwork(NeuralNetwork):
         motor_output_left, motor_output_right = self.motor_output(
             phases, amplitudes)
         
-        # print(f"motor_output_left: {motor_output_left}")
-        # print(f"motor_output_right: {motor_output_right}")
-        # print(f"phases_new: {phases}")
-        # print(f"amplitudes_new: {amplitudes}")
-        # print(f"left_body_idx: {self.left_body_idx}")
-        # print(f"right_body_idx: {self.right_body_idx}")
-
-        # print(f"data.state[iteration]: {self.data.state.array[iteration, :20]}")
-        # print(f"data.state shape: {self.data.state.array.shape}")
-        # print(f"amplitudes_new max: {amplitudes.max():.3f}")
-
 
         # Only set body joints in project 1
         # self.data.state.array[iteration, :] = 0

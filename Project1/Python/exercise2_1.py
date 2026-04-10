@@ -34,6 +34,7 @@ def post_processing(base_path):
         controller_data = pickle.load(f)
 
 
+
 def main(**kwargs):
     """Run exercise 2.1 simulation and post-processing pipeline."""
     os.makedirs(PLOT_PATH, exist_ok=True)
