@@ -156,7 +156,7 @@ class CPGNetwork(NeuralNetwork):
                     w[i, j] = self.coupling_weights_contra
 
         ########################################
-        print("w:", w)
+        #print("w:", w)
 
         ####  Phase Lag calculation  ####
         #self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
@@ -183,7 +183,7 @@ class CPGNetwork(NeuralNetwork):
                     phase_offset[i, j] = 0
 
         ########################################
-        print("phase_offset:", phase_offset)
+        #print("phase_offset:", phase_offset)
 
         #### ODE calculation  ####
         
@@ -204,12 +204,12 @@ class CPGNetwork(NeuralNetwork):
 
         dstates[:self.n_oscillators] = states_calculation
         dstates[self.n_oscillators:2*self.n_oscillators] = np.repeat(self.a_rate, 2) * (self.nominal_amplitudes - amplitudes)
-
+        """
         print("freq:", self.nominal_frequencies)
         print("amp:", self.nominal_amplitudes)
         print("phases:", phases)
         print("coupling:", coupling)
-                
+        """        
         #pylog.warning("TODO 2.1 CPG ODE implementation")
 
         pylog.warning("TODO 3.1 Stretch feedback")
