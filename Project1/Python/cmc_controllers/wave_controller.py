@@ -55,11 +55,16 @@ class WaveNetwork(NeuralNetwork):
         calling the physics.
 
         """
+        # code estelle+johanne
+        act_left = np.zeros(self.n_body_joints)
+        act_right = np.zeros(self.n_body_joints)
+        
+        for i in range(self.n_body_joints):
+            act_left[i] = (1/2)*(self.amp*np.sin(2*np.pi*(self.freq*time - self.twl*(i/self.n_body_joints))))+1
+            act_right[i] = 2-act_left[i]
+        ################
 
-        act_left = (1/2)*(self.amp*np.sin(2*np.pi*(self.freq*time - self.twl*(timestep/self.n_body_joints))))+1
-        act_right = 2-act_left
-
-        pylog.warning("TODO:1.1 Use self.freq, self.amp, self.twl and self.n_body_joints to implement a wave controller")
+        #pylog.warning("TODO:1.1 Use self.freq, self.amp, self.twl and self.n_body_joints to implement a wave controller")
 
         # implicit muscle activation
         self.data.state.array[iteration, self.left_body_idx] = act_left
@@ -141,4 +146,3 @@ class WaveController(PolymanderController):
             animat_data=animat_data,
             config=config,
         )
-
