@@ -133,38 +133,41 @@ class CPGNetwork(NeuralNetwork):
 
         ####  Coupling calculation  ####
         w = np.zeros((self.n_oscillators, self.n_oscillators))
+        
+        ####### code estelle #######
 
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
                 if i == j:
                     continue  
-                if j == i + 1:
+                if (j == i + 1) and ((i+1) % self.n_body_joints != 0): # rostral, preventing wrap
                     w[i, j] = self.coupling_weights_rostral 
-                elif j == i - 1:
+                elif (j == i - 1) and (i % self.n_body_joints != 0):   # caudal, preventing wrap
                     w[i, j] = self.coupling_weights_caudal
-                elif j == self.n_oscillators - i - 1:
-                    w[i, j] = self.coupling_weights_contra
+                elif j == (i + self.n_body_joints) / self.n_oscillators:    # contralateral
+                    w[i, j] = self.coupling_weights_contra          
 
         ########################################
 
         ####  Phase Lag calculation  ####
         self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
-        self.phase_bias = 2* np.pi / (self.n_body_joints)  #à mediter
+        self.phase_bias = (np.sum(self.PL)) / (self.n_body_joints)  # sum of PLs gives the total body phase lag
 
+        
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
                 if i == j:
                     continue  
-                if j == i + 1: 
-                    self.phase_offset[i, j] = self.phase_bias[i, j]
+                if (j == i + 1) and ((i+1) % self.n_body_joints != 0): 
+                    self.phase_offset[i, j] = self.phase_bias
                 # ipsilateral downward
-                elif j == i - 1:  
-                    self.phase_offset[i, j] = -self.phase_bias[i, j]
+                elif (j == i - 1) and (i % self.n_body_joints != 0):  
+                    self.phase_offset[i, j] = -self.phase_bias
                 # contralateral left->right
-                elif j == self.n_oscillators - i - 1:  # opposite side
+                elif j == (i + self.n_body_joints) / self.n_oscillators:  # opposite side
                     self.phase_offset[i, j] = np.pi
                 # contralateral right->left
-                elif j == self.n_oscillators - (i + 1):  
+                elif j == (i - self.n_body_joints) / self.n_oscillators:  
                     self.phase_offset[i, j] = -np.pi
                 # otherwise
                 else:
@@ -174,14 +177,17 @@ class CPGNetwork(NeuralNetwork):
 
         ##### frequency and amplitude calculation #####
         for i in range(self.n_oscillators):
-            if self.drive_left > self.d_low and self.drive_left < self.d_high:
-                if self.drive_right > self.d_low and self.drive_right < self.d_high:
-                    self.nominal_frequencies[i] = self.offset_freq[i] + self.G_freq[i] * (self.drive_left - self.d_low)
-                    self.nominal_amplitudes[i] = self.offset_amp[i] + self.G_amp[i] * (self.drive_left - self.d_low)
-                else:
-                    self.nominal_frequencies[i] = 0
-                    self.nominal_amplitudes[i] = 0
-
+            if i < self.n_body_joints:
+                drive = self.drive_left
+            else :
+                drive = self.drive_right
+            joint_index = i % self.n_body_joints
+            if drive > self.d_low and drive < self.d_high:
+                self.nominal_frequencies[i] = self.offset_freq[joint_index] + self.G_freq[joint_index] * (drive - self.d_low)
+                self.nominal_amplitudes[i] = self.offset_amp[joint_index] + self.G_amp[joint_index] * (drive - self.d_low)
+            else:
+                self.nominal_frequencies[i] = 0
+                self.nominal_amplitudes[i] = 0
         ########################################
 
         #### ODE calculation  ####
