@@ -145,10 +145,6 @@ class CPGNetwork(NeuralNetwork):
 
         dstates = np.zeros_like(state)
 
-        print("state shape:", state.shape)
-        print("state:", state)
-        print("n_oscillators:", self.n_oscillators)
-
         ####  Coupling calculation  ####
         w = np.zeros((self.n_oscillators, self.n_oscillators))
 
@@ -207,12 +203,7 @@ class CPGNetwork(NeuralNetwork):
         dstates[:self.n_oscillators] = states_calculation
         dstates[self.n_oscillators:2*self.n_oscillators] = np.repeat(self.a_rate, 2) * (self.nominal_amplitudes - amplitudes)
         ########################################
-        print("phases:", phases)
-        print("amplitudes:", amplitudes)
-        print("w has nan:", np.any(np.isnan(w)))
-        print("phase_offset has nan:", np.any(np.isnan(phase_offset)))
-        print("nominal_frequencies:", self.nominal_frequencies)
-        print("nominal_amplitudes:", self.nominal_amplitudes)
+
                 #pylog.warning("TODO 2.1 CPG ODE implementation")
 
         pylog.warning("TODO 3.1 Stretch feedback_node implementation")
