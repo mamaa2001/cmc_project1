@@ -167,4 +167,3 @@ def exercise1_1(**kwargs):
 
 if __name__ == '__main__':
     exercise1_1(plot=True)
-

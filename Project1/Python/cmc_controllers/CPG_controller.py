@@ -56,6 +56,10 @@ class CPGNetwork(NeuralNetwork):
         # [phases, amplitudes, motor_outputs_storage]
         self.state = np.zeros((self.n_iterations, 3*self.n_oscillators))
 
+        #test pour les plots 
+        self.state_log = []  # ajoute ça
+
+
         # init phase
         self.state[0, :self.n_oscillators] = init_phase
 
@@ -141,10 +145,13 @@ class CPGNetwork(NeuralNetwork):
 
         ####  Coupling calculation  ####
         w = np.zeros((self.n_oscillators, self.n_oscillators))
+<<<<<<< HEAD
         
         ####### code estelle #######
         
         ####### code estelle #######
+=======
+>>>>>>> origin/matt_branch
 
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
@@ -158,7 +165,10 @@ class CPGNetwork(NeuralNetwork):
                     w[i, j] = self.coupling_weights_contra
 
         ########################################
+<<<<<<< HEAD
         #print("w:", w)
+=======
+>>>>>>> origin/matt_branch
 
         ####  Phase Lag calculation  ####
         #self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
@@ -185,7 +195,10 @@ class CPGNetwork(NeuralNetwork):
                     phase_offset[i, j] = 0
 
         ########################################
+<<<<<<< HEAD
         #print("phase_offset:", phase_offset)
+=======
+>>>>>>> origin/matt_branch
 
         #### ODE calculation  ####
         
@@ -206,12 +219,16 @@ class CPGNetwork(NeuralNetwork):
 
         dstates[:self.n_oscillators] = states_calculation
         dstates[self.n_oscillators:2*self.n_oscillators] = np.repeat(self.a_rate, 2) * (self.nominal_amplitudes - amplitudes)
+<<<<<<< HEAD
         """
         print("freq:", self.nominal_frequencies)
         print("amp:", self.nominal_amplitudes)
         print("phases:", phases)
         print("coupling:", coupling)
         """        
+=======
+
+>>>>>>> origin/matt_branch
         #pylog.warning("TODO 2.1 CPG ODE implementation")
 
         pylog.warning("TODO 3.1 Stretch feedback")
@@ -271,12 +288,20 @@ class CPGNetwork(NeuralNetwork):
         pylog.warning("TODO 3.3 Disruption to sensors")
 
         pylog.warning("TODO 3.3 Set ODE parameters with stretch value")
+<<<<<<< HEAD
         #self.solver.set_f_params(np.zeros(self.n_oscillators))
+=======
+        self.solver.set_f_params(np.zeros(self.n_oscillators))
+>>>>>>> origin/matt_branch
 
         # Integrate ODE using dopri5 solver
         self.solver.integrate(time + timestep)
         integrated_state = self.solver.y
 
+        #test plot
+        self.state_log.append(integrated_state[:2*self.n_oscillators].copy())
+
+      
         # motor output from CPG state
         motor_output_left, motor_output_right = self.motor_output(
             phases, amplitudes)
@@ -302,6 +327,10 @@ class CPGNetwork(NeuralNetwork):
         self.state[iteration, right_storage_idx] = motor_output_right
 
         if iteration + 1 >= self.n_iterations:
+            #test plots
+            log = np.array(self.state_log)
+            self.state[:len(log), :2*self.n_oscillators] = log
+
             return
 
         # Update state with integrated values
@@ -408,4 +437,3 @@ class CPGController(PolymanderController):
             animat_data=animat_data,
             config=config,
         )
-

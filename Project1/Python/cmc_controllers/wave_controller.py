@@ -146,4 +146,3 @@ class WaveController(PolymanderController):
             animat_data=animat_data,
             config=config,
         )
-

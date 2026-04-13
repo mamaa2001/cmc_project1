@@ -1,0 +1,99 @@
+#VRML_SIM R2019a utf8
+WorldInfo {
+  physics "fix"
+  basicTimeStep 1
+  FPS 25
+}
+Viewpoint {
+  orientation 0.24031479335615558 0.9533130782122661 0.18287420540809565 4.895366749622414
+  position -7.580077016454696 4.331245455502912 1.7098665687971593
+}
+TexturedBackgroundLight {
+}
+SpotLight {
+  attenuation 0 0 1
+  beamWidth 0.785398
+  direction 0 1 0
+}
+Floor {
+}
+DEF Base Robot {
+  translation 0 2 0
+  children [
+    DEF Base Shape {
+      appearance Appearance {
+        material Material {
+        }
+      }
+      geometry Box {
+        size 0.25 0.1 0.25
+      }
+    }
+    SliderJoint {
+      jointParameters JointParameters {
+        axis 0 1 0
+      }
+      device [
+        PositionSensor {
+          name "muscle_pos"
+        }
+        LinearMotor {
+          name "muscle"
+          maxVelocity 12
+          maxPosition 2
+          maxForce 5000
+          muscles [
+            Muscle {
+              maxRadius 0.1
+              endOffset 0.001 0 0
+              color [
+                1 0 0
+                0 0 1
+              ]
+            }
+          ]
+        }
+      ]
+      endPoint DEF Mass Solid {
+        translation 0 -1 0
+        children [
+          DEF Mass Shape {
+            appearance Appearance {
+              material Material {
+              }
+            }
+            geometry Sphere {
+              radius 0.1
+            }
+          }
+        ]
+        boundingObject USE Mass
+        physics Physics {
+          density -1
+          mass 100
+          centerOfMass [
+            0 0 0
+          ]
+          inertiaMatrix [
+            0.01675516081914557 0.01675516081914557 0.01675516081914557
+            0 0 0
+          ]
+        }
+      }
+    }
+  ]
+  name "Base"
+  boundingObject USE Base
+  physics Physics {
+    density -1
+    mass 10
+    centerOfMass [
+      0 0 0
+    ]
+    inertiaMatrix [
+      0.03776041666666667 0.06510416666666667 0.03776041666666667
+      0 0 0
+    ]
+  }
+  controller "muscle_test"
+}
