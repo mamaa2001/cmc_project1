@@ -337,9 +337,4 @@ def compute_mechanical_energy_and_cot(times: np.ndarray,
     energy = times * np.sum(Power)
     Dfwd = np.sum(links_positions[-1, :, 0] * LINKS_MASSES) / TOTAL_MASS - np.sum(links_positions[0, :, 0] * LINKS_MASSES) / TOTAL_MASS #différence de position du CoM entre le début et la fin
     cot = energy / Dfwd
-<<<<<<< HEAD
     return energy, cot
-
-=======
-    return energy, cot
->>>>>>> origin/matt_branch
