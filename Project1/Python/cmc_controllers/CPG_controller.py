@@ -96,6 +96,8 @@ class CPGNetwork(NeuralNetwork):
         self.coupling_weights = np.zeros(
             (self.n_oscillators, self.n_oscillators))
         self.phase_bias = np.zeros((self.n_oscillators, self.n_oscillators))
+        
+        self.state[0, self.n_oscillators:2*self.n_oscillators] = self.nominal_amplitudes #test pour 3.1
 
         # drive (constant in project 1)
         self.drive_left = drive_left
@@ -142,6 +144,10 @@ class CPGNetwork(NeuralNetwork):
         amplitudes = state[self.n_oscillators:2*self.n_oscillators]
 
         dstates = np.zeros_like(state)
+
+        print("state shape:", state.shape)
+        print("state:", state)
+        print("n_oscillators:", self.n_oscillators)
 
         ####  Coupling calculation  ####
         w = np.zeros((self.n_oscillators, self.n_oscillators))
@@ -198,19 +204,32 @@ class CPGNetwork(NeuralNetwork):
 
             states_calculation[i] = phase_dot + coupling # phase derivative = 2*pi*f + coupling
 
-        # for i in range(self.n_oscillators):
-        #     dstates[i + self.n_oscillators]  = self.a_rate[i % self.n_body_joints] * (self.nominal_amplitudes[i] - amplitudes[i])  
-        ########################################
-
         dstates[:self.n_oscillators] = states_calculation
         dstates[self.n_oscillators:2*self.n_oscillators] = np.repeat(self.a_rate, 2) * (self.nominal_amplitudes - amplitudes)
+        ########################################
+        print("phases:", phases)
+        print("amplitudes:", amplitudes)
+        print("w has nan:", np.any(np.isnan(w)))
+        print("phase_offset has nan:", np.any(np.isnan(phase_offset)))
+        print("nominal_frequencies:", self.nominal_frequencies)
+        print("nominal_amplitudes:", self.nominal_amplitudes)
+                #pylog.warning("TODO 2.1 CPG ODE implementation")
 
-        #pylog.warning("TODO 2.1 CPG ODE implementation")
+        pylog.warning("TODO 3.1 Stretch feedback_node implementation")
 
-        pylog.warning("TODO 3.1 Stretch feedback")
+        stretch_values = np.zeros(self.n_oscillators)
+        for i in range(self.n_oscillators):
+            if i % 2 == 0:  # left side
+                stretch_values[i] = np.maximum(0, phases[i])
+            else:            # right side
+                stretch_values[i] = np.maximum(0, -phases[i])
 
         if self.w_ipsi is not None:
-            pass
+            si = np.zeros(self.n_oscillators)
+            si = stretch_values * self.w_ipsi
+            dstates[:self.n_oscillators] -= si * (1/amplitudes) * np.sin(phases)
+            dstates[self.n_oscillators:2*self.n_oscillators] += si * np.cos(phases)
+            print ("stretch_values:", stretch_values)
         return dstates
 
     def step(
@@ -235,7 +254,8 @@ class CPGNetwork(NeuralNetwork):
         stretch_value = np.array(
             self.data.sensors.joints.array[iteration-1, :self.n_body_joints, 0]) if iteration > 0 else np.zeros(self.n_body_joints)
 
-        pylog.warning("TODO 3.1 Stretch feedback")
+        pylog.warning("TODO 3.1 Stretch feedback_step implementation")
+        
 
         pylog.warning("TODO 3.3 Disruption to sensors")
 
