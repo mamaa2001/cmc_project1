@@ -61,6 +61,7 @@ def post_processing(base_path):
 
     #########################################################################
 
+
 def main(**kwargs):
     """Run exercise 2.1 simulation and post-processing pipeline."""
     os.makedirs(PLOT_PATH, exist_ok=True)

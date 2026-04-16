@@ -134,7 +134,7 @@ class CPGNetwork(NeuralNetwork):
 
         """
         Compute derivatives for the ODE system.
-        state: [phases, amplitudes, dphases_storage, damplitudes_storage, motor_outputs_storage]
+ o      state: [phases, amplitudes, dphases_storage, damplitudes_storage, motor_outputs_storage]
         stretch_value: array of stretch feedback values (or zeros if w_ipsi is None)
         Returns: derivatives for [phases, amplitudes]
         """
@@ -151,7 +151,7 @@ class CPGNetwork(NeuralNetwork):
                 if i == j:
                     continue  
                 if j == i + 2:
-                    w[i, j] = self.coupling_weights_rostral 
+                    w[i, j] = self.coupling_weights_rostral
                 elif j == i - 2:
                     w[i, j] = self.coupling_weights_caudal
                 elif (i % 2 == 0 and j == i + 1) or (i % 2 == 1 and j == i - 1):
@@ -169,10 +169,10 @@ class CPGNetwork(NeuralNetwork):
                 if i == j:
                     continue  
                 if j == i + 2: 
-                    phase_offset[i, j] = self.phase_bias[i, j] 
+                    phase_offset[i, j] = -self.phase_bias[i, j] 
                 # ipsilateral downward
                 elif j == i - 2:  
-                    phase_offset[i, j] = -self.phase_bias[i, j]
+                    phase_offset[i, j] = self.phase_bias[i, j]
                 # contralateral left->right
                 elif (i % 2 == 0 and j == i + 1):  
                     phase_offset[i, j] = np.pi
@@ -207,10 +207,22 @@ class CPGNetwork(NeuralNetwork):
 
         #pylog.warning("TODO 2.1 CPG ODE implementation")
 
-        pylog.warning("TODO 3.1 Stretch feedback")
+        #pylog.warning("TODO 3.1 Stretch feedback")
 
         if self.w_ipsi is not None:
-            pass
+            #pass
+            #### code estelle  ####
+            states_calculation = np.zeros(self.n_oscillators)
+            stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full car on passe stretch full en tant que paramètre stretch_value
+            
+            for i in range(self.n_oscillators):
+                if amplitudes[i] != 0 :
+                    dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
+                
+                dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
+
+           
+
         return dstates
 
     def step(
@@ -235,12 +247,24 @@ class CPGNetwork(NeuralNetwork):
         stretch_value = np.array(
             self.data.sensors.joints.array[iteration-1, :self.n_body_joints, 0]) if iteration > 0 else np.zeros(self.n_body_joints)
 
-        pylog.warning("TODO 3.1 Stretch feedback")
+        #pylog.warning("TODO 3.1 Stretch feedback")
+
+        ##### code estelle ######
+        if self.w_ipsi is not None:
+            stretch_left = np.maximum(0, stretch_value)   # left side: positive angles
+            stretch_right = np.maximum(0, -stretch_value)  # right side: negative angles
+            stretch_full = np.zeros(self.n_oscillators)
+            stretch_full[:self.n_body_joints] = stretch_left
+            stretch_full[self.n_body_joints:] = stretch_right
+        else:
+            stretch_full = np.zeros(self.n_oscillators)
+
+        self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
         pylog.warning("TODO 3.3 Disruption to sensors")
 
         pylog.warning("TODO 3.3 Set ODE parameters with stretch value")
-        self.solver.set_f_params(np.zeros(self.n_oscillators))
+        #self.solver.set_f_params(np.zeros(self.n_oscillators))
 
         # Integrate ODE using dopri5 solver
         self.solver.integrate(time + timestep)
