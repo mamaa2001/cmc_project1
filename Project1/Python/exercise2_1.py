@@ -24,7 +24,6 @@ def post_processing(base_path):
     sim_result = base_path + 'simulation.hdf5'
     with h5py.File(sim_result, "r") as f:
         sim_times = f['times'][:]
-        state_data = f['FARMSLISTanimats']['0']['state'][:] #rajout pour les plots
         sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
         sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
     sensor_data_links_positions = sensor_data_links[:, :, 7:10]
@@ -35,31 +34,102 @@ def post_processing(base_path):
         controller_data = pickle.load(f)
     print("controleur data keys:", controller_data.keys())
 
-    # pour l'instant c'est guez de ouf
 
-    # θ et r directement depuis HDF5
-    theta_hist = state_data[:, :16]   # colonnes 0-15
-    r_hist     = state_data[:, 16:32] # colonnes 16-31
+    # print("controller_data keys:", controller_data.keys())
+    # print("controller_data indices:", controller_data['indices'])
+    # print("controller_data state shape:", controller_data['state'].shape)
+    # print("controller_data indices:", controller_data['indices'])
 
-    # Filtre 5s
-    mask = sim_times <= 5.0
-    t = sim_times[mask]
+    state = controller_data['state']  # (2501, 48)
+
+    # Colonnes 0-15 : phases θ entrelacées (gauche=pairs, droite=impairs)
+    theta_left  = state[:, slice(0, 16, 2)]   # cols 0,2,4,6,8,10,12,14  → 8 oscillateurs gauche
+    theta_right = state[:, slice(1, 17, 2)]   # cols 1,3,5,7,9,11,13,15  → 8 oscillateurs droite
+
+    # Colonnes 16-31 : amplitudes r 
+    r_left  = state[:, slice(16, 32, 2)]      # cols 16,18,20,22,24,26,28,30
+    r_right = state[:, slice(17, 33, 2)]      # cols 17,19,21,23,25,27,29,31
+
+    # Colonnes 32-39 : motor output gauche, 40-47 : motor output droite
+    motor_left  = state[:, slice(32, 48, 2)]  # cols 32,34,36,38,40,42,44,46
+    motor_right = state[:, slice(33, 49, 2)]  # cols 33,35,37,39,41,43,45,47    
+    # Sum et diff
+    motor_sum  = motor_left + motor_right   # mouvement symétrique
+    motor_diff = motor_left - motor_right   # mouvement antisymétrique
+
+    mask   = sim_times <= 5.0
+    t_plot = sim_times[mask]
 
     # Plot θ
     plt.figure()
-    for i in range(16):
-        plt.plot(t, theta_hist[mask, i], label=f"θ_{i}")
+    for i in range(8):
+        plt.plot(t_plot, theta_left[mask, i],  label=f"θ_L{i}")
+        plt.plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--')
     plt.xlabel("Time [s]"); plt.ylabel("Phase θ")
     plt.title("Time evolution of phases (θ)"); plt.legend(); plt.grid()
 
     # Plot r
     plt.figure()
-    for i in range(16):
-        plt.plot(t, r_hist[mask, i], label=f"r_{i}")
+    for i in range(8):
+        plt.plot(t_plot, r_left[mask, i],  label=f"r_L{i}")
+        plt.plot(t_plot, r_right[mask, i], label=f"r_R{i}", linestyle='--')
     plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
     plt.title("Time evolution of amplitudes (r)"); plt.legend(); plt.grid()
 
+    # Plot sum
+    plt.figure()
+    for i in range(8):
+        plt.plot(t_plot, motor_sum[mask, i], label=f"sum_{i}")
+    plt.xlabel("Time [s]"); plt.ylabel("Sum L+R")
+    plt.title("Motor output sum (L+R)"); plt.legend(); plt.grid()
+
+    # Plot diff
+    plt.figure()
+    for i in range(8):
+        plt.plot(t_plot, motor_diff[mask, i], label=f"diff_{i}")
+    plt.xlabel("Time [s]"); plt.ylabel("Diff L-R")
+    plt.title("Motor output difference (L-R)"); plt.legend(); plt.grid()
+
     #########################################################################
+
+    # Plot joint angles (first 8 joints for example)
+    n_joints = 8
+    min_len = min(len(sim_times), sensor_data_joints_positions.shape[0])
+
+    times = sim_times[:min_len]
+    joints = sensor_data_joints_positions[:min_len, :n_joints]
+
+    plt.figure()
+    for i in range(joints.shape[1]):
+        plt.plot(times, joints[:, i], label=f'Joint {i}')
+
+
+    plt.xlabel("Time [s]")
+    plt.ylabel("Joint angles [rad]")
+    plt.title("Joint Angles Over Time")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # Compute CoM (mean over links)
+    com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
+
+    # Extract x and y (horizontal plane)
+    com_x = com_positions[:, 0]
+    com_y = com_positions[:, 1]
+
+    # Plot trajectory
+    plt.figure()
+    plt.plot(com_x, com_y)
+    plt.xlabel("X position")
+    plt.ylabel("Y position")
+    plt.title("Center of Mass Trajectory")
+    plt.axis('equal')
+    plt.grid()
+    plt.show()
+    
+    #########################################################################
+
 
 def main(**kwargs):
     """Run exercise 2.1 simulation and post-processing pipeline."""

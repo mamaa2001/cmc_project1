@@ -56,9 +56,6 @@ class CPGNetwork(NeuralNetwork):
         # [phases, amplitudes, motor_outputs_storage]
         self.state = np.zeros((self.n_iterations, 3*self.n_oscillators))
 
-        #test pour les plots 
-        self.state_log = []  # ajoute ça
-
 
         # init phase
         self.state[0, :self.n_oscillators] = init_phase
@@ -96,8 +93,6 @@ class CPGNetwork(NeuralNetwork):
         self.coupling_weights = np.zeros(
             (self.n_oscillators, self.n_oscillators))
         self.phase_bias = np.zeros((self.n_oscillators, self.n_oscillators))
-        
-        self.state[0, self.n_oscillators:2*self.n_oscillators] = self.nominal_amplitudes #test pour 3.1
 
         # drive (constant in project 1)
         self.drive_left = drive_left
@@ -147,15 +142,13 @@ class CPGNetwork(NeuralNetwork):
 
         ####  Coupling calculation  ####
         w = np.zeros((self.n_oscillators, self.n_oscillators))
-        
-        ####### code estelle #######
-        
+
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
                 if i == j:
                     continue  
                 if j == i + 2:
-                    w[i, j] = self.coupling_weights_rostral 
+                    w[i, j] = self.coupling_weights_rostral
                 elif j == i - 2:
                     w[i, j] = self.coupling_weights_caudal
                 elif (i % 2 == 0 and j == i + 1) or (i % 2 == 1 and j == i - 1):
@@ -173,10 +166,10 @@ class CPGNetwork(NeuralNetwork):
                 if i == j:
                     continue  
                 if j == i + 2: 
-                    phase_offset[i, j] = self.phase_bias[i, j] 
+                    phase_offset[i, j] = -self.phase_bias[i, j] 
                 # ipsilateral downward
                 elif j == i - 2:  
-                    phase_offset[i, j] = -self.phase_bias[i, j]
+                    phase_offset[i, j] = self.phase_bias[i, j]
                 # contralateral left->right
                 elif (i % 2 == 0 and j == i + 1):  
                     phase_offset[i, j] = np.pi
@@ -202,41 +195,31 @@ class CPGNetwork(NeuralNetwork):
 
             states_calculation[i] = phase_dot + coupling # phase derivative = 2*pi*f + coupling
 
+        # for i in range(self.n_oscillators):
+        #     dstates[i + self.n_oscillators]  = self.a_rate[i % self.n_body_joints] * (self.nominal_amplitudes[i] - amplitudes[i])  
+        ########################################
+
         dstates[:self.n_oscillators] = states_calculation
         dstates[self.n_oscillators:2*self.n_oscillators] = np.repeat(self.a_rate, 2) * (self.nominal_amplitudes - amplitudes)
 
-        print("freq:", self.nominal_frequencies)
-        print("amp:", self.nominal_amplitudes)
-        print("phases:", phases)
-        print("coupling:", coupling)
-                
         #pylog.warning("TODO 2.1 CPG ODE implementation")
 
-        pylog.warning("TODO 3.1 Stretch feedback_node implementation")
-
-        # stretch_value = np.zeros(self.n_oscillators)
-        # for i in range(self.n_oscillators):
-        #     if i % 2 == 0:  # left side
-        #         stretch_value[i] = np.maximum(0, phases[i])
-        #     else:            # right side
-        #         stretch_value[i] = np.maximum(0, -phases[i])
-
-        # if self.w_ipsi is not None:
-        #     #pass
-        #     #### code estelle  ####
-        #     states_calculation = np.zeros(self.n_oscillators)
-        #     stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full je crois
-            
-        #     for i in range(self.n_oscillators):
-        #         if amplitudes[i] != 0 :
-        #             dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
-                
-        #         dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
-            
-        #     return dstates
+        #pylog.warning("TODO 3.1 Stretch feedback")
 
         if self.w_ipsi is not None:
-            pass
+            #pass
+            #### code estelle  ####
+            states_calculation = np.zeros(self.n_oscillators)
+            stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full car on passe stretch full en tant que paramètre stretch_value
+            
+            for i in range(self.n_oscillators):
+                if amplitudes[i] != 0 :
+                    dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
+                
+                dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
+
+           
+
         return dstates
 
     def step(
@@ -257,11 +240,23 @@ class CPGNetwork(NeuralNetwork):
         amplitudes = self.state[iteration,
                                 self.n_oscillators:2*self.n_oscillators]
 
-        # # Compute stretch feedback value
-        # stretch_value = np.array(
-        #     self.data.sensors.joints.array[iteration-1, :self.n_body_joints, 0]) if iteration > 0 else np.zeros(self.n_body_joints)
+        # Compute stretch feedback value
+        stretch_value = np.array(
+            self.data.sensors.joints.array[iteration-1, :self.n_body_joints, 0]) if iteration > 0 else np.zeros(self.n_body_joints)
 
-        pylog.warning("TODO 3.1 Stretch feedback")
+        #pylog.warning("TODO 3.1 Stretch feedback")
+
+        ##### code estelle ######
+        if self.w_ipsi is not None:
+            stretch_left = np.maximum(0, stretch_value)   # left side: positive angles
+            stretch_right = np.maximum(0, -stretch_value)  # right side: negative angles
+            stretch_full = np.zeros(self.n_oscillators)
+            stretch_full[:self.n_body_joints] = stretch_left
+            stretch_full[self.n_body_joints:] = stretch_right
+        else:
+            stretch_full = np.zeros(self.n_oscillators)
+
+        self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
         pylog.warning("TODO 3.3 Disruption to sensors")
 
@@ -271,9 +266,6 @@ class CPGNetwork(NeuralNetwork):
         # Integrate ODE using dopri5 solver
         self.solver.integrate(time + timestep)
         integrated_state = self.solver.y
-
-        #test plot
-        self.state_log.append(integrated_state[:2*self.n_oscillators].copy())
 
       
         # motor output from CPG state
@@ -301,10 +293,6 @@ class CPGNetwork(NeuralNetwork):
         self.state[iteration, right_storage_idx] = motor_output_right
 
         if iteration + 1 >= self.n_iterations:
-            #test plots
-            log = np.array(self.state_log)
-            self.state[:len(log), :2*self.n_oscillators] = log
-
             return
 
         # Update state with integrated values
