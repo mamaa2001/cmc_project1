@@ -110,7 +110,7 @@ def post_processing_without_sf(base_path):
     #########################################################################
 
 '''
-
+'''
 def plot_oscillator_states():
     """Plot oscillator states (theta and r) for w_ipsi=3 and w_ipsi=0"""
 
@@ -125,7 +125,7 @@ def plot_oscillator_states():
 
     n_oscillators = 16
     n_iterations = state_with.shape[0]
-    timestep = 0.001  # adjust if different
+    timestep = 0.004  # adjust if different
     time = np.arange(n_iterations) * timestep
 
     # Extract theta and r
@@ -133,7 +133,7 @@ def plot_oscillator_states():
     r_with        = state_with[:, n_oscillators:2*n_oscillators]
     theta_without = state_without[:, :n_oscillators]
     r_without     = state_without[:, n_oscillators:2*n_oscillators]
-
+    motor
     # Only plot first 5 seconds
     t_end = 5.0
     mask = time <= t_end
@@ -185,6 +185,173 @@ def plot_oscillator_states():
     os.makedirs(PLOT_PATH, exist_ok=True)
     plt.savefig(os.path.join(PLOT_PATH, 'oscillator_states_comparison.png'), dpi=150)
     plt.show()
+'''
+def plot_oscillator_states():
+
+    with open(os.path.join(BASE_PATH, 'controller_with_sf.pkl'), 'rb') as f:
+        controller_with = pickle.load(f)
+    with open(os.path.join(BASE_PATH, 'controller_without_sf.pkl'), 'rb') as f:
+        controller_without = pickle.load(f)
+
+    with h5py.File(os.path.join(BASE_PATH, 'simulation_with_sf.hdf5'), 'r') as f:
+        sensor_data_links_with = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+    with h5py.File(os.path.join(BASE_PATH, 'simulation_without_sf.hdf5'), 'r') as f:
+        sensor_data_links_without = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+
+    print("links array shape:", sensor_data_links_with.shape)
+
+    state_with = controller_with['state']
+    state_without = controller_without['state']
+
+    timestep = 0.004
+    n_iterations = state_with.shape[0]
+    time = np.arange(n_iterations) * timestep
+
+    # Extract phases
+    theta_left_with   = state_with[:, slice(0, 16, 2)]
+    theta_right_with  = state_with[:, slice(1, 17, 2)]
+    theta_left_without   = state_without[:, slice(0, 16, 2)]
+    theta_right_without  = state_without[:, slice(1, 17, 2)]
+
+    # Extract amplitudes
+    r_left_with   = state_with[:, slice(16, 32, 2)]
+    r_right_with  = state_with[:, slice(17, 33, 2)]
+    r_left_without   = state_without[:, slice(16, 32, 2)]
+    r_right_without  = state_without[:, slice(17, 33, 2)]
+
+    # Extract motor outputs
+    motor_left_with   = state_with[:, slice(32, 48, 2)]
+    motor_right_with  = state_with[:, slice(33, 49, 2)]
+    motor_left_without   = state_without[:, slice(32, 48, 2)]
+    motor_right_without  = state_without[:, slice(33, 49, 2)]
+
+    # Sum and diff
+    motor_sum_with   = motor_left_with  + motor_right_with
+    motor_diff_with  = motor_left_with  - motor_right_with
+    motor_sum_without  = motor_left_without + motor_right_without
+    motor_diff_without = motor_left_without - motor_right_without
+
+    # CoM trajectory
+    com_positions_with    = sensor_data_links_with.mean(axis=1)
+    com_positions_without = sensor_data_links_without.mean(axis=1)
+    com_x_with    = com_positions_with[:, 0]
+    com_y_with    = com_positions_with[:, 1]
+    com_x_without = com_positions_without[:, 0]
+    com_y_without = com_positions_without[:, 1]
+
+    # Only plot first 5 seconds
+    t_end = 5.0
+    mask = time <= t_end
+    t = time[mask]
+
+    joints = [0, 1, 2, 3]  # which joints to plot
+    colors = plt.cm.viridis(np.linspace(0, 1, len(joints)))
+
+  
+    # ---- Figure 1: theta and r ----
+    fig1, axes1 = plt.subplots(2, 2, figsize=(14, 10))
+    fig1.suptitle('Oscillator states: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+
+    # theta with
+    for idx, j in enumerate(joints):
+        axes1[0, 0].plot(t, theta_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
+        axes1[0, 0].plot(t, theta_right_with[mask, j], color=colors[idx], linestyle='--', label=f'joint {j} right')
+    axes1[0, 0].set_title('Phase θ — with stretch feedback')
+    axes1[0, 0].set_xlabel('Time (s)')
+    axes1[0, 0].set_ylabel('Phase (rad)')
+    axes1[0, 0].legend(fontsize=7)
+
+    # theta without
+    for idx, j in enumerate(joints):
+        axes1[0, 1].plot(t, theta_left_without[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
+        axes1[0, 1].plot(t, theta_right_without[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
+    axes1[0, 1].set_title('Phase θ — without stretch feedback')
+    axes1[0, 1].set_xlabel('Time (s)')
+    axes1[0, 1].set_ylabel('Phase (rad)')
+    axes1[0, 1].legend(fontsize=7)
+
+    # r with
+    for idx, j in enumerate(joints):
+        axes1[1, 0].plot(t, r_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
+        axes1[1, 0].plot(t, r_right_with[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
+    axes1[1, 0].set_title('Amplitude r — with stretch feedback')
+    axes1[1, 0].set_xlabel('Time (s)')
+    axes1[1, 0].set_ylabel('Amplitude')
+    axes1[1, 0].legend(fontsize=7)
+
+    # r without
+    for idx, j in enumerate(joints):
+        axes1[1, 1].plot(t, r_left_without[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
+        axes1[1, 1].plot(t, r_right_without[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
+    axes1[1, 1].set_title('Amplitude r — without stretch feedback')
+    axes1[1, 1].set_xlabel('Time (s)')
+    axes1[1, 1].set_ylabel('Amplitude')
+    axes1[1, 1].legend(fontsize=7)
+
+    fig1.tight_layout()
+    os.makedirs(PLOT_PATH, exist_ok=True)
+    fig1.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r.png'), dpi=150)
+
+    # ---- Figure 2: motor sum and diff ----
+    fig2, axes2 = plt.subplots(2, 2, figsize=(14, 10))
+    fig2.suptitle('Motor outputs: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+
+    # sum with
+    for idx, j in enumerate(joints):
+        axes2[0, 0].plot(t, motor_sum_with[mask, j], color=colors[idx], label=f'joint {j}')
+    axes2[0, 0].set_title('Motor sum (ML+MR) — with stretch feedback')
+    axes2[0, 0].set_xlabel('Time (s)')
+    axes2[0, 0].set_ylabel('ML + MR')
+    axes2[0, 0].legend(fontsize=7)
+
+    # sum without
+    for idx, j in enumerate(joints):
+        axes2[0, 1].plot(t, motor_sum_without[mask, j], color=colors[idx], label=f'joint {j}')
+    axes2[0, 1].set_title('Motor sum (ML+MR) — without stretch feedback')
+    axes2[0, 1].set_xlabel('Time (s)')
+    axes2[0, 1].set_ylabel('ML + MR')
+    axes2[0, 1].legend(fontsize=7)
+
+    # diff with
+    for idx, j in enumerate(joints):
+        axes2[1, 0].plot(t, motor_diff_with[mask, j], color=colors[idx], label=f'joint {j}')
+    axes2[1, 0].set_title('Motor diff (ML-MR) — with stretch feedback')
+    axes2[1, 0].set_xlabel('Time (s)')
+    axes2[1, 0].set_ylabel('ML - MR')
+    axes2[1, 0].legend(fontsize=7)
+
+    # diff without
+    for idx, j in enumerate(joints):
+        axes2[1, 1].plot(t, motor_diff_without[mask, j], color=colors[idx], label=f'joint {j}')
+    axes2[1, 1].set_title('Motor diff (ML-MR) — without stretch feedback')
+    axes2[1, 1].set_xlabel('Time (s)')
+    axes2[1, 1].set_ylabel('ML - MR')
+    axes2[1, 1].legend(fontsize=7)
+
+    fig2.tight_layout()
+    fig2.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor.png'), dpi=150)
+
+    # ---- Figure 3: CoM trajectory ----
+    fig3, axes3 = plt.subplots(1, 2, figsize=(14, 5))
+    fig3.suptitle('CoM trajectory: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+
+    axes3[0].plot(com_x_with, com_y_with)
+    axes3[0].set_title('CoM trajectory — with stretch feedback')
+    axes3[0].set_xlabel('X position (m)')
+    axes3[0].set_ylabel('Y position (m)')
+    axes3[0].axis('equal')
+    axes3[0].grid()
+
+    axes3[1].plot(com_x_without, com_y_without)
+    axes3[1].set_title('CoM trajectory — without stretch feedback')
+    axes3[1].set_xlabel('X position (m)')
+    axes3[1].set_ylabel('Y position (m)')
+    axes3[1].axis('equal')
+    axes3[1].grid()
+
+    fig3.tight_layout()
+    fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory.png'), dpi=150)
+    plt.show()
 
 def main(**kwargs):
     """Run exercise 3.1 simulations with and without sensory feedback."""
@@ -227,8 +394,8 @@ def main(**kwargs):
         recording='animation3_1_with_sf.mp4',
         hdf5_name='simulation_with_sf.hdf5',
         controller_name='controller_with_sf.pkl',
-        runtime_n_iterations=2001,
-        runtime_buffer_size=2001,
+        runtime_n_iterations=501,
+        runtime_buffer_size=501,
         fast=fast,
         headless=headless,
     )
@@ -243,14 +410,16 @@ def main(**kwargs):
         recording='animation3_1_without_sf.mp4',
         hdf5_name='simulation_without_sf.hdf5',
         controller_name='controller_without_sf.pkl',
-        runtime_n_iterations=2001,
-        runtime_buffer_size=2001,
+        runtime_n_iterations=501,
+        runtime_buffer_size=501,
         fast=fast,
         headless=headless,
     )
     #post_processing_without_sf(BASE_PATH)
     #pylog.info('Total simulation time: %s [s]', time.time() - tic2)
     plot_oscillator_states()
+
+
 
 
   
