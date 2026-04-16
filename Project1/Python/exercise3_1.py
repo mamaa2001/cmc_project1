@@ -362,8 +362,8 @@ def plot_oscillator_states():
         joints_velocities_without[transient:]
     )
     print("CoT")
-    print(f"With stretch feedback:    CoT={CoT_with[-1]:.3f}") # [-1]  (last value) since the energy function is computing a cumulative integration over time — the last value represents the total energy divided by total distance
-    print(f"Without stretch feedback: CoT={CoT_without[-1]:.3f}")
+    print(f"With stretch feedback:    CoT={CoT_with:.3f}") 
+    print(f"Without stretch feedback: CoT={CoT_without:.3f}")
     
 
     
@@ -397,7 +397,7 @@ def main(**kwargs):
     }
     w_ipsi = 3
     fast = kwargs.pop('fast', False)
-    headless = kwargs.pop('headless', False)
+    headless = kwargs.pop('headless', True) #Si True ne fait pas la video
 
     #pylog.warning("TODO: 3.1 Simulate with and without sensory feedback")
 
@@ -407,7 +407,7 @@ def main(**kwargs):
         controller=controller,
         base_path=BASE_PATH,
         w_ipsi=w_ipsi,
-        recording='animation3_1_with_sf.mp4',
+        recording=None,#'animation3_1_with_sf.mp4',
         hdf5_name='simulation_with_sf.hdf5',
         controller_name='controller_with_sf.pkl',
         runtime_n_iterations=1001,
@@ -420,7 +420,7 @@ def main(**kwargs):
         controller=controller,
         base_path=BASE_PATH,
         w_ipsi=0,
-        recording='animation3_1_without_sf.mp4',
+        recording=None, #'animation3_1_without_sf.mp4',
         hdf5_name='simulation_without_sf.hdf5',
         controller_name='controller_without_sf.pkl',
         runtime_n_iterations=1001,
