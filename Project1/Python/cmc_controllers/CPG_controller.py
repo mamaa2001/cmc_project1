@@ -221,19 +221,23 @@ class CPGNetwork(NeuralNetwork):
         #     else:            # right side
         #         stretch_value[i] = np.maximum(0, -phases[i])
 
-        if self.w_ipsi is not None:
-            #pass
-            #### code estelle  ####
-            states_calculation = np.zeros(self.n_oscillators)
-            stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full je crois
+        # if self.w_ipsi is not None:
+        #     #pass
+        #     #### code estelle  ####
+        #     states_calculation = np.zeros(self.n_oscillators)
+        #     stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full je crois
             
-            for i in range(self.n_oscillators):
-                if amplitudes[i] != 0 :
-                    dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
+        #     for i in range(self.n_oscillators):
+        #         if amplitudes[i] != 0 :
+        #             dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
                 
-                dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
+        #         dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
             
-            return dstates
+        #     return dstates
+
+        if self.w_ipsi is not None:
+            pass
+        return dstates
 
     def step(
         self,
@@ -253,9 +257,9 @@ class CPGNetwork(NeuralNetwork):
         amplitudes = self.state[iteration,
                                 self.n_oscillators:2*self.n_oscillators]
 
-        # Compute stretch feedback value
-        stretch_value = np.array(
-            self.data.sensors.joints.array[iteration-1, :self.n_body_joints, 0]) if iteration > 0 else np.zeros(self.n_body_joints)
+        # # Compute stretch feedback value
+        # stretch_value = np.array(
+        #     self.data.sensors.joints.array[iteration-1, :self.n_body_joints, 0]) if iteration > 0 else np.zeros(self.n_body_joints)
 
         pylog.warning("TODO 3.1 Stretch feedback")
 
