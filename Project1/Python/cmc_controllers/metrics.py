@@ -333,8 +333,11 @@ def compute_mechanical_energy_and_cot(times: np.ndarray,
 
     pylog.warning("TODO: 1.2 Compute energy and CoT")
     # johanne code
-    Power = np.maximum(joints_torques * joints_velocities, 0) 
-    energy = times * np.sum(Power)
-    Dfwd = np.sum(links_positions[-1, :, 0] * LINKS_MASSES) / TOTAL_MASS - np.sum(links_positions[0, :, 0] * LINKS_MASSES) / TOTAL_MASS #différence de position du CoM entre le début et la fin
-    cot = energy / Dfwd
+    dt = times[1]-times[0]  # we assume that the dt is constant, which is ok
+    Power = np.maximum(joints_torques * joints_velocities, 0)
+    energy = dt * np.sum(Power)
+    com_final = np.sum(links_positions[-1, :, 0] * LINKS_MASSES) / TOTAL_MASS
+    com_initial = np.sum(links_positions[0, :, 0] * LINKS_MASSES) / TOTAL_MASS
+    Dfwd = np.abs(com_final - com_initial)
+    cot = energy / Dfwd if Dfwd > 0 else np.inf
     return energy, cot
