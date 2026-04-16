@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import os
 import h5py
 import pickle
@@ -21,81 +22,97 @@ from simulate import runsim
 BASE_PATH = 'logs/exercise3_1/'
 PLOT_PATH = 'results'
 
+'''
+def post_processing_with_sf(base_path):
+    """Post processing"""
+    # Load HDF5
+    sim_result = base_path + 'simulation_with_sf.hdf5'
+    with h5py.File(sim_result, "r") as f:
+        sim_times = f['times'][:]
+        state_data = f['FARMSLISTanimats']['0']['state'][:] #rajout pour les plots
+        sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+        sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+    sensor_data_links_positions = sensor_data_links[:, :, 7:10]
+    sensor_data_joints_positions = sensor_data_joints[:, :, 0]
 
-def main(**kwargs):
-    """Run exercise 3.1 simulations with and without sensory feedback."""
-    controller = {
-        'loader': 'cmc_controllers.CPG_controller.CPGController',
-        'config': {
-            'drive_left': 3,
-            'drive_right': 3,
-            'd_low': 1,
-            'd_high': 5,
-            'a_rate': np.ones(8) * 3,
-            'offset_freq': np.ones(8) * 1,
-            'offset_amp': np.ones(8) * 0.5,
-            'G_freq': np.ones(8) * 0.5,
-            'G_amp': np.ones(8) * 0.25,
-            'PL': np.ones(7) * np.pi * 2 / 8,
-            'coupling_weights_rostral': 5,
-            'coupling_weights_caudal': 5,
-            'coupling_weights_contra': 10,
-            'init_phase': np.random.default_rng(
-                seed=42).uniform(
-                0.0,
-                2 * np.pi,
-                size=16),
-        },
-    }
-    w_ipsi = 3
-    fast = kwargs.pop('fast', False)
-    headless = kwargs.pop('headless', False)
+    # Load Controller
+    with open(base_path + "controller_with_sf.pkl", "rb") as f:
+        controller_data = pickle.load(f)
+    print("controleur data keys:", controller_data.keys())
 
-    pylog.warning("TODO: 3.1 Simulate with and without sensory feedback")
+    # pour l'instant c'est guez de ouf
 
-    pylog.warning("TODO: 3.1 Compare the performance")
+    # θ et r directement depuis HDF5
+    theta_hist = sensor_data_links_positions   
+    r_hist     = sensor_data_joints_positions  
 
+    # Filtre 5s
+    mask = sim_times <= 5.0
+    t = sim_times[mask]
 
-    runsim(
-        controller=controller,
-        base_path=BASE_PATH,
-        w_ipsi=w_ipsi,
-        recording='animation3_1_with_sf.mp4',
-        hdf5_name='simulation_with_sf.hdf5',
-        controller_name='controller_with_sf.pkl',
-        runtime_n_iterations=5001,
-        runtime_buffer_size=5001,
-        fast=fast,
-        headless=headless,
-    )
-   
-    runsim(
-        controller=controller,
-        base_path=BASE_PATH,
-        w_ipsi=0,
-        recording='animation3_1_without_sf.mp4',
-        hdf5_name='simulation_without_sf.hdf5',
-        controller_name='controller_without_sf.pkl',
-        runtime_n_iterations=5001,
-        runtime_buffer_size=5001,
-        fast=fast,
-        headless=headless,
-    )
+    # Plot θ
+    plt.figure()
+    for i in range(16):
+        plt.plot(t, theta_hist[mask, i], label=f"θ_{i}")
+    plt.xlabel("Time [s]"); plt.ylabel("Phase θ")
+    plt.title("Time evolution of phases (θ) WITH SF"); plt.legend(); plt.grid()
 
-    plot_oscillator_states()
-  
-def exercise3_1(**kwargs):
-    """ex3.1 main"""
-    profile(function=main, profile_filename='',
-            fast=kwargs.pop('fast', False),
-            headless=kwargs.pop('headless', False),)
-    plot = kwargs.pop('plot', False)
-    if plot:
-        plt.show()
+    # Plot r
+    plt.figure()
+    for i in range(16):
+        plt.plot(t, r_hist[mask, i], label=f"r_{i}")
+    plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
+    plt.title("Time evolution of amplitudes (r) WITH SF"); plt.legend(); plt.grid()
 
+    #########################################################################
+
+def post_processing_without_sf(base_path):
+    """Post processing"""
+    # Load HDF5
+    sim_result = base_path + 'simulation_without_sf.hdf5'
+    with h5py.File(sim_result, "r") as f:
+        sim_times = f['times'][:]
+        state_data = f['FARMSLISTanimats']['0']['state'][:] #rajout pour les plots
+        sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+        sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+    sensor_data_links_positions = sensor_data_links[:, :, 7:10]
+    sensor_data_joints_positions = sensor_data_joints[:, :, 0]
+
+    # Load Controller
+    with open(base_path + "controller_without_sf.pkl", "rb") as f:
+        controller_data = pickle.load(f)
+    print("controleur data keys:", controller_data.keys())
+
+    # pour l'instant c'est guez de ouf
+
+    # θ et r directement depuis HDF5
+    theta_hist = state_data[:, :16]   # colonnes 0-15
+    r_hist     = state_data[:, 16:32] # colonnes 16-31
+
+    # Filtre 5s
+    mask = sim_times <= 5.0
+    t = sim_times[mask]
+
+    # Plot θ
+    plt.figure()
+    for i in range(16):
+        plt.plot(t, theta_hist[mask, i], label=f"θ_{i}")
+    plt.xlabel("Time [s]"); plt.ylabel("Phase θ")
+    plt.title("Time evolution of phases (θ) NO SF"); plt.legend(); plt.grid()
+
+    # Plot r
+    plt.figure()
+    for i in range(16):
+        plt.plot(t, r_hist[mask, i], label=f"r_{i}")
+    plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
+    plt.title("Time evolution of amplitudes (r) NO SF"); plt.legend(); plt.grid()
+
+    #########################################################################
+
+'''
 
 def plot_oscillator_states():
-    # Plot oscillator states (theta and r) for w_ipsi=3 and w_ipsi=0
+    """Plot oscillator states (theta and r) for w_ipsi=3 and w_ipsi=0"""
 
     with open(os.path.join(BASE_PATH, 'controller_with_sf.pkl'), 'rb') as f:
         controller_with = pickle.load(f)
@@ -105,11 +122,6 @@ def plot_oscillator_states():
     # Extract states directly from the dict
     state_with = controller_with['state']       # shape (n_iterations, 3*n_oscillators)
     state_without = controller_without['state']
-
-    print("min amplitude:", np.min(state_with[:515, 16:32]))
-    print("max amplitude:", np.max(state_with[:515, 16:32]))
-    print("amplitude at iteration 514:", state_with[514, 16:32])
-    return
 
     n_oscillators = 16
     n_iterations = state_with.shape[0]
@@ -174,6 +186,82 @@ def plot_oscillator_states():
     plt.savefig(os.path.join(PLOT_PATH, 'oscillator_states_comparison.png'), dpi=150)
     plt.show()
 
+def main(**kwargs):
+    """Run exercise 3.1 simulations with and without sensory feedback."""
+    controller = {
+        'loader': 'cmc_controllers.CPG_controller.CPGController',
+        'config': {
+            'drive_left': 3,
+            'drive_right': 3,
+            'd_low': 1,
+            'd_high': 5,
+            'a_rate': np.ones(8) * 3,
+            'offset_freq': np.ones(8) * 1,
+            'offset_amp': np.ones(8) * 0.5,
+            'G_freq': np.ones(8) * 0.5,
+            'G_amp': np.ones(8) * 0.25,
+            'PL': np.ones(7) * np.pi * 2 / 8,
+            'coupling_weights_rostral': 5,
+            'coupling_weights_caudal': 5,
+            'coupling_weights_contra': 10,
+            'init_phase': np.random.default_rng(
+                seed=42).uniform(
+                0.0,
+                2 * np.pi,
+                size=16),
+        },
+    }
+    w_ipsi = 3
+    fast = kwargs.pop('fast', False)
+    headless = kwargs.pop('headless', False)
+
+    #pylog.warning("TODO: 3.1 Simulate with and without sensory feedback")
+
+    #pylog.warning("TODO: 3.1 Compare the performance")
+
+    tic1 = time.time()
+    runsim(
+        controller=controller,
+        base_path=BASE_PATH,
+        w_ipsi=w_ipsi,
+        recording='animation3_1_with_sf.mp4',
+        hdf5_name='simulation_with_sf.hdf5',
+        controller_name='controller_with_sf.pkl',
+        runtime_n_iterations=2001,
+        runtime_buffer_size=2001,
+        fast=fast,
+        headless=headless,
+    )
+    #post_processing_with_sf(BASE_PATH)
+    #pylog.info('Total simulation time: %s [s]', time.time() - tic1)
+
+    tic2 = time.time()
+    runsim(
+        controller=controller,
+        base_path=BASE_PATH,
+        w_ipsi=0,
+        recording='animation3_1_without_sf.mp4',
+        hdf5_name='simulation_without_sf.hdf5',
+        controller_name='controller_without_sf.pkl',
+        runtime_n_iterations=2001,
+        runtime_buffer_size=2001,
+        fast=fast,
+        headless=headless,
+    )
+    #post_processing_without_sf(BASE_PATH)
+    #pylog.info('Total simulation time: %s [s]', time.time() - tic2)
+    plot_oscillator_states()
+
+
+  
+def exercise3_1(**kwargs):
+    """ex3.1 main"""
+    profile(function=main, profile_filename='',
+            fast=kwargs.pop('fast', False),
+            headless=kwargs.pop('headless', False),)
+    plot = kwargs.pop('plot', False)
+    if plot:
+        plt.show()
 
 
 if __name__ == '__main__':
