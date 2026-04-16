@@ -213,7 +213,7 @@ class CPGNetwork(NeuralNetwork):
             #pass
             #### code estelle  ####
             states_calculation = np.zeros(self.n_oscillators)
-            stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full je crois
+            stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full car on passe stretch full en tant que paramètre stretch_value
             
             for i in range(self.n_oscillators):
                 if amplitudes[i] != 0 :
@@ -259,7 +259,7 @@ class CPGNetwork(NeuralNetwork):
         else:
             stretch_full = np.zeros(self.n_oscillators)
 
-        self.solver.set_f_params(stretch_full)
+        self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
         pylog.warning("TODO 3.3 Disruption to sensors")
 

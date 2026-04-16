@@ -82,7 +82,7 @@ def main(**kwargs):
         headless=headless,
     )
 
-    #plot_oscillator_states()
+    plot_oscillator_states()
   
 def exercise3_1(**kwargs):
     """ex3.1 main"""
@@ -93,7 +93,7 @@ def exercise3_1(**kwargs):
     if plot:
         plt.show()
 
-"""
+
 def plot_oscillator_states():
     # Plot oscillator states (theta and r) for w_ipsi=3 and w_ipsi=0
 
@@ -106,9 +106,9 @@ def plot_oscillator_states():
     state_with = controller_with['state']       # shape (n_iterations, 3*n_oscillators)
     state_without = controller_without['state']
 
-    print("state_with shape:", state_with.shape)
-    print("non-zero rows:", np.sum(np.any(state_with != 0, axis=1)))
-    print("timestep would be:", 5.0 / state_with.shape[0])
+    print("min amplitude:", np.min(state_with[:515, 16:32]))
+    print("max amplitude:", np.max(state_with[:515, 16:32]))
+    print("amplitude at iteration 514:", state_with[514, 16:32])
     return
 
     n_oscillators = 16
@@ -174,7 +174,7 @@ def plot_oscillator_states():
     plt.savefig(os.path.join(PLOT_PATH, 'oscillator_states_comparison.png'), dpi=150)
     plt.show()
 
-"""
+
 
 if __name__ == '__main__':
     exercise3_1(plot=True)
