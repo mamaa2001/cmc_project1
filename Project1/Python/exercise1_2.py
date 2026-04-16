@@ -132,4 +132,3 @@ def exercise1_2(**kwargs):
 
 if __name__ == '__main__':
     exercise1_2(plot=True)
-

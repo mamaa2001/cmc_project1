@@ -150,8 +150,6 @@ class CPGNetwork(NeuralNetwork):
         
         ####### code estelle #######
         
-        ####### code estelle #######
-
         for i in range(self.n_oscillators):
             for j in range(self.n_oscillators):
                 if i == j:
@@ -164,7 +162,6 @@ class CPGNetwork(NeuralNetwork):
                     w[i, j] = self.coupling_weights_contra
 
         ########################################
-        print("w:", w)
 
         ####  Phase Lag calculation  ####
         #self.phase_offset = np.zeros((self.n_oscillators, self.n_oscillators))
@@ -191,7 +188,6 @@ class CPGNetwork(NeuralNetwork):
                     phase_offset[i, j] = 0
 
         ########################################
-        print("phase_offset:", phase_offset)
 
         #### ODE calculation  ####
         
@@ -218,16 +214,26 @@ class CPGNetwork(NeuralNetwork):
 
         pylog.warning("TODO 3.1 Stretch feedback_node implementation")
 
-        stretch_values = np.zeros(self.n_oscillators)
-        for i in range(self.n_oscillators):
-            if i % 2 == 0:  # left side
-                stretch_values[i] = np.maximum(0, phases[i])
-            else:            # right side
-                stretch_values[i] = np.maximum(0, -phases[i])
+        # stretch_value = np.zeros(self.n_oscillators)
+        # for i in range(self.n_oscillators):
+        #     if i % 2 == 0:  # left side
+        #         stretch_value[i] = np.maximum(0, phases[i])
+        #     else:            # right side
+        #         stretch_value[i] = np.maximum(0, -phases[i])
 
         if self.w_ipsi is not None:
-            pass
-        return dstates
+            #pass
+            #### code estelle  ####
+            states_calculation = np.zeros(self.n_oscillators)
+            stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full je crois
+            
+            for i in range(self.n_oscillators):
+                if amplitudes[i] != 0 :
+                    dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
+                
+                dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
+            
+            return dstates
 
     def step(
         self,
