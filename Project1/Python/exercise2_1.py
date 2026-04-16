@@ -50,7 +50,6 @@ def post_processing(base_path):
     r_left  = state[:, slice(16, 32, 2)]      # cols 16,18,20,22,24,26,28,30
     r_right = state[:, slice(17, 33, 2)]      # cols 17,19,21,23,25,27,29,31
 
-    # Colonnes 32-39 : motor output gauche, 40-47 : motor output droite
     motor_left  = state[:, slice(32, 48, 2)]  # cols 32,34,36,38,40,42,44,46
     motor_right = state[:, slice(33, 49, 2)]  # cols 33,35,37,39,41,43,45,47    
     # Sum et diff
@@ -61,12 +60,19 @@ def post_processing(base_path):
     t_plot = sim_times[mask]
 
     # Plot θ
+    colors = plt.cm.tab10(np.linspace(0, 1, 8))
+
     plt.figure()
     for i in range(8):
-        plt.plot(t_plot, theta_left[mask, i],  label=f"θ_L{i}")
-        plt.plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--')
-    plt.xlabel("Time [s]"); plt.ylabel("Phase θ")
-    plt.title("Time evolution of phases (θ)"); plt.legend(); plt.grid()
+        c = colors[i]
+        plt.plot(t_plot, theta_left[mask, i],  label=f"θ_L{i}", color=c)
+        plt.plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--', color=c)
+
+    plt.xlabel("Time [s]")
+    plt.ylabel("Phase θ")
+    plt.title("Time evolution of phases (θ)")
+    plt.legend(ncol=2)
+    plt.show()
 
     # Plot r
     plt.figure()
@@ -93,24 +99,45 @@ def post_processing(base_path):
     #########################################################################
 
     # Plot joint angles (first 8 joints for example)
-    n_joints = 8
+    n_joints = 10
     min_len = min(len(sim_times), sensor_data_joints_positions.shape[0])
 
     times = sim_times[:min_len]
     joints = sensor_data_joints_positions[:min_len, :n_joints]
 
-    plt.figure()
-    for i in range(joints.shape[1]):
-        plt.plot(times, joints[:, i], label=f'Joint {i}')
+    fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
 
+    # --- Active joints ---
+    active_joints = [0, 1, 2, 3, 4, 5, 6, 7]
+    for i in active_joints:
+        axs[0].plot(times, joints[:, i], label=f'Joint {i}')
+    axs[0].set_title("Active Joints")
+    axs[0].set_ylabel("Angle [rad]")
+    axs[0].legend()
+    axs[0].grid()
 
-    plt.xlabel("Time [s]")
-    plt.ylabel("Joint angles [rad]")
-    plt.title("Joint Angles Over Time")
-    plt.legend()
-    plt.grid()
+    # --- Passive joints ---
+    passivejoints = [8, 9]
+    for i in passivejoints:
+        axs[1].plot(times, joints[:, i], label=f'Joint {i}')
+    axs[1].set_title("Passive Joints")
+    axs[1].set_ylabel("Angle [rad]")
+    axs[1].legend()
+    axs[1].grid()
+
+    # --- All joints ---
+    for i in range(n_joints):
+        axs[2].plot(times, joints[:, i], label=f'Joint {i}')
+    axs[2].set_title("All Joints")
+    axs[2].set_xlabel("Time [s]")
+    axs[2].set_ylabel("Angle [rad]")
+    axs[2].legend(ncol=2)
+    axs[2].grid()
+
+    plt.tight_layout()
     plt.show()
 
+    
     # Compute CoM (mean over links)
     com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
 
