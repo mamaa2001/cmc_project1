@@ -22,94 +22,7 @@ from simulate import runsim
 BASE_PATH = 'logs/exercise3_1/'
 PLOT_PATH = 'results'
 
-'''
-def post_processing_with_sf(base_path):
-    """Post processing"""
-    # Load HDF5
-    sim_result = base_path + 'simulation_with_sf.hdf5'
-    with h5py.File(sim_result, "r") as f:
-        sim_times = f['times'][:]
-        state_data = f['FARMSLISTanimats']['0']['state'][:] #rajout pour les plots
-        sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
-        sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
-    sensor_data_links_positions = sensor_data_links[:, :, 7:10]
-    sensor_data_joints_positions = sensor_data_joints[:, :, 0]
-
-    # Load Controller
-    with open(base_path + "controller_with_sf.pkl", "rb") as f:
-        controller_data = pickle.load(f)
-    print("controleur data keys:", controller_data.keys())
-
-    # pour l'instant c'est guez de ouf
-
-    # θ et r directement depuis HDF5
-    theta_hist = sensor_data_links_positions   
-    r_hist     = sensor_data_joints_positions  
-
-    # Filtre 5s
-    mask = sim_times <= 5.0
-    t = sim_times[mask]
-
-    # Plot θ
-    plt.figure()
-    for i in range(16):
-        plt.plot(t, theta_hist[mask, i], label=f"θ_{i}")
-    plt.xlabel("Time [s]"); plt.ylabel("Phase θ")
-    plt.title("Time evolution of phases (θ) WITH SF"); plt.legend(); plt.grid()
-
-    # Plot r
-    plt.figure()
-    for i in range(16):
-        plt.plot(t, r_hist[mask, i], label=f"r_{i}")
-    plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
-    plt.title("Time evolution of amplitudes (r) WITH SF"); plt.legend(); plt.grid()
-
-    #########################################################################
-
-def post_processing_without_sf(base_path):
-    """Post processing"""
-    # Load HDF5
-    sim_result = base_path + 'simulation_without_sf.hdf5'
-    with h5py.File(sim_result, "r") as f:
-        sim_times = f['times'][:]
-        state_data = f['FARMSLISTanimats']['0']['state'][:] #rajout pour les plots
-        sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
-        sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
-    sensor_data_links_positions = sensor_data_links[:, :, 7:10]
-    sensor_data_joints_positions = sensor_data_joints[:, :, 0]
-
-    # Load Controller
-    with open(base_path + "controller_without_sf.pkl", "rb") as f:
-        controller_data = pickle.load(f)
-    print("controleur data keys:", controller_data.keys())
-
-    # pour l'instant c'est guez de ouf
-
-    # θ et r directement depuis HDF5
-    theta_hist = state_data[:, :16]   # colonnes 0-15
-    r_hist     = state_data[:, 16:32] # colonnes 16-31
-
-    # Filtre 5s
-    mask = sim_times <= 5.0
-    t = sim_times[mask]
-
-    # Plot θ
-    plt.figure()
-    for i in range(16):
-        plt.plot(t, theta_hist[mask, i], label=f"θ_{i}")
-    plt.xlabel("Time [s]"); plt.ylabel("Phase θ")
-    plt.title("Time evolution of phases (θ) NO SF"); plt.legend(); plt.grid()
-
-    # Plot r
-    plt.figure()
-    for i in range(16):
-        plt.plot(t, r_hist[mask, i], label=f"r_{i}")
-    plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
-    plt.title("Time evolution of amplitudes (r) NO SF"); plt.legend(); plt.grid()
-
-    #########################################################################
-
-'''
+######################## début code Estelle #################################################
 '''
 def plot_oscillator_states():
     """Plot oscillator states (theta and r) for w_ipsi=3 and w_ipsi=0"""
@@ -195,10 +108,17 @@ def plot_oscillator_states():
 
     with h5py.File(os.path.join(BASE_PATH, 'simulation_with_sf.hdf5'), 'r') as f:
         sensor_data_links_with = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+        joints_array_with = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+        joints_names = f['FARMSLISTanimats']['0']['sensors']['joints']['names'][:]
+        #print("timestep 100, all joints, feature 0:", joints_array_with[100, :, 0])  # positions?
+        #print("timestep 100, all joints, feature 1:", joints_array_with[100, :, 1])  # velocities?
+        #print("timestep 100, all joints, feature 11:", joints_array_with[100, :, 11]) # torques?
+        #print("timestep 100, all joints, feature 14:", joints_array_with[100, :, 14])
     with h5py.File(os.path.join(BASE_PATH, 'simulation_without_sf.hdf5'), 'r') as f:
         sensor_data_links_without = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+        joints_array_without = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
 
-    print("links array shape:", sensor_data_links_with.shape)
+    #print("links array shape:", sensor_data_links_with.shape)
 
     state_with = controller_with['state']
     state_without = controller_without['state']
@@ -231,13 +151,33 @@ def plot_oscillator_states():
     motor_sum_without  = motor_left_without + motor_right_without
     motor_diff_without = motor_left_without - motor_right_without
 
+    ######## Forward speed ######
+    #links_positions_with  = sensor_data_links_with[:, :, :3]
+    links_positions_with  = sensor_data_links_with[:, :, 7:10]
+    links_velocities_with = sensor_data_links_with[:, :, 14:17]
+
+    #links_positions_without  = sensor_data_links_without[:, :, :3]
+    links_positions_without  = sensor_data_links_without[:, :, 7:10]
+    links_velocities_without = sensor_data_links_without[:, :, 14:17]
+
     # CoM trajectory
-    com_positions_with    = sensor_data_links_with.mean(axis=1)
-    com_positions_without = sensor_data_links_without.mean(axis=1)
+    #com_positions_with    = sensor_data_links_with.mean(axis=1)
+    #com_positions_without = sensor_data_links_without.mean(axis=1)
+    com_positions_with    = links_positions_with.mean(axis=1)
+    com_positions_without = links_positions_without.mean(axis=1)
     com_x_with    = com_positions_with[:, 0]
     com_y_with    = com_positions_with[:, 1]
     com_x_without = com_positions_without[:, 0]
     com_y_without = com_positions_without[:, 1]
+
+    # Joints
+    joint_angles_with    = joints_array_with[:, :8, 0]    # (n_iterations, 8)
+    joint_angles_without = joints_array_without[:, :8, 0]
+    
+    joints_velocities_with    = joints_array_with[:, :, 1]
+    joints_torques_with       = joints_array_with[:, :, 11]
+    joints_velocities_without = joints_array_without[:, :, 1]
+    joints_torques_without    = joints_array_without[:, :, 11]
 
     # Only plot first 5 seconds
     t_end = 5.0
@@ -351,7 +291,84 @@ def plot_oscillator_states():
 
     fig3.tight_layout()
     fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory.png'), dpi=150)
+    #plt.show()
+
+    # ---- Figure 4: CoM trajectory ----
+
+    joints_to_plot = list(range(8))  # subset for clarity
+    colors = plt.cm.viridis(np.linspace(0, 1, len(joints_to_plot)))
+
+    fig4, axes4 = plt.subplots(1, 2, figsize=(14, 5))
+    fig4.suptitle('Body joint angles: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+
+    for idx, j in enumerate(joints_to_plot):
+        axes4[0].plot(t, joint_angles_with[mask, j], color=colors[idx], label=f'joint {j}')
+    axes4[0].set_title('Joint angles — with stretch feedback')
+    axes4[0].set_xlabel('Time (s)')
+    axes4[0].set_ylabel('Angle (rad)')
+    axes4[0].legend(fontsize=7)
+    axes4[0].grid()
+
+    for idx, j in enumerate(joints_to_plot):
+        axes4[1].plot(t, joint_angles_without[mask, j], color=colors[idx], label=f'joint {j}')
+    axes4[1].set_title('Joint angles — without stretch feedback')
+    axes4[1].set_xlabel('Time (s)')
+    axes4[1].set_ylabel('Angle (rad)')
+    axes4[1].legend(fontsize=7)
+    axes4[1].grid()
+
+    fig4.tight_layout()
+    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
     plt.show()
+
+    ########### Neural metrics #########
+
+    # skip transient (first 2s)
+    transient = int(2.0 / timestep)
+    t_steady = time[transient:]
+
+    # compute metrics
+    peak_freq_with, _, peak_amp_with = compute_frequency_amplitude_fft(
+        t_steady, motor_diff_with[transient:, :])
+    peak_freq_without, _, peak_amp_without = compute_frequency_amplitude_fft(
+        t_steady, motor_diff_without[transient:, :])
+
+    neural_freq_with    = np.mean(peak_freq_with)
+    neural_amp_with    = np.mean(peak_amp_with)
+    neural_freq_without = np.mean(peak_freq_without)
+    neural_amp_without = np.mean(peak_amp_without)
+
+    print("=== Neural Metrics ===")
+    print(f"With stretch feedback:    neural_freq={neural_freq_with:.3f} Hz,  neural_amp={ neural_amp_with:.3f}")
+    print(f"Without stretch feedback: neural_freq={ neural_freq_without:.3f} Hz, neural_amp={ neural_amp_without:.3f}")
+
+    ######## Forward speed ############
+    
+    forward_speed_with,  _ = compute_mechanical_speed(links_positions_with,  links_velocities_with)
+    forward_speed_without, _ = compute_mechanical_speed(links_positions_without, links_velocities_without)
+    print("=== Other Metrics ===")
+    print("Forward speed")
+    print(f"With stretch feedback:    forward_speed={forward_speed_with:.3f}")
+    print(f"Without stretch feedback: forward_speed={forward_speed_without:.3f}")
+
+    ######### CoT ############
+    
+    _, CoT_with = compute_mechanical_energy_and_cot(t_steady, links_positions_with[transient:],
+        joints_torques_with[transient:],
+        joints_velocities_with[transient:]
+    )
+    _, CoT_without = compute_mechanical_energy_and_cot(t_steady, links_positions_without[transient:],
+        joints_torques_without[transient:],
+        joints_velocities_without[transient:]
+    )
+    print("CoT")
+    print(f"With stretch feedback:    CoT={CoT_with[-1]:.3f}") # [-1]  (last value) since the energy function is computing a cumulative integration over time — the last value represents the total energy divided by total distance
+    print(f"Without stretch feedback: CoT={CoT_without[-1]:.3f}")
+    
+
+    
+######################## fin code Estelle #################################################
+
 
 def main(**kwargs):
     """Run exercise 3.1 simulations with and without sensory feedback."""
@@ -386,7 +403,6 @@ def main(**kwargs):
 
     #pylog.warning("TODO: 3.1 Compare the performance")
 
-    tic1 = time.time()
     runsim(
         controller=controller,
         base_path=BASE_PATH,
@@ -394,15 +410,12 @@ def main(**kwargs):
         recording='animation3_1_with_sf.mp4',
         hdf5_name='simulation_with_sf.hdf5',
         controller_name='controller_with_sf.pkl',
-        runtime_n_iterations=501,
-        runtime_buffer_size=501,
+        runtime_n_iterations=1001,
+        runtime_buffer_size=1001,
         fast=fast,
         headless=headless,
     )
-    #post_processing_with_sf(BASE_PATH)
-    #pylog.info('Total simulation time: %s [s]', time.time() - tic1)
 
-    tic2 = time.time()
     runsim(
         controller=controller,
         base_path=BASE_PATH,
@@ -410,13 +423,12 @@ def main(**kwargs):
         recording='animation3_1_without_sf.mp4',
         hdf5_name='simulation_without_sf.hdf5',
         controller_name='controller_without_sf.pkl',
-        runtime_n_iterations=501,
-        runtime_buffer_size=501,
+        runtime_n_iterations=1001,
+        runtime_buffer_size=1001,
         fast=fast,
         headless=headless,
     )
-    #post_processing_without_sf(BASE_PATH)
-    #pylog.info('Total simulation time: %s [s]', time.time() - tic2)
+  
     plot_oscillator_states()
 
 
