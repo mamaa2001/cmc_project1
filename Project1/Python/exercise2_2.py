@@ -59,6 +59,32 @@ def exercise2_2(**kwargs):
     pylog.warning("TODO: 2.2: Explore the effect of drive parameters and body phase bias")
     # pylog.set_level('critical')
 
+    #En cours d'implementation et copier depuis le 1.2
+    ''' os.makedirs(PLOT_PATH, exist_ok=True)
+    base_controller = {
+        'loader': 'cmc_controllers.CPG_controller.CPGController',
+        'config': {
+            'freq': 1.5,
+            'twl': 0.2,
+            'amp': 1.0}}
+
+
+    example_twl_range = np.linspace(0.2, 1.5, 10)
+    example_amp_range = np.linspace(1.0, 4.0, 10)
+
+    parameter_grid_example = {
+        'twl': example_twl_range,
+        'amp': example_amp_range,
+    }
+
+    run_multiple(
+        max_workers=MAX_WORKERS,
+        controller=base_controller,
+        base_path=BASE_PATH,
+        parameter_grid=parameter_grid_example,
+        common_kwargs={'fast': True, 'headless': True},
+    )'''
+
     plot = kwargs.pop('plot', False)
     if plot:
         plt.show()
