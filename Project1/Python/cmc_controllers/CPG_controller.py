@@ -104,6 +104,8 @@ class CPGNetwork(NeuralNetwork):
         else:
             self.drive_left = drive_left
             self.drive_right = drive_right
+        
+        print(f"drive left: {self.drive_left}, drive right: {self.drive_right}")
 
         ##### frequency and amplitude calculation #####
         if self.d_low < self.drive_left < self.d_high:
