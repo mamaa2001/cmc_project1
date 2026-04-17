@@ -60,21 +60,36 @@ def exercise2_2(**kwargs):
     # pylog.set_level('critical')
 
     #En cours d'implementation et copier depuis le 1.2
-    ''' os.makedirs(PLOT_PATH, exist_ok=True)
+    os.makedirs(PLOT_PATH, exist_ok=True)
     base_controller = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config': {
-            'freq': 1.5,
-            'twl': 0.2,
-            'amp': 1.0}}
+            'drive_left': None,
+            'drive_right': 3,
+            'd_low': 1,
+            'd_high': 5,
+            'a_rate': np.ones(8) * 3,
+            'offset_freq': np.ones(8) * 1,
+            'offset_amp': np.ones(8) * 0.5,
+            'G_freq': np.ones(8) * 0.5,
+            'G_amp': np.ones(8) * 0.25,
+            'PL': np.ones(7) * np.pi * 2 / 8,
+            'coupling_weights_rostral': 5,
+            'coupling_weights_caudal': 5,
+            'coupling_weights_contra': 10,
+            'init_phase': np.random.default_rng(
+                seed=42).uniform(
+                0.0,
+                2 * np.pi,
+                size=16)}}
 
-
-    example_twl_range = np.linspace(0.2, 1.5, 10)
-    example_amp_range = np.linspace(1.0, 4.0, 10)
+    drive_range = np.linspace(2.0,4.0,5)
+    PL_range = np.linspace(np.pi/16,3*np.pi/8,5)
+    
 
     parameter_grid_example = {
-        'twl': example_twl_range,
-        'amp': example_amp_range,
+        'drive_right': drive_range,
+        'PL': PL_range,
     }
 
     run_multiple(
@@ -83,7 +98,7 @@ def exercise2_2(**kwargs):
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example,
         common_kwargs={'fast': True, 'headless': True},
-    )'''
+    )
 
     plot = kwargs.pop('plot', False)
     if plot:

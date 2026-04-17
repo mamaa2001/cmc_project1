@@ -98,9 +98,12 @@ class CPGNetwork(NeuralNetwork):
         self.phase_bias = np.zeros((self.n_oscillators, self.n_oscillators))
 
         # drive (constant in project 1)
-        self.drive_left = drive_left
-        self.drive_right = drive_right
-
+        if drive_left is None: # to have the same value for 2.2
+            self.drive_left = drive_right
+            self.drive_right = drive_right
+        else:
+            self.drive_left = drive_left
+            self.drive_right = drive_right
 
         ##### frequency and amplitude calculation #####
         if self.d_low < self.drive_left < self.d_high:
