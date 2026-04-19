@@ -103,15 +103,15 @@ def exercise1_2(**kwargs):
         'loader': 'cmc_controllers.wave_controller.WaveController',
         'config': {
             'freq': 1.5,
-            'twl': 1.0,
-            'amp': 10.0}}
+            'twl': 0.2,
+            'amp': 1.0}}
     pylog.warning("TODO: 1.2 Adapt the parameter space according to needs.")
     # Hint: You don't need to test all combinations of parameters with complexity of O(n^3)
     # You can replace range with list of length 1 to keep some parameters fixed
     # while testing others O(n^2) or O(n)
 
-    example_twl_range = np.linspace(0.2, 1.2, 3)
-    example_amp_range = np.linspace(1.0, 3.0, 3)
+    example_twl_range = np.linspace(0.2, 1.5, 10)
+    example_amp_range = np.linspace(1.0, 4.0, 10)
 
     parameter_grid_example = {
         'twl': example_twl_range,
@@ -127,8 +127,55 @@ def exercise1_2(**kwargs):
     )
 
     pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
-    post_processing()
+    
+    #To displya the metrics
+    metrics = []
+    for twl_val in parameter_grid_example['twl']:
+        for amp_val in parameter_grid_example['amp']:
+            v_fwd, cot, mean_ipls = get_metrics(twl=twl_val, amp=amp_val)
+            int_results = {
+                'twl': twl_val,
+                'amp': amp_val,
+                'forward_speed': v_fwd,
+                'CoT': cot,
+                'average_ipls': mean_ipls
+            }
+            metrics.append(int_results)
 
+    twl_vals = np.array([m['twl'] for m in metrics])
+    amp_vals = np.array([m['amp'] for m in metrics])
+    forward_speed_vals = np.array([m['forward_speed'] for m in metrics])
+    cot_vals = np.array([m['CoT'] for m in metrics])
+    ipls_vals = np.array([m['average_ipls'] for m in metrics])
+
+    fig1 = plt.figure(figsize=(7, 6))
+    ax1 = fig1.add_subplot(111, projection='3d')
+    ax1.scatter(twl_vals, amp_vals, forward_speed_vals, c=forward_speed_vals, cmap='viridis')
+    ax1.set_xlabel('twl')
+    ax1.set_ylabel('amp')
+    ax1.set_zlabel('forward_speed')
+    ax1.set_title('Forward speed')
+    plt.tight_layout()
+
+    fig2 = plt.figure(figsize=(7, 6))
+    ax2 = fig2.add_subplot(111, projection='3d')
+    ax2.scatter(twl_vals, amp_vals, cot_vals, c=cot_vals, cmap='plasma')
+    ax2.set_xlabel('twl')
+    ax2.set_ylabel('amp')
+    ax2.set_zlabel('CoT')
+    ax2.set_title('CoT')
+    plt.tight_layout()
+
+    fig3 = plt.figure(figsize=(7, 6))
+    ax3 = fig3.add_subplot(111, projection='3d')
+    ax3.scatter(twl_vals, amp_vals, ipls_vals, c=ipls_vals, cmap='coolwarm')
+    ax3.set_xlabel('twl')
+    ax3.set_ylabel('amp')
+    ax3.set_zlabel('average_ipls')
+    ax3.set_title('Average IPLS')
+    plt.tight_layout()
+
+    plt.show()
 
 if __name__ == '__main__':
     exercise1_2(plot=True)
