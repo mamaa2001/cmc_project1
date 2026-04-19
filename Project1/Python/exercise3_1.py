@@ -410,8 +410,8 @@ def main(**kwargs):
         recording=None,#'animation3_1_with_sf.mp4',
         hdf5_name='simulation_with_sf.hdf5',
         controller_name='controller_with_sf.pkl',
-        runtime_n_iterations=5001,
-        runtime_buffer_size=5001,
+        runtime_n_iterations=1001,
+        runtime_buffer_size=1001,
         fast=fast,
         headless=headless,
     )
@@ -423,8 +423,8 @@ def main(**kwargs):
         recording=None, #'animation3_1_without_sf.mp4',
         hdf5_name='simulation_without_sf.hdf5',
         controller_name='controller_without_sf.pkl',
-        runtime_n_iterations=5001,
-        runtime_buffer_size=5001,
+        runtime_n_iterations=1001,
+        runtime_buffer_size=1001,
         fast=fast,
         headless=headless,
     )

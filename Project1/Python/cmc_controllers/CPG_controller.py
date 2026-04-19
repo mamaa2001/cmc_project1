@@ -270,11 +270,13 @@ class CPGNetwork(NeuralNetwork):
             stretch_full = np.zeros(self.n_oscillators)
 
         # in step(), add this debug print for a few iterations
+        '''
         if iteration == 100:
             print("drive_left:", self.drive_left)
             print("drive_right:", self.drive_right)
             print("nominal_freq:", self.nominal_frequencies)
             print("nominal_amp:", self.nominal_amplitudes)
+        '''
         self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
         #pylog.warning("TODO 3.3 Disruption to sensors")
