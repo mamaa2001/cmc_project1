@@ -21,7 +21,7 @@ try:
     from tqdm import tqdm
 except ImportError:
     tqdm = None
-MAX_WORKERS = 8  # adjust based on your hardware capabilities
+MAX_WORKERS = 16  # adjust based on your hardware capabilities
 
 
 BASE_PATH = 'logs/exercise3_2/'
@@ -48,11 +48,60 @@ INIT_PHASE = np.random.default_rng(
 pylog.set_level('warning')
 # pylog.set_level('critical') # suppress logging output in multi-processing
 
+#added by Matt on the basis of ex 1.2
+def get_metrics(w_ipsi):
+    """Compute mechanical metrics for a single parameter set."""
+    # Load HDF5
+    sim_result = BASE_PATH + \
+        f'simulation_w_ipsi{w_ipsi:0.3f}.hdf5'
+    with h5py.File(sim_result, "r") as f:
+        sim_times = f['times'][:]
+        sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
+        sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+
+    sensor_data_links_positions = sensor_data_links[:, :, 7:10]
+
+    sensor_data_links_velocities = sensor_data_links[:, :, 14:17]
+    sensor_data_joints_velocities = sensor_data_joints[:, :, 1]
+    sensor_data_joints_torques = sensor_data_joints[:, :, 2]
+
+    speed_forward, _ = compute_mechanical_speed(
+        links_positions=sensor_data_links_positions,
+        links_velocities=sensor_data_links_velocities,
+    )
+    _, cot = compute_mechanical_energy_and_cot(
+        times=sim_times,
+        links_positions=sensor_data_links_positions,
+        joints_torques=sensor_data_joints_torques,
+        joints_velocities=sensor_data_joints_velocities,
+    )
+
+    # Load Controller
+    controller_file = os.path.join(
+        BASE_PATH,
+        f"controller_w_ipsi{w_ipsi:0.3f}.pkl",
+    )
+    with open(controller_file, "rb") as f:
+        controller_data = pickle.load(f)
+
+    indices = controller_data["indices"]
+    neural_signals = (
+        controller_data["state"][:, indices['left_body_idx']]
+        - controller_data["state"][:, indices['right_body_idx']]
+    )
+    neural_signals_smoothed = filter_signals(
+        times=sim_times, signals=neural_signals)
+    peak_frq, freq, peak_amp = compute_frequency_amplitude_fft(
+        times=sim_times,
+        smooth_signals=neural_signals_smoothed,
+    )
+    return speed_forward, cot, peak_frq, peak_amp
+
 def exercise3_2(**kwargs):
     """ex3.2 main"""
     pylog.warning("TODO: 3.2 Explore the effect of stretch feedback on the metrics.")
 
-    w_ipsi_range = np.linspace(0, 0, 5)
+    w_ipsi_range = np.linspace(-3.0, 17.0, 20)
 
     controller = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
@@ -73,7 +122,7 @@ def exercise3_2(**kwargs):
             'init_phase': INIT_PHASE,
         },
     }
-    run_multiple(
+    '''run_multiple(
         max_workers=MAX_WORKERS,
         controller=controller,
         base_path=BASE_PATH,
@@ -84,12 +133,93 @@ def exercise3_2(**kwargs):
             'runtime_n_iterations': 5001,
             'runtime_buffer_size': 5001,
         },
-    )
+    )'''
+
+    metrics = []
+    for w_ipsi_val in w_ipsi_range:
+        v_fwd, cot, peak_freq, peak_amp = get_metrics(w_ipsi=w_ipsi_val)
+        int_results = {
+            'w_ipsi': w_ipsi_val,
+            'forward_speed': v_fwd,
+            'CoT': cot,
+            'peak_frequency': peak_freq,
+            'peak_amplitude': peak_amp
+        }
+        metrics.append(int_results)
+
+    # ---- Plots: no saving, no 3D ----
+    w_vals = np.array([m['w_ipsi'] for m in metrics])
+    fwd_vals = np.array([m['forward_speed'] for m in metrics])
+    cot_vals = np.array([m['CoT'] for m in metrics])
+    freq_vals = np.array([m['peak_frequency'] for m in metrics])   # shape: (20, 8)
+    amp_vals = np.array([m['peak_amplitude'] for m in metrics])    # shape: (20, 8)
+
+    figs = []
+
+    # 1) Forward speed (2D scatter)
+    fig1 = plt.figure(figsize=(8, 6))
+    ax1 = fig1.add_subplot(1, 1, 1)
+    ax1.scatter(w_vals, fwd_vals, s=45, alpha=0.9)
+    ax1.set_title('Forward Speed vs w_ipsi')
+    ax1.set_xlabel('w_ipsi [-]')
+    ax1.set_ylabel('Forward speed [m/s]')
+    ax1.grid(True, alpha=0.3)
+    fig1.tight_layout()
+    figs.append(fig1)
+
+    # 2) CoT (2D scatter)
+    fig2 = plt.figure(figsize=(8, 6))
+    ax2 = fig2.add_subplot(1, 1, 1)
+    ax2.scatter(w_vals, cot_vals, s=45, alpha=0.9, color='tab:orange')
+    ax2.set_title('CoT vs w_ipsi')
+    ax2.set_xlabel('w_ipsi [-]')
+    ax2.set_ylabel('CoT [-]')
+    ax2.grid(True, alpha=0.3)
+    fig2.tight_layout()
+    figs.append(fig2)
+
+    # 3) Peak frequency: one scatter per joint in a 4x2 grid
+    fig3, axes3 = plt.subplots(4, 2, figsize=(12, 14), sharex=True)
+    axes3 = axes3.ravel()
+
+    for j in range(freq_vals.shape[1]):  # expected: 8 joints
+        ax = axes3[j]
+        ax.scatter(w_vals, freq_vals[:, j], s=30, alpha=0.9, color='tab:green')
+        ax.set_title(f'Joint {j}')
+        ax.set_ylabel('Peak frequency [Hz]')
+        ax.grid(True, alpha=0.3)
+
+    for ax in axes3[-2:]:
+        ax.set_xlabel('w_ipsi [-]')
+
+    fig3.suptitle('Peak Frequency vs w_ipsi (per joint)', y=0.995)
+    fig3.tight_layout()
+    figs.append(fig3)
+
+    # 4) Peak amplitude: one scatter per joint in a 4x2 grid
+    fig4, axes4 = plt.subplots(4, 2, figsize=(12, 14), sharex=True)
+    axes4 = axes4.ravel()
+
+    for j in range(amp_vals.shape[1]):  # expected: 8 joints
+        ax = axes4[j]
+        ax.scatter(w_vals, amp_vals[:, j], s=30, alpha=0.9, color='tab:red')
+        ax.set_title(f'Joint {j}')
+        ax.set_ylabel('Peak amplitude [a.u.]')
+        ax.grid(True, alpha=0.3)
+
+    for ax in axes4[-2:]:
+        ax.set_xlabel('w_ipsi [-]')
+
+    fig4.suptitle('Peak Amplitude vs w_ipsi (per joint)', y=0.995)
+    fig4.tight_layout()
+    figs.append(fig4)
 
     plot = kwargs.pop('plot', False)
     if plot:
         plt.show()
-
+    else:
+        for f in figs:
+            plt.close(f)
 
 if __name__ == '__main__':
     exercise3_2(plot=True)
