@@ -256,14 +256,27 @@ class CPGNetwork(NeuralNetwork):
 
         ##### code estelle ######
         if self.w_ipsi is not None:
+            '''
             stretch_left = np.maximum(0, stretch_value)   # left side: positive angles
             stretch_right = np.maximum(0, -stretch_value)  # right side: negative angles
             stretch_full = np.zeros(self.n_oscillators)
             stretch_full[:self.n_body_joints] = stretch_left
             stretch_full[self.n_body_joints:] = stretch_right
+            '''
+            stretch_full = np.zeros(self.n_oscillators)
+            stretch_full[::2]  = np.maximum(0, stretch_value)   # even indices = left
+            stretch_full[1::2] = np.maximum(0, -stretch_value)  # odd indices = right
         else:
             stretch_full = np.zeros(self.n_oscillators)
 
+        # in step(), add this debug print for a few iterations
+        '''
+        if iteration == 100:
+            print("drive_left:", self.drive_left)
+            print("drive_right:", self.drive_right)
+            print("nominal_freq:", self.nominal_frequencies)
+            print("nominal_amp:", self.nominal_amplitudes)
+        '''
         self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
         #pylog.warning("TODO 3.3 Disruption to sensors")
