@@ -89,6 +89,15 @@ class CPGNetwork(NeuralNetwork):
         self.disruption_p_couplings = kwargs.pop('disruption_p_couplings', 0.0)
         self.random_seed = kwargs.pop('random_seed', 42)
         np.random.seed(self.random_seed)
+        ######### code estelle ############
+        # Masks for disruptions (3.3)
+        # Sensor disruption mask: shape (n_oscillators,)
+        sensor_mask = np.random.uniform(0, 1, self.n_oscillators)
+        self.disrupted_sensors = sensor_mask < self.disruption_p_sensors
+        # Coupling disruption mask: shape (n_oscillators, n_oscillators)
+        coupling_mask = np.random.uniform(0, 1, (self.n_oscillators, self.n_oscillators))
+        self.disrupted_couplings = coupling_mask < self.disruption_p_couplings
+        #####################
 
         # CPG controller parameters
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
@@ -123,6 +132,8 @@ class CPGNetwork(NeuralNetwork):
             self.nominal_amplitudes[1:self.n_oscillators:2] = 0
 
         self.phase_bias = (2*np.pi / self.n_body_joints) * np.ones((self.n_oscillators, self.n_oscillators))
+
+       
 
     def motor_output(self, phase, amplitude):
         #pylog.warning("TODO 2.1 CPG motor output implementation")
@@ -162,6 +173,15 @@ class CPGNetwork(NeuralNetwork):
                 elif (i % 2 == 0 and j == i + 1) or (i % 2 == 1 and j == i - 1):
                     w[i, j] = self.coupling_weights_contra
 
+        ########################################
+        ###### code estelle - 3.3 ##############
+        for i in range(self.n_oscillators):
+            for j in range(self.n_oscillators):
+                if self.disrupted_couplings[i, j]:
+                    # only disrupt rostral/caudal, not contralateral
+                    is_contra = (i % 2 == 0 and j == i+1) or (i % 2 == 1 and j == i-1)
+                    if not is_contra: # only sets to zero if it's not contralateral
+                        w[i, j] = 0.0
         ########################################
 
         ####  Phase Lag calculation  ####
@@ -280,6 +300,7 @@ class CPGNetwork(NeuralNetwork):
         self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
         #pylog.warning("TODO 3.3 Disruption to sensors")
+        stretch_full[self.disrupted_sensors] = 0.0 # gives the value zero to disrupted sensors
 
         #pylog.warning("TODO 3.3 Set ODE parameters with stretch value")
         #self.solver.set_f_params(np.zeros(self.n_oscillators))

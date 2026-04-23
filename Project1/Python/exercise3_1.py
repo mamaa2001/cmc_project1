@@ -22,7 +22,7 @@ from simulate import runsim
 BASE_PATH = 'logs/exercise3_1/'
 PLOT_PATH = 'results'
 
-######################## début code Estelle #################################################
+######################################### début code Estelle #################################################
 
 def post_processing_3_1():
 
@@ -34,6 +34,7 @@ def post_processing_3_1():
     with h5py.File(os.path.join(BASE_PATH, 'simulation_with_sf.hdf5'), 'r') as f:
         sensor_data_links_with = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
         joints_array_with = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+        joints_names = f['FARMSLISTanimats']['0']['sensors']['joints']['names'][:]  
 
     with h5py.File(os.path.join(BASE_PATH, 'simulation_without_sf.hdf5'), 'r') as f:
         sensor_data_links_without = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
@@ -230,7 +231,7 @@ def post_processing_3_1():
 
     #############################################################################################################
     
-
+    '''
     # ---- Figure 4: ----
 
     joints_to_plot = list(range(8))  # subset for clarity
@@ -259,7 +260,56 @@ def post_processing_3_1():
     fig4.tight_layout()
     fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
     plt.show()
+    '''
+    # ---- Figure 4: Joint angles (active + passive) ----
+    joints_names_decoded = [name.decode('utf-8') for name in joints_names]
+    indices_actifs  = list(range(8))
+    indices_passifs = [16, 17]
+    noms_actifs  = [joints_names_decoded[i] for i in indices_actifs]
+    noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
 
+    joint_angles_with_active   = joints_array_with[:, indices_actifs, 0]
+    joint_angles_with_passive  = joints_array_with[:, indices_passifs, 0]
+    joint_angles_without_active  = joints_array_without[:, indices_actifs, 0]
+    joint_angles_without_passive = joints_array_without[:, indices_passifs, 0]
+
+    fig4, axs = plt.subplots(3, 2, figsize=(16, 12))
+    fig4.suptitle('Joint angles: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+
+    for col, (active, passive, label) in enumerate([
+        (joint_angles_with_active,    joint_angles_with_passive,    'with stretch feedback'),
+        (joint_angles_without_active, joint_angles_without_passive, 'without stretch feedback'),
+    ]):
+        all_angles = np.concatenate([active, passive], axis=1)
+        noms_all   = noms_actifs + noms_passifs
+
+        # Active joints
+        for i, name in enumerate(noms_actifs):
+            axs[0, col].plot(t, active[mask, i], label=name)
+        axs[0, col].set_title(f'Active Joints — {label}')
+        axs[0, col].set_ylabel('Angle [rad]')
+        axs[0, col].legend(fontsize=7)
+        axs[0, col].grid(True)
+
+        # Passive joints
+        for i, name in enumerate(noms_passifs):
+            axs[1, col].plot(t, passive[mask, i], label=name)
+        axs[1, col].set_title(f'Passive Joints — {label}')
+        axs[1, col].set_ylabel('Angle [rad]')
+        axs[1, col].legend(fontsize=7)
+        axs[1, col].grid(True)
+
+        # All joints
+        for i, name in enumerate(noms_all):
+            axs[2, col].plot(t, all_angles[mask, i], label=name)
+        axs[2, col].set_title(f'All Joints — {label}')
+        axs[2, col].set_xlabel('Time [s]')
+        axs[2, col].set_ylabel('Angle [rad]')
+        axs[2, col].legend(fontsize=7)
+        axs[2, col].grid(True)
+
+    fig4.tight_layout()
+    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
     ########### Neural metrics #########
 
     # skip transient (first 2s)
@@ -290,7 +340,7 @@ def post_processing_3_1():
     print(f"With stretch feedback:    forward_speed={forward_speed_with:.3f}")
     print(f"Without stretch feedback: forward_speed={forward_speed_without:.3f}")
 
-    ######### CoT ############
+    ########## CoT ############
     
     _, CoT_with = compute_mechanical_energy_and_cot(t_steady, links_positions_with[transient:],
         joints_torques_with[transient:],
