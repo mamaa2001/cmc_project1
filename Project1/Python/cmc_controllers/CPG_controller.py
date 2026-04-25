@@ -56,6 +56,9 @@ class CPGNetwork(NeuralNetwork):
         # [phases, amplitudes, motor_outputs_storage]
         self.state = np.zeros((self.n_iterations, 3*self.n_oscillators))
 
+        #test pour les plots 
+        #self.state_log = []  # ajoute ça
+
 
         # init phase
         self.state[0, :self.n_oscillators] = init_phase
@@ -78,10 +81,10 @@ class CPGNetwork(NeuralNetwork):
         self.coupling_weights_caudal = coupling_weights_caudal
         self.coupling_weights_contra = coupling_weights_contra
 
-        pylog.warning("TODO 3.1 stretch feedback")
+        #pylog.warning("TODO 3.1 stretch feedback")
         self.w_ipsi = kwargs.pop('w_ipsi', None)
 
-        pylog.warning("TODO 3.3 Disruption masks")
+        #pylog.warning("TODO 3.3 Disruption masks")
         self.disruption_p_sensors = kwargs.pop('disruption_p_sensors', 0.0)
         self.disruption_p_couplings = kwargs.pop('disruption_p_couplings', 0.0)
         self.random_seed = kwargs.pop('random_seed', 42)
@@ -95,9 +98,14 @@ class CPGNetwork(NeuralNetwork):
         self.phase_bias = np.zeros((self.n_oscillators, self.n_oscillators))
 
         # drive (constant in project 1)
-        self.drive_left = drive_left
-        self.drive_right = drive_right
-
+        if drive_left is None: # to have the same value for 2.2
+            self.drive_left = drive_right
+            self.drive_right = drive_right
+        else:
+            self.drive_left = drive_left
+            self.drive_right = drive_right
+        
+        print(f"drive left: {self.drive_left}, drive right: {self.drive_right}")
 
         ##### frequency and amplitude calculation #####
         if self.d_low < self.drive_left < self.d_high:
@@ -117,7 +125,7 @@ class CPGNetwork(NeuralNetwork):
         self.phase_bias = (2*np.pi / self.n_body_joints) * np.ones((self.n_oscillators, self.n_oscillators))
 
     def motor_output(self, phase, amplitude):
-        pylog.warning("TODO 2.1 CPG motor output implementation")
+        #pylog.warning("TODO 2.1 CPG motor output implementation")
         oscillator_output = np.zeros_like(phase)
 
         # johanne code
@@ -248,24 +256,40 @@ class CPGNetwork(NeuralNetwork):
 
         ##### code estelle ######
         if self.w_ipsi is not None:
+            '''
             stretch_left = np.maximum(0, stretch_value)   # left side: positive angles
             stretch_right = np.maximum(0, -stretch_value)  # right side: negative angles
             stretch_full = np.zeros(self.n_oscillators)
             stretch_full[:self.n_body_joints] = stretch_left
             stretch_full[self.n_body_joints:] = stretch_right
+            '''
+            stretch_full = np.zeros(self.n_oscillators)
+            stretch_full[::2]  = np.maximum(0, stretch_value)   # even indices = left
+            stretch_full[1::2] = np.maximum(0, -stretch_value)  # odd indices = right
         else:
             stretch_full = np.zeros(self.n_oscillators)
 
+        # in step(), add this debug print for a few iterations
+        '''
+        if iteration == 100:
+            print("drive_left:", self.drive_left)
+            print("drive_right:", self.drive_right)
+            print("nominal_freq:", self.nominal_frequencies)
+            print("nominal_amp:", self.nominal_amplitudes)
+        '''
         self.solver.set_f_params(stretch_full) # on le passe dans la fonction network_ode en tant que paramètre stretch_value
 
-        pylog.warning("TODO 3.3 Disruption to sensors")
+        #pylog.warning("TODO 3.3 Disruption to sensors")
 
-        pylog.warning("TODO 3.3 Set ODE parameters with stretch value")
+        #pylog.warning("TODO 3.3 Set ODE parameters with stretch value")
         #self.solver.set_f_params(np.zeros(self.n_oscillators))
 
         # Integrate ODE using dopri5 solver
         self.solver.integrate(time + timestep)
         integrated_state = self.solver.y
+
+        #test plot
+        #self.state_log.append(integrated_state[:2*self.n_oscillators].copy())
 
       
         # motor output from CPG state
@@ -291,10 +315,16 @@ class CPGNetwork(NeuralNetwork):
             self.right_body_idx.step)
         self.state[iteration, left_storage_idx] = motor_output_left
         self.state[iteration, right_storage_idx] = motor_output_right
+        '''
+        if iteration + 1 >= self.n_iterations:
+            #test plots
+            log = np.array(self.state_log)
+            self.state[:len(log), :2*self.n_oscillators] = log
 
+            return
+        '''
         if iteration + 1 >= self.n_iterations:
             return
-
         # Update state with integrated values
         self.state[iteration+1,
                    :self.n_oscillators] = integrated_state[:self.n_oscillators]

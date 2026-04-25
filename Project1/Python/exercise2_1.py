@@ -26,6 +26,7 @@ def post_processing(base_path):
         sim_times = f['times'][:]
         sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
         sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+        joints_names = f['FARMSLISTanimats']['0']['sensors']['joints']['names'][:]
     sensor_data_links_positions = sensor_data_links[:, :, 7:10]
     sensor_data_joints_positions = sensor_data_joints[:, :, 0]
 
@@ -34,11 +35,9 @@ def post_processing(base_path):
         controller_data = pickle.load(f)
     print("controleur data keys:", controller_data.keys())
 
+    
 
-    # print("controller_data keys:", controller_data.keys())
-    # print("controller_data indices:", controller_data['indices'])
-    # print("controller_data state shape:", controller_data['state'].shape)
-    # print("controller_data indices:", controller_data['indices'])
+    print(joints_names) 
 
     state = controller_data['state']  # (2501, 48)
 
@@ -98,47 +97,61 @@ def post_processing(base_path):
 
     #########################################################################
 
-    # Plot joint angles (first 8 joints for example)
-    n_joints = 10
+    ################ Body Joints ##################
     min_len = min(len(sim_times), sensor_data_joints_positions.shape[0])
 
     times = sim_times[:min_len]
-    joints = sensor_data_joints_positions[:min_len, :n_joints]
 
-    fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+    joints_names_decoded = [name.decode('utf-8') for name in joints_names]
 
-    # --- Active joints ---
-    active_joints = [0, 1, 2, 3, 4, 5, 6, 7]
-    for i in active_joints:
-        axs[0].plot(times, joints[:, i], label=f'Joint {i}')
-    axs[0].set_title("Active Joints")
-    axs[0].set_ylabel("Angle [rad]")
+    indices_actifs = list(range(8))
+    indices_passifs = [16, 17]
+
+    joints_actifs = sensor_data_joints_positions[:min_len, indices_actifs]
+    joints_passifs = sensor_data_joints_positions[:min_len, indices_passifs]
+
+    ### In degrees ###
+    joints_actifs = joints_actifs * 180 / np.pi
+    joints_passifs = joints_passifs * 180 / np.pi
+
+
+    noms_actifs = [joints_names_decoded[i] for i in indices_actifs]
+    noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
+
+    fig, axs = plt.subplots(3, 1, figsize=(12, 10))
+
+    # Active Joints
+    for i, idx in enumerate(indices_actifs):
+        axs[0].plot(times[:min_len], joints_actifs[:, i], label=noms_actifs[i])
+    axs[0].set_title('Active Joints')
+    axs[0].set_ylabel('Angle [deg]')
     axs[0].legend()
-    axs[0].grid()
+    axs[0].grid(True)
 
-    # --- Passive joints ---
-    passivejoints = [8, 9]
-    for i in passivejoints:
-        axs[1].plot(times, joints[:, i], label=f'Joint {i}')
-    axs[1].set_title("Passive Joints")
-    axs[1].set_ylabel("Angle [rad]")
+    # Passive Joints
+    for i, idx in enumerate(indices_passifs):
+        axs[1].plot(times[:min_len], joints_passifs[:, i], label=noms_passifs[i])
+    axs[1].set_title('Passive Joints')
+    axs[1].set_ylabel('Angle [deg]')
     axs[1].legend()
-    axs[1].grid()
+    axs[1].grid(True)
 
-    # --- All joints ---
-    for i in range(n_joints):
-        axs[2].plot(times, joints[:, i], label=f'Joint {i}')
-    axs[2].set_title("All Joints")
-    axs[2].set_xlabel("Time [s]")
-    axs[2].set_ylabel("Angle [rad]")
-    axs[2].legend(ncol=2)
-    axs[2].grid()
+    # All Joints
+    joints_all = np.concatenate([joints_actifs, joints_passifs], axis=1)
+    noms_all = noms_actifs + noms_passifs
+    for i in range(joints_all.shape[1]):
+        axs[2].plot(times[:min_len], joints_all[:, i], label=noms_all[i])
+    axs[2].set_title('All Joints')
+    axs[2].set_xlabel('Time [s]')
+    axs[2].set_ylabel('Angle [deg]')
+    axs[2].legend()
+    axs[2].grid(True)
 
     plt.tight_layout()
     plt.show()
 
-    
-    # Compute CoM (mean over links)
+    ###################### Center of Mass Trajectory ##################
+
     com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
 
     # Extract x and y (horizontal plane)
