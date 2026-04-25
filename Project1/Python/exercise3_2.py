@@ -59,21 +59,26 @@ def get_metrics(w_ipsi):
         sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
         sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
 
-    sensor_data_links_positions = sensor_data_links[:, :, 7:10]
+    transient_cutoff = 2000
+    
+    # On découpe le temps
+    sim_times_steady = sim_times[transient_cutoff:]
 
-    sensor_data_links_velocities = sensor_data_links[:, :, 14:17]
-    sensor_data_joints_velocities = sensor_data_joints[:, :, 1]
-    sensor_data_joints_torques = sensor_data_joints[:, :, 2]
+    # On découpe les données brutes des capteurs (en gardant toutes les dimensions intactes)
+    links_positions_steady = sensor_data_links[transient_cutoff:, :, 7:10]
+    links_velocities_steady = sensor_data_links[transient_cutoff:, :, 14:17]
+    joints_velocities_steady = sensor_data_joints[transient_cutoff:, :, 1]
+    joints_torques_steady = sensor_data_joints[transient_cutoff:, :, 2]
 
     speed_forward, _ = compute_mechanical_speed(
-        links_positions=sensor_data_links_positions,
-        links_velocities=sensor_data_links_velocities,
+        links_positions=links_positions_steady,
+        links_velocities=links_velocities_steady,
     )
     _, cot = compute_mechanical_energy_and_cot(
         times=sim_times,
-        links_positions=sensor_data_links_positions,
-        joints_torques=sensor_data_joints_torques,
-        joints_velocities=sensor_data_joints_velocities,
+        links_positions=links_positions_steady,
+        joints_torques=joints_torques_steady,
+        joints_velocities=joints_velocities_steady,
     )
 
     # Load Controller
@@ -83,16 +88,56 @@ def get_metrics(w_ipsi):
     )
     with open(controller_file, "rb") as f:
         controller_data = pickle.load(f)
-
     indices = controller_data["indices"]
+    '''
+    controller_left_smooth = filter_signals(times=sim_times,
+                                            signals=controller_data["state"][:, indices['left_body_idx']])
+    controller_right_smooth = filter_signals(times=sim_times,
+                                            signals=controller_data["state"][:, indices['right_body_idx']])
+    
     neural_signals = (
         controller_data["state"][:, indices['left_body_idx']]
         - controller_data["state"][:, indices['right_body_idx']]
     )
     neural_signals_smoothed = filter_signals(
         times=sim_times, signals=neural_signals)
+    neural_signals_smoothed = (controller_left_smooth - controller_right_smooth)
     peak_frq, freq, peak_amp = compute_frequency_amplitude_fft(
         times=sim_times,
+        smooth_signals=neural_signals_smoothed,
+    )'''
+
+    # 1. On récupère les index
+    idx_L = indices['left_body_idx']
+    idx_R = indices['right_body_idx']
+    
+    # 2. On récupère les phases et les amplitudes (rappel: amplitudes sont décalées de 16 indices)
+    # slice(start, stop, step) -> on ajoute 16 au start et stop pour les amplitudes
+    amp_idx_L = slice(idx_L.start + 16, idx_L.stop + 16, idx_L.step)
+    amp_idx_R = slice(idx_R.start + 16, idx_R.stop + 16, idx_R.step)
+
+    phases_left = controller_data["state"][:, idx_L]
+    amps_left = controller_data["state"][:, amp_idx_L]
+    
+    phases_right = controller_data["state"][:, idx_R]
+    amps_right = controller_data["state"][:, amp_idx_R]
+    
+    # 3. On recalcule la vraie commande motrice
+    motor_left = amps_left * (1 + np.cos(phases_left))
+    motor_right = amps_right * (1 + np.cos(phases_right))
+    
+    # 4. On calcule le signal neuronal (différence gauche/droite)
+    neural_signals = motor_left - motor_right
+    
+    # On enlève le régime transitoire (ex: on ignore les 2000 premiers pas) pour ne pas fausser la FFT
+    
+    neural_signals_steady = neural_signals[transient_cutoff:]
+    sim_times_steady = sim_times[transient_cutoff:]
+    
+    neural_signals_smoothed = filter_signals(times=sim_times_steady, signals=neural_signals_steady)
+    
+    peak_frq, freq, peak_amp = compute_frequency_amplitude_fft(
+        times=sim_times_steady,
         smooth_signals=neural_signals_smoothed,
     )
     return speed_forward, cot, peak_frq, peak_amp
@@ -101,7 +146,7 @@ def exercise3_2(**kwargs):
     """ex3.2 main"""
     pylog.warning("TODO: 3.2 Explore the effect of stretch feedback on the metrics.")
 
-    w_ipsi_range = np.linspace(-3.0, 17.0, 20)
+    w_ipsi_range = np.linspace(-3.0, 17.0, 80)
 
     controller = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
@@ -122,7 +167,7 @@ def exercise3_2(**kwargs):
             'init_phase': INIT_PHASE,
         },
     }
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=controller,
         base_path=BASE_PATH,
@@ -130,10 +175,10 @@ def exercise3_2(**kwargs):
         common_kwargs={
             'fast': True,
             'headless': True,
-            'runtime_n_iterations': 5001,
-            'runtime_buffer_size': 5001,
+            'runtime_n_iterations': 20001,
+            'runtime_buffer_size': 20001,
         },
-    )'''
+    )
 
     metrics = []
     for w_ipsi_val in w_ipsi_range:
@@ -178,21 +223,23 @@ def exercise3_2(**kwargs):
     fig2.tight_layout()
     figs.append(fig2)
 
-    # 3) Peak frequency: one scatter per joint in a 4x2 grid
-    fig3, axes3 = plt.subplots(4, 2, figsize=(12, 14), sharex=True)
-    axes3 = axes3.ravel()
+    # 3) Peak frequency: single plot using mean across joints
+    fig3 = plt.figure(figsize=(8, 6))
+    ax3 = fig3.add_subplot(1, 1, 1)
 
-    for j in range(freq_vals.shape[1]):  # expected: 8 joints
-        ax = axes3[j]
-        ax.scatter(w_vals, freq_vals[:, j], s=30, alpha=0.9, color='tab:green')
-        ax.set_title(f'Joint {j}')
-        ax.set_ylabel('Peak frequency [Hz]')
-        ax.grid(True, alpha=0.3)
+    # Robust to either shape (N, 8) or (N,)
+    if freq_vals.ndim == 2:
+        freq_mean = np.mean(freq_vals, axis=1)
+    else:
+        freq_mean = freq_vals
 
-    for ax in axes3[-2:]:
-        ax.set_xlabel('w_ipsi [-]')
-
-    fig3.suptitle('Peak Frequency vs w_ipsi (per joint)', y=0.995)
+    ax3.scatter(w_vals, freq_mean, s=45, alpha=0.9, color='tab:green', label='Mean peak frequency')
+    ax3.plot(w_vals, freq_mean, color='tab:green', alpha=0.6)
+    ax3.set_title('Mean Peak Frequency vs w_ipsi')
+    ax3.set_xlabel('w_ipsi [-]')
+    ax3.set_ylabel('Mean peak frequency [Hz]')
+    ax3.grid(True, alpha=0.3)
+    ax3.legend()
     fig3.tight_layout()
     figs.append(fig3)
 
@@ -203,14 +250,14 @@ def exercise3_2(**kwargs):
     for j in range(amp_vals.shape[1]):  # expected: 8 joints
         ax = axes4[j]
         ax.scatter(w_vals, amp_vals[:, j], s=30, alpha=0.9, color='tab:red')
-        ax.set_title(f'Joint {j}')
+        ax.set_title(f'Channel {j}')
         ax.set_ylabel('Peak amplitude [a.u.]')
         ax.grid(True, alpha=0.3)
 
     for ax in axes4[-2:]:
         ax.set_xlabel('w_ipsi [-]')
 
-    fig4.suptitle('Peak Amplitude vs w_ipsi (per joint)', y=0.995)
+    fig4.suptitle('Peak Amplitude vs w_ipsi (per channel)', y=0.995)
     fig4.tight_layout()
     figs.append(fig4)
 
