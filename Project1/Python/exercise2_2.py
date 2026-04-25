@@ -6,10 +6,12 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from matplotlib.patches import Rectangle
 
 from farms_core import pylog
 
 from cmc_controllers.metrics import (
+    get_filtered_signals,
     compute_mechanical_energy_and_cot,
     compute_mechanical_speed,
     compute_trajectory_curvature,
@@ -54,8 +56,9 @@ def load_metrics_from_hdf5(hdf5_path):
     #added by Matt
     CoM_traj = links_positions.mean(axis=1)
     timestep = sim_times[1]-sim_times[0]
+    CoM_traj_filtered = get_filtered_signals(CoM_traj, signal_dt=timestep, fcut_lp=0.5)
     
-    curvature_mean = compute_trajectory_curvature(trajectory=CoM_traj, timestep=timestep)
+    curvature_mean = compute_trajectory_curvature(trajectory=CoM_traj_filtered, timestep=timestep)
 
     return speed_forward, speed_lateral, cot, CoM_traj, curvature_mean
 
@@ -98,13 +101,13 @@ def exercise2_2(**kwargs):
     }
     
 
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example,
         common_kwargs={'fast': True, 'headless': True},
-    )'''
+    )
     
     drive_range_2 = np.linspace(2.0,4.0,9)
     parameter_grid_example_2 = {
@@ -112,13 +115,13 @@ def exercise2_2(**kwargs):
         'drive_left': drive_range_2
     }
     
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example_2,
         common_kwargs={'fast': True, 'headless': True},
-    )'''
+    )
 
     plot = kwargs.pop('plot', False)
     if plot:
@@ -160,7 +163,7 @@ def exercise2_2(**kwargs):
         # ---- Heatmaps (same palette + value in each square) ----
         shared_cmap = "viridis"
 
-        def plot_annotated_heatmap(grid, x_vals, y_vals, title, xlabel, ylabel, cbar_label, fmt=".3f"):
+        def plot_annotated_heatmap(grid, x_vals, y_vals, title, xlabel, ylabel, cbar_label, fmt=".3f", frame_abs_min=False):
             fig, ax = plt.subplots(figsize=(7, 6), constrained_layout=True)
             im = ax.imshow(grid, origin="lower", aspect="auto", cmap=shared_cmap)
 
@@ -179,6 +182,27 @@ def exercise2_2(**kwargs):
                     val = grid[i, j]
                     txt_color = "white" if norm(val) < 0.6 else "black"
                     ax.text(j, i, format(val, fmt), ha="center", va="center", color=txt_color, fontsize=8)
+
+            # Frame lowest and highest values
+            min_idx = np.unravel_index(np.nanargmin(grid), grid.shape)
+            max_idx = np.unravel_index(np.nanargmax(grid), grid.shape)
+
+            ax.add_patch(Rectangle(
+                (min_idx[1] - 0.5, min_idx[0] - 0.5), 1, 1,
+                fill=False, edgecolor="red", linewidth=2.5
+            ))
+            ax.add_patch(Rectangle(
+                (max_idx[1] - 0.5, max_idx[0] - 0.5), 1, 1,
+                fill=False, edgecolor="red", linewidth=2.5
+            ))
+
+            # Frame lowest absolute value if requested
+            if frame_abs_min:
+                abs_min_idx = np.unravel_index(np.nanargmin(np.abs(grid)), grid.shape)
+                ax.add_patch(Rectangle(
+                    (abs_min_idx[1] - 0.5, abs_min_idx[0] - 0.5), 1, 1,
+                    fill=False, edgecolor="red", linewidth=2.5
+                ))
 
             cbar = fig.colorbar(im, ax=ax)
             cbar.set_label(cbar_label)
@@ -204,10 +228,10 @@ def exercise2_2(**kwargs):
             cot_grid,
             x_vals=unique_PL,
             y_vals=unique_drive,
-            title="Cost of Transport [-]",
+            title="Cost of Transport [J/m]",
             xlabel="phase lag [rad]",
             ylabel="drive [-]",
-            cbar_label="CoT [-]",
+            cbar_label="CoT [J/m]",
             fmt=".3f",
         )
 
@@ -221,11 +245,12 @@ def exercise2_2(**kwargs):
             mean_curvature_grid,
             x_vals=unique_drive_left,
             y_vals=unique_drive_right,
-            title="Mean curvature [1/m]",
+            title=r"Mean curvature [$m^{-1}$]",
             xlabel="drive left [-]",
             ylabel="drive right [-]",
-            cbar_label="mean curvature [1/m]",
+            cbar_label=r"Mean curvature [$m^{-1}$]",
             fmt=".3f",
+            frame_abs_min=True,
         )
 
         # Grid of CoM trajectories (one subplot per drive_right/drive_left pair)
@@ -257,7 +282,7 @@ def exercise2_2(**kwargs):
         for j in range(len(unique_drive_right), 9):
             axes[j].axis("off")
 
-        fig3.suptitle("CoM trajectories grouped by drive right (x,y in [m])", y=1.02)
+        fig3.suptitle("CoM trajectories grouped by drive right (x,y in [m])", y=0.98)
         plt.tight_layout()
 
         plt.show()

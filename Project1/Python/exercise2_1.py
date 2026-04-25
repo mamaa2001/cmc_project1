@@ -171,7 +171,7 @@ def main(**kwargs):
             'offset_amp': np.ones(8) * 0.5,
             'G_freq': np.ones(8) * 0.5,
             'G_amp': np.ones(8) * 0.25,
-            'PL': np.ones(7) * np.pi * 2 / 8,
+            'PL': np.pi * 2 / 8,
             'coupling_weights_rostral': 5,
             'coupling_weights_caudal': 5,
             'coupling_weights_contra': 10,

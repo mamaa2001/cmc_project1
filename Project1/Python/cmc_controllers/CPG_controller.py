@@ -122,7 +122,7 @@ class CPGNetwork(NeuralNetwork):
             self.nominal_frequencies[1:self.n_oscillators:2] = 0
             self.nominal_amplitudes[1:self.n_oscillators:2] = 0
 
-        self.phase_bias = (2*np.pi / self.n_body_joints) * np.ones((self.n_oscillators, self.n_oscillators))
+        self.phase_bias = self.PL * np.ones((self.n_oscillators, self.n_oscillators))
 
     def motor_output(self, phase, amplitude):
         #pylog.warning("TODO 2.1 CPG motor output implementation")

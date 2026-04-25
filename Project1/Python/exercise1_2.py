@@ -7,6 +7,7 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib.patches import Rectangle
 
 from farms_core import pylog
 
@@ -168,8 +169,8 @@ def exercise1_2(**kwargs):
         im = ax.imshow(grid, origin='lower', aspect='auto', cmap=cmap)
 
         ax.set_title(title)
-        ax.set_xlabel('amp [rad]')
-        ax.set_ylabel('twl [-]')
+        ax.set_xlabel('A [-]')
+        ax.set_ylabel('TWL [Body length]')
 
         # Show actual parameter values on axes
         ax.set_xticks(np.arange(len(amp_axis)))
@@ -186,17 +187,34 @@ def exercise1_2(**kwargs):
                 ax.text(j, i, format(val, value_fmt),
                         ha='center', va='center', color=txt_color, fontsize=8)
 
+        # Frame lowest and highest values
+        min_idx = np.unravel_index(np.nanargmin(grid), grid.shape)
+        max_idx = np.unravel_index(np.nanargmax(grid), grid.shape)
+
+        ax.add_patch(Rectangle(
+            (min_idx[1] - 0.5, min_idx[0] - 0.5), 1, 1,
+            fill=False, edgecolor='red', linewidth=2.5
+        ))
+        ax.add_patch(Rectangle(
+            (max_idx[1] - 0.5, max_idx[0] - 0.5), 1, 1,
+            fill=False, edgecolor='red', linewidth=2.5
+        ))
+
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label(cbar_label)
 
     plot_annotated_heatmap(
-        forward_speed_grid, 'Forward speed', shared_cmap, 'speed [m/s]', value_fmt=".3f"
+        forward_speed_grid, 'Forward speed at f = 2 Hz', shared_cmap, 'Forward speed [m/s]', value_fmt=".3f"
     )
     plot_annotated_heatmap(
-        cot_grid, 'CoT', shared_cmap, 'CoT [-]', value_fmt=".3f"
+        cot_grid, 'CoT at f = 2 Hz', shared_cmap, 'CoT [J/m]', value_fmt=".3f"
     )
     plot_annotated_heatmap(
-        ipls_grid, 'Average IPLS', shared_cmap, 'IPLS [rad]', value_fmt=".3f"
+        ipls_grid,
+        r'Average $IPL_{neur}$ at f = 2 Hz',
+        shared_cmap,
+        r'Average $IPL_{neur}$ [rad]',
+        value_fmt=".3f"
     )
 
     plt.show()
