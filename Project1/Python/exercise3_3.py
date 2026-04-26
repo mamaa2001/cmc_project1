@@ -88,9 +88,9 @@ def exercise3_3(**kwargs):
     controller_base = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config' : baseline_config}
-    print("fist sim about to start")
-    runsim(controller=controller_base, base_path=BASE_PATH+'baseline/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
-    print("first sim finished")
+
+    #runsim(controller=controller_base, base_path=BASE_PATH+'baseline/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
+
     # --- Mixed disruption demo (20%/20%) ---
     mixed_config = {**baseline_config,
         'disruption_p_sensors': DISRUPTION_P_SENSORS,
@@ -99,12 +99,12 @@ def exercise3_3(**kwargs):
     controller_mixed = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config' : mixed_config}
-    print("second sim about to start")
-    runsim(controller=controller_mixed, base_path=BASE_PATH+'mixed_demo/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
-    print("second sim finished")
+
+    #runsim(controller=controller_mixed, base_path=BASE_PATH+'mixed_demo/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
+
     # Building of all configurations (Two setups × three disruption types × five probabilities = 30 configs:)
     probs = np.linspace(0, 0.15, 5)
-    configs = []
+    '''configs = []
     log_paths = []
 
     for setup_name, w_ipsi, rostral, caudal in [
@@ -130,16 +130,33 @@ def exercise3_3(**kwargs):
                 })
                 log_paths.append(
                     f"{BASE_PATH}{setup_name}/{disruption_type}/p{p_s:.3f}_{p_c:.3f}/"
-                )
-
-    run_multiple(configs, log_paths=log_paths,runtime_buffer_size=10001, runtime_n_iterations=10001, max_workers=MAX_WORKERS,
-                common_kwargs={
+                )'''
+    grid_combined = {
+        'disruption_p_sensors': probs,
+        'disruption_p_couplings': probs,
+        'coupling_weights_rostral': [COUPLING_WEIGHTS_ROSTRAL], 
+        'coupling_weights_caudal': [COUPLING_WEIGHTS_CAUDAL],   
+        'w_ipsi': [10.0] # Capteurs activés
+    }
+    '''run_multiple(MAX_WORKERS, controller_base, BASE_PATH + 'combined/', grid_combined, common_kwargs={
                     'fast': True,
                     'headless': True,
                     'runtime_n_iterations': 20001,
                     'runtime_buffer_size': 20001,
-                },)
-
+                },)'''
+    grid_decoupled = {
+        'disruption_p_sensors': probs,
+        'disruption_p_couplings': probs,
+        'coupling_weights_rostral': [0.0], # Spine cut
+        'coupling_weights_caudal': [0.0],  # Spine cut
+        'w_ipsi': [10.0] # Capteurs activés
+    }
+    '''run_multiple(MAX_WORKERS, controller_base, BASE_PATH + 'decoupled/', grid_decoupled, common_kwargs={
+                    'fast': True,
+                    'headless': True,
+                    'runtime_n_iterations': 20001,
+                    'runtime_buffer_size': 20001,
+                },)'''
     # Loading results and computing metrics
     speeds = np.zeros((2, 3, 5))   # [setup, disruption_type, prob]
     cots   = np.zeros((2, 3, 5))
@@ -152,21 +169,48 @@ def exercise3_3(**kwargs):
     ]
 
     for i_setup, setup_name in enumerate(['combined', 'decoupled']):
+        
+        # Définir les poids fixes selon le setup
+        if setup_name == 'combined':
+            rostral_str = "5.000"
+            caudal_str  = "5.000"
+        else:
+            rostral_str = "0.000"
+            caudal_str  = "0.000"
+            
         for i_type, (disruption_type, p_sensors, p_couplings) in enumerate(disruption_configs):
             for i_p, (p_s, p_c) in enumerate(zip(p_sensors, p_couplings)):
-                path = f"{BASE_PATH}{setup_name}/{disruption_type}/p{p_s:.3f}_{p_c:.3f}/simulation.hdf5"
                 
-                try:
-                    sim_times, pos, vel, j_pos, j_vel, j_torq = load_sim_data(path)
-                    speed, _ = compute_mechanical_speed(links_positions=pos, links_velocities=vel)
-                    _, cot = compute_mechanical_energy_and_cot(times=sim_times, links_positions=pos, 
-                                           joints_torques=j_torq, joints_velocities=j_vel)
-                    
-                    speeds[i_setup, i_type, i_p] = speed
-                    cots[i_setup, i_type, i_p] = cot
-                except Exception as e:
-                    print(f"Error during the loading of {path}: {e}")
-
+                # 1. On reconstruit le nom exact comme dans ton ex 3.2
+                # (L'astuce {:.4f}[:5] permet d'avoir '0.037' au lieu de '0.038' pour coller à FARMS)
+                ps_str = f"{p_s:.4f}"[:5]
+                pc_str = f"{p_c:.4f}"[:5]
+                
+                folder_name = (f"simulation_disruption_p_sensors{ps_str}_"
+                               f"disruption_p_couplings{pc_str}_"
+                               f"coupling_weights_rostral{rostral_str}_"
+                               f"coupling_weights_caudal{caudal_str}_"
+                               f"w_ipsi10.000.hdf5")
+                
+                # Chemin complet vers le fichier HDF5
+                target_path = os.path.join(BASE_PATH, setup_name, folder_name)
+                
+                # 2. Lecture directe si le fichier existe
+                if os.path.exists(target_path):
+                    try:
+                        sim_times, pos, vel, j_pos, j_vel, j_torq = load_sim_data(target_path)
+                        speed, _ = compute_mechanical_speed(links_positions=pos, links_velocities=vel)
+                        _, cot = compute_mechanical_energy_and_cot(times=sim_times, links_positions=pos, 
+                                                               joints_torques=j_torq, joints_velocities=j_vel)
+                        
+                        speeds[i_setup, i_type, i_p] = speed
+                        cots[i_setup, i_type, i_p] = cot
+                    except Exception as e:
+                        print(f"Erreur de lecture pour {target_path}: {e}")
+                else:
+                    print(f"ATTENTION: Fichier introuvable -> {target_path}")
+    print(f"Speed {speeds}")
+    print(f"CoT {cots}")
     plot = kwargs.pop('plot', False)
     if plot:
         plt.show()

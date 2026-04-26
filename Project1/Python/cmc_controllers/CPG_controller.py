@@ -246,12 +246,10 @@ class CPGNetwork(NeuralNetwork):
             stretch_feedback = self.w_ipsi * stretch_value # stretch value a les valeurs de stretch full car on passe stretch full en tant que paramètre stretch_value
             
             for i in range(self.n_oscillators):
-                if amplitudes[i] != 0 :
+                if amplitudes[i] > 1e-4 : #change made for numerical stability
                     dstates[i] -= (stretch_feedback[i] / amplitudes[i]) * np.sin(phases[i])
                 
                 dstates[i + self.n_oscillators] += stretch_feedback[i] * np.cos(phases[i])
-
-           
 
         return dstates
 
