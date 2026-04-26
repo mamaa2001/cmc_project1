@@ -4,6 +4,7 @@ import os
 import pickle
 import h5py
 import matplotlib.pyplot as plt
+import numpy as np
 
 from farms_core.utils.profile import profile
 from farms_core import pylog
@@ -30,12 +31,13 @@ def post_processing():
         sim_times = f['times'][:]
         sensor_data_links = f['FARMSLISTanimats']['0']['sensors']['links']['array'][:]
         sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+        joints_names = f['FARMSLISTanimats']['0']['sensors']['joints']['names'][:]
     sensor_data_links_positions = sensor_data_links[:, :, 7:10]
     sensor_data_links_velocities = sensor_data_links[:, :, 14:17]
     sensor_data_joints_positions = sensor_data_joints[:, :, 0]
     sensor_data_joints_velocities = sensor_data_joints[:, :, 1]
     sensor_data_joints_torques = sensor_data_joints[:, :, 2]
-
+    
     # Load Controller
     with open(BASE_PATH + "controller.pkl", "rb") as f:
         controller_data = pickle.load(f)
@@ -98,25 +100,65 @@ def post_processing():
 
     # pylog.warning("TODO: 1.2: Plot joint angles + CoM trajectory")
 
-    # Plot joint angles (first 8 joints for example)
-    n_joints = 8
-    min_len = min(len(sim_times), sensor_data_joints_positions.shape[0])
+    joints_names_decoded = [name.decode('utf-8') for name in joints_names]
+    
+    indices_actifs  = list(range(8)) # Dos (0 à 7)
+    indices_passifs = [16, 17]       # Pitch passifs (16 et 17)
+    
+    noms_actifs  = [joints_names_decoded[i] for i in indices_actifs]
+    noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
 
-    times = sim_times[:min_len]
-    joints = sensor_data_joints_positions[:min_len, :n_joints]
+    times = sim_times[:sensor_data_joints_positions.shape[0]]
+    mask_6s = times <= 6.0
 
-    plt.figure()
-    for i in range(joints.shape[1]):
-        plt.plot(times, joints[:, i], label=f'Joint {i}')
+    # L'astuce pour avoir les vraies 10 couleurs de base sans en sauter aucune !
+    colors = plt.cm.tab10.colors 
 
+    # ---- 2. Dessin des graphiques ----
+    fig1, axs = plt.subplots(3, 1, figsize=(14, 12))
+    fig1.suptitle('Joint angles over time (0–6 s)')
 
-    plt.xlabel("Time [s]")
-    plt.ylabel("Joint angles [rad]")
-    plt.title("Joint Angles Over Time")
-    plt.legend()
-    plt.grid()
+    # Active joints 0-3
+    for i in range(4):
+        idx = indices_actifs[i]
+        axs[0].plot(times[mask_6s], sensor_data_joints_positions[mask_6s, idx],
+                    color=colors[i], label=f'{noms_actifs[i]}')
+    axs[0].set_title('Active Joints (0 to 3)')
+    axs[0].set_ylabel('Angle [rad]')
+    axs[0].set_xlim(0.0, 6.0)
+    axs[0].legend(fontsize=8, ncol=2)
+    axs[0].grid(True)
+
+    # Active joints 4-7
+    for i in range(4, 8):
+        idx = indices_actifs[i]
+        axs[1].plot(times[mask_6s], sensor_data_joints_positions[mask_6s, idx],
+                    color=colors[i], label=f'{noms_actifs[i]}')
+    axs[1].set_title('Active Joints (4 to 7)')
+    axs[1].set_ylabel('Angle [rad]')
+    axs[1].set_xlim(0.0, 6.0)
+    axs[1].legend(fontsize=8, ncol=2)
+    axs[1].grid(True)
+
+    # Passive joints (Vérifie qu'elles existent bien dans le tableau)
+    if sensor_data_joints_positions.shape[1] > 17:
+        for i in range(len(indices_passifs)):
+            idx = indices_passifs[i]
+            axs[2].plot(times[mask_6s], sensor_data_joints_positions[mask_6s, idx],
+                        color=colors[i], label=f'{noms_passifs[i]}')
+        axs[2].legend(fontsize=8, ncol=2)
+    else:
+        axs[2].text(0.5, 0.5, "Données passives non disponibles", ha='center', va='center')
+        
+    axs[2].set_title('Passive Pitch Joints (Indices 16 & 17)')
+    axs[2].set_xlabel('Time [s]')
+    axs[2].set_ylabel('Angle [rad]')
+    axs[2].set_xlim(0.0, 6.0)
+    axs[2].grid(True)
+
+    fig1.tight_layout()
+    fig1.savefig(os.path.join(PLOT_PATH, "joint_angles_0_6s_1_2.png"), dpi=150)
     plt.show()
-
     # Compute CoM (mean over links)
     com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
 
@@ -125,13 +167,15 @@ def post_processing():
     com_y = com_positions[:, 1]
 
     # Plot trajectory
-    plt.figure()
-    plt.plot(com_x, com_y)
-    plt.xlabel("X position")
-    plt.ylabel("Y position")
-    plt.title("Center of Mass Trajectory")
-    plt.axis('equal')
-    plt.grid()
+    fig2, ax2 = plt.subplots(figsize=(6, 6))
+    ax2.plot(com_x, com_y)
+    ax2.set_xlabel("X position [m]")
+    ax2.set_ylabel("Y position [m]")
+    ax2.set_title("Center of Mass Trajectory")
+    ax2.axis('equal')
+    ax2.grid(True)
+    fig2.tight_layout()
+    fig2.savefig(os.path.join(PLOT_PATH, "com_trajectory_1_2.png"), dpi=150)
     plt.show()
 
 
@@ -148,7 +192,7 @@ def main(**kwargs):
     runsim(
         controller=controller,
         base_path=BASE_PATH,
-        recording='exercise1_1.mp4',
+        recording=None,
     )
 
     post_processing()
