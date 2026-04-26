@@ -15,6 +15,7 @@ from simulate import runsim
 BASE_PATH = 'logs/exercise2_3/'
 PLOT_PATH = 'results'
 ANIMAL_DATA_PATH = 'cmc_project_pack/models/a2sw5_cycle_smoothed.csv'
+CONVERSION_RATIO = np.sqrt(1/6.5) #conversion ratio to be used for conveting the animal data to compare it
 
 def get_frequency_and_amplitude(time, signal):
     n = len(time)
