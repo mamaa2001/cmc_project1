@@ -65,6 +65,7 @@ def load_sim_data(hdf5_path, skip_start=500):
 
 def exercise3_3(**kwargs):
     """ex3.3 main"""
+    plot = kwargs.pop('plot', False)
     #pylog.warning("TODO: 3.3 Implement neural disruptions and compare with no disruption.")
     os.makedirs(os.path.join(BASE_PATH, 'baseline'), exist_ok=True)
     os.makedirs(os.path.join(BASE_PATH, 'mixed_demo'), exist_ok=True)
@@ -209,11 +210,6 @@ def exercise3_3(**kwargs):
                         print(f"Erreur de lecture pour {target_path}: {e}")
                 else:
                     print(f"ATTENTION: Fichier introuvable -> {target_path}")
-    print(f"Speed {speeds}")
-    print(f"CoT {cots}")
-    plot = kwargs.pop('plot', False)
-    if plot:
-        plt.show()
 
     # Plotting 
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
@@ -221,8 +217,8 @@ def exercise3_3(**kwargs):
 
     for i_setup, setup_name in enumerate(['Combined', 'Decoupled']):
         for i_type, label in enumerate(labels):
-            axes[0, i_setup].plot(probs*100, speeds[i_setup, i_type], label=label)
-            axes[1, i_setup].plot(probs*100, cots[i_setup, i_type],   label=label)
+            axes[0, i_setup].plot(probs*100, speeds[i_setup, i_type], label=label, marker= 'o')
+            axes[1, i_setup].plot(probs*100, cots[i_setup, i_type],   label=label, marker= 'o')
 
         axes[0, i_setup].set_title(f'{setup_name} — Speed')
         axes[1, i_setup].set_title(f'{setup_name} — CoT')
@@ -233,7 +229,121 @@ def exercise3_3(**kwargs):
     axes[0, 0].set_ylabel('Forward speed (m/s)')
     axes[1, 0].set_ylabel('CoT (J/m)')
     plt.tight_layout()
-    plt.savefig(os.path.join(BASE_PATH, PLOT_PATH, 'disruption_ablation.png'))
+    plt.savefig(os.path.join(PLOT_PATH, 'disruption_ablation_run_multiple_3_3.png'))
+
+    # ---- Direct comparison: baseline/simulation.hdf5 vs mixed_demo/simulation.hdf5 ----
+    baseline_file = os.path.join(BASE_PATH, 'baseline', 'simulation.hdf5')
+    mixed_file = os.path.join(BASE_PATH, 'mixed_demo', 'simulation.hdf5')
+
+    if os.path.exists(baseline_file) and os.path.exists(mixed_file):
+        # Load both runs
+        t_b, pos_b, vel_b, jpos_b, jvel_b, jtorq_b = load_sim_data(baseline_file, skip_start = 0)
+        t_m, pos_m, vel_m, jpos_m, jvel_m, jtorq_m = load_sim_data(mixed_file, skip_start=0)
+
+        # Metrics
+        speed_b, _ = compute_mechanical_speed(links_positions=pos_b, links_velocities=vel_b)
+        speed_m, _ = compute_mechanical_speed(links_positions=pos_m, links_velocities=vel_m)
+
+        _, cot_b = compute_mechanical_energy_and_cot(
+            times=t_b, links_positions=pos_b, joints_torques=jtorq_b, joints_velocities=jvel_b
+        )
+        _, cot_m = compute_mechanical_energy_and_cot(
+            times=t_m, links_positions=pos_m, joints_torques=jtorq_m, joints_velocities=jvel_m
+        )
+
+        # CoM trajectories
+        com_b = pos_b.mean(axis=1)  # [time, xyz]
+        com_m = pos_m.mean(axis=1)
+
+        fig_cmp, ax_cmp = plt.subplots(1, 1, figsize=(6.5, 4.5))
+        fig_cmp.suptitle('Baseline vs Mixed disruption (20% sensors, 20% couplings)')
+
+        # CoM trajectory only
+        ax_cmp.plot(com_b[:, 0], com_b[:, 1], label='Baseline', alpha=0.9)
+        ax_cmp.plot(com_m[:, 0], com_m[:, 1], label='Mixed demo', alpha=0.9)
+        ax_cmp.set_title('CoM trajectory')
+        ax_cmp.set_xlabel('X position (m)')
+        ax_cmp.set_ylabel('Y position (m)')
+        ax_cmp.axis('equal')
+        ax_cmp.grid(True)
+        ax_cmp.legend()
+
+        fig_cmp.tight_layout()
+        fig_cmp.savefig(os.path.join(PLOT_PATH, 'baseline_vs_mixed_demo_3_3.png'), dpi=150)
+
+        # ---- Joint angles comparison (first 6s): baseline vs mixed_demo ----
+        # ---- Joint angles comparison (first 6s): baseline vs mixed_demo ----
+        colors = plt.cm.tab10.colors[:8]
+        t_rel_b = t_b - t_b[0]
+        t_rel_m = t_m - t_m[0]
+        mask_b = (t_rel_b >= 0.0) & (t_rel_b <= 6.0)
+        mask_m = (t_rel_m >= 0.0) & (t_rel_m <= 6.0)
+
+        if np.any(mask_b) and np.any(mask_m):
+            
+            # 1. Extraction des vrais noms depuis le HDF5 (Méthode Ex 3.1)
+            with h5py.File(baseline_file, "r") as f:
+                joints_names = f['FARMSLISTanimats']['0']['sensors']['joints']['names'][:]
+            joints_names_decoded = [name.decode('utf-8') for name in joints_names]
+            
+            # 2. Les BONS indices découverts !
+            indices_actifs  = list(range(8)) # Dos (0 à 7)
+            indices_passifs = [16, 17]       # Pitch passifs (16 et 17)
+            
+            noms_actifs  = [joints_names_decoded[i] for i in indices_actifs]
+            noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
+
+            colors = plt.cm.tab10(np.linspace(0, 1, 10))
+            fig4, axs = plt.subplots(3, 1, figsize=(14, 12))
+            fig4.suptitle('Joint angles (0s–6s): baseline (—) vs mixed demo (--)')
+
+            # Active joints 0-3
+            for i in range(4):
+                idx = indices_actifs[i]
+                axs[0].plot(t_rel_b[mask_b], jpos_b[mask_b, idx], color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} baseline')
+                axs[0].plot(t_rel_m[mask_m], jpos_m[mask_m, idx], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} mixed')
+            axs[0].set_title('Active Joints (0 to 3)')
+            axs[0].set_ylabel('Angle [rad]')
+            axs[0].set_xlim(0.0, 6.0)
+            axs[0].legend(fontsize=8, ncol=2)
+            axs[0].grid(True)
+
+            # Active joints 4-7
+            for i in range(4, 8):
+                idx = indices_actifs[i]
+                axs[1].plot(t_rel_b[mask_b], jpos_b[mask_b, idx], color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} baseline')
+                axs[1].plot(t_rel_m[mask_m], jpos_m[mask_m, idx], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} mixed')
+            axs[1].set_title('Active Joints (4 to 7)')
+            axs[1].set_ylabel('Angle [rad]')
+            axs[1].set_xlim(0.0, 6.0)
+            axs[1].legend(fontsize=8, ncol=2)
+            axs[1].grid(True)
+
+            # Passive joints
+            for i in range(len(indices_passifs)):
+                idx = indices_passifs[i]
+                axs[2].plot(t_rel_b[mask_b], jpos_b[mask_b, idx], color=colors[i], linestyle='-',  label=f'{noms_passifs[i]} baseline')
+                axs[2].plot(t_rel_m[mask_m], jpos_m[mask_m, idx], color=colors[i], linestyle='--', label=f'{noms_passifs[i]} mixed')
+            
+            axs[2].set_title('Passive Pitch Joints (Indices 16 & 17)')
+            axs[2].set_xlabel('Time [s]')
+            axs[2].set_ylabel('Angle [rad]')
+            axs[2].set_xlim(0.0, 6.0)
+            axs[2].legend(fontsize=8, ncol=2)
+            axs[2].grid(True)
+
+            fig4.tight_layout()
+            fig4.savefig(os.path.join(PLOT_PATH, 'baseline_vs_mixed_joint_angles_0s_6s_3_3.png'), dpi=150)
+        else:
+            print("ATTENTION: no data in [0s, 6s] window for one of the files.")
+
+    else:
+        print("ATTENTION: missing files for direct comparison:")
+        print(f" - {baseline_file}")
+        print(f" - {mixed_file}")
+
+    if plot:
+        plt.show()
 
 if __name__ == '__main__':
     exercise3_3(plot=True)

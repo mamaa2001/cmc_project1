@@ -116,7 +116,7 @@ def post_processing_3_1():
 
     fig1.tight_layout()
     os.makedirs(PLOT_PATH, exist_ok=True)
-    fig1.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r.png'), dpi=150)
+    fig1.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r_3_1.png'), dpi=150)
 
     #############################################################################################################
 
@@ -175,7 +175,7 @@ def post_processing_3_1():
     axes2[1, 1].grid()
 
     fig2.tight_layout()
-    fig2.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor.png'), dpi=150)
+    fig2.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor_3_1.png'), dpi=150)
 
     #############################################################################################################
     
@@ -239,7 +239,7 @@ def post_processing_3_1():
     axes3[1].grid()
 
     fig3.tight_layout()
-    fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory.png'), dpi=150)
+    fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory_3_1.png'), dpi=150)
 
     #############################################################################################################
     
@@ -289,7 +289,7 @@ def post_processing_3_1():
     joint_angles_without_active  = joints_array_without[:, indices_actifs, 0]
     joint_angles_without_passive = joints_array_without[:, indices_passifs, 0]
     '''
-    colors = plt.cm.tab10(np.linspace(0, 1, 8))
+    colors = plt.cm.tab10.colors[:8]
 
     fig4, axs = plt.subplots(3, 1, figsize=(14, 12))
     fig4.suptitle('Joint angles: with (—) vs without (--) stretch feedback')
@@ -323,7 +323,7 @@ def post_processing_3_1():
     axs[2].grid(True)
 
     fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
+    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles_3_1.png'), dpi=150)
     '''
 
     # V2
