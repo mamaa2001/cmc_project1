@@ -119,6 +119,7 @@ def get_metrics(w_ipsi):
 
 def exercise3_2(**kwargs):
     """ex3.2 main"""
+    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
     #pylog.warning("TODO: 3.2 Explore the effect of stretch feedback on the metrics.")
 
     w_ipsi_range = np.linspace(-3.0, 17.0, 80)
@@ -185,6 +186,7 @@ def exercise3_2(**kwargs):
     ax1.set_ylabel('Forward speed [m/s]')
     ax1.grid(True, alpha=0.3)
     fig1.tight_layout()
+    fig1.savefig(os.path.join(BASE_PATH, PLOT_PATH, "forward_speed_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig1)
 
     # 2) CoT (2D scatter)
@@ -196,6 +198,7 @@ def exercise3_2(**kwargs):
     ax2.set_ylabel('CoT [-]')
     ax2.grid(True, alpha=0.3)
     fig2.tight_layout()
+    fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "cot_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig2)
 
     # 3) Peak frequency: single plot using mean across joints
@@ -216,6 +219,7 @@ def exercise3_2(**kwargs):
     ax3.grid(True, alpha=0.3)
     ax3.legend()
     fig3.tight_layout()
+    fig3.savefig(os.path.join(BASE_PATH, PLOT_PATH, "peak_frequency_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig3)
 
     # 4) Peak amplitude: combined in a single plot
@@ -251,6 +255,7 @@ def exercise3_2(**kwargs):
     ax4.grid(True, alpha=0.3)
     ax4.legend(ncol=2, fontsize=8)
     fig4.tight_layout()
+    fig4.savefig(os.path.join(BASE_PATH, PLOT_PATH, "peak_amplitude_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig4)
 
     plot = kwargs.pop('plot', False)

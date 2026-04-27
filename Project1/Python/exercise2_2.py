@@ -67,8 +67,9 @@ def exercise2_2(**kwargs):
     pylog.warning("TODO: 2.2: Explore the effect of drive parameters and body phase bias")
     # pylog.set_level('critical')
 
-    #En cours d'implementation et copier depuis le 1.2
-    os.makedirs(PLOT_PATH, exist_ok=True)
+    os.makedirs(BASE_PATH, exist_ok=True)
+    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
+
     base_controller = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config': {
@@ -101,13 +102,13 @@ def exercise2_2(**kwargs):
     }
     
 
-    run_multiple(
+    '''run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example,
         common_kwargs={'fast': True, 'headless': True},
-    )
+    )'''
     
     drive_range_2 = np.linspace(2.0,4.0,9)
     parameter_grid_example_2 = {
@@ -115,13 +116,13 @@ def exercise2_2(**kwargs):
         'drive_left': drive_range_2
     }
     
-    run_multiple(
+    '''run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example_2,
         common_kwargs={'fast': True, 'headless': True},
-    )
+    )'''
 
     plot = kwargs.pop('plot', False)
     if plot:
@@ -163,7 +164,7 @@ def exercise2_2(**kwargs):
         # ---- Heatmaps (same palette + value in each square) ----
         shared_cmap = "viridis"
 
-        def plot_annotated_heatmap(grid, x_vals, y_vals, title, xlabel, ylabel, cbar_label, fmt=".3f", frame_abs_min=False):
+        def plot_annotated_heatmap(grid, x_vals, y_vals, title, xlabel, ylabel, cbar_label, filename, fmt=".3f", frame_abs_min=False):
             fig, ax = plt.subplots(figsize=(7, 6), constrained_layout=True)
             im = ax.imshow(grid, origin="lower", aspect="auto", cmap=shared_cmap)
 
@@ -207,6 +208,9 @@ def exercise2_2(**kwargs):
             cbar = fig.colorbar(im, ax=ax)
             cbar.set_label(cbar_label)
 
+            fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, filename), dpi=150)
+            plt.close(fig)
+
         # Grid 1: rows=drive, cols=PL
         unique_drive = np.sort(np.unique(drive_vals))
         unique_PL = np.sort(np.unique(PL_vals))
@@ -221,6 +225,7 @@ def exercise2_2(**kwargs):
             xlabel="phase lag [rad]",
             ylabel="drive [-]",
             cbar_label="forward speed [m/s]",
+            filename="Forward_speed_2_2.png",
             fmt=".3f",
         )
 
@@ -232,6 +237,7 @@ def exercise2_2(**kwargs):
             xlabel="phase lag [rad]",
             ylabel="drive [-]",
             cbar_label="CoT [J/m]",
+            filename="CoT_2_2.png",
             fmt=".3f",
         )
 
@@ -249,6 +255,7 @@ def exercise2_2(**kwargs):
             xlabel="drive left [-]",
             ylabel="drive right [-]",
             cbar_label=r"Mean curvature [$m^{-1}$]",
+            filename="mean_curvature_2_2.png",
             fmt=".3f",
             frame_abs_min=True,
         )
@@ -284,7 +291,7 @@ def exercise2_2(**kwargs):
 
         fig3.suptitle("CoM trajectories grouped by drive right (x,y in [m])", y=0.98)
         plt.tight_layout()
-
+        fig3.savefig(os.path.join(BASE_PATH, PLOT_PATH, "com_trajectories_2_2.png"), dpi=150)
         plt.show()
 
 

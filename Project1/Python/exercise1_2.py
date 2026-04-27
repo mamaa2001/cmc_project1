@@ -99,14 +99,15 @@ def get_metrics(twl, amp):
 
 def exercise1_2(**kwargs):
     """ex1.2 main"""
-    os.makedirs(PLOT_PATH, exist_ok=True)
+    os.makedirs(BASE_PATH, exist_ok=True)
+    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
     base_controller = {
         'loader': 'cmc_controllers.wave_controller.WaveController',
         'config': {
             'freq': 1.5,
             'twl': 0.2,
             'amp': 1.0}}
-    pylog.warning("TODO: 1.2 Adapt the parameter space according to needs.")
+    #pylog.warning("TODO: 1.2 Adapt the parameter space according to needs.")
     # Hint: You don't need to test all combinations of parameters with complexity of O(n^3)
     # You can replace range with list of length 1 to keep some parameters fixed
     # while testing others O(n^2) or O(n)
@@ -119,15 +120,15 @@ def exercise1_2(**kwargs):
         'amp': example_amp_range,
     }
 
-    run_multiple(
+    '''run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example,
         common_kwargs={'fast': True, 'headless': True},
-    )
+    )'''
 
-    pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
+    #pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
     
     #To displya the metrics
     metrics = []
@@ -163,7 +164,7 @@ def exercise1_2(**kwargs):
     # Use one common colormap for all plots
     shared_cmap = 'viridis'
 
-    def plot_annotated_heatmap(grid, title, cmap, cbar_label, value_fmt=".2f"):
+    def plot_annotated_heatmap(grid, title, cmap, cbar_label, filename, value_fmt=".2f"):
         fig, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
 
         im = ax.imshow(grid, origin='lower', aspect='auto', cmap=cmap)
@@ -203,19 +204,35 @@ def exercise1_2(**kwargs):
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label(cbar_label)
 
+        fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, filename), dpi=150)
+
     plot_annotated_heatmap(
-        forward_speed_grid, 'Forward speed at f = 2 Hz', shared_cmap, 'Forward speed [m/s]', value_fmt=".3f"
+        forward_speed_grid,
+        'Forward speed at f = 2 Hz',
+        shared_cmap,
+        'Forward speed [m/s]',
+        'Forward_speed_1_3.png',
+        value_fmt=".3f",
     )
+
     plot_annotated_heatmap(
-        cot_grid, 'CoT at f = 2 Hz', shared_cmap, 'CoT [J/m]', value_fmt=".3f"
+        cot_grid,
+        'CoT at f = 2 Hz',
+        shared_cmap,
+        'CoT [J/m]',
+        'CoT_1_3.png',
+        value_fmt=".3f",
     )
+
     plot_annotated_heatmap(
         ipls_grid,
         r'Average $IPL_{neur}$ at f = 2 Hz',
         shared_cmap,
         r'Average $IPL_{neur}$ [rad]',
-        value_fmt=".3f"
+        'IPL_neur_1_3.png',
+        value_fmt=".3f",
     )
+    
 
     plt.show()
 

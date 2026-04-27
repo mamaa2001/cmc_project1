@@ -66,10 +66,11 @@ def load_sim_data(hdf5_path, skip_start=500):
 def exercise3_3(**kwargs):
     """ex3.3 main"""
     plot = kwargs.pop('plot', False)
-    #pylog.warning("TODO: 3.3 Implement neural disruptions and compare with no disruption.")
+
+    results_dir = os.path.join(BASE_PATH, PLOT_PATH)
     os.makedirs(os.path.join(BASE_PATH, 'baseline'), exist_ok=True)
     os.makedirs(os.path.join(BASE_PATH, 'mixed_demo'), exist_ok=True)
-    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
     ##################### code estelle #######################
     # --- Baseline: no disruption ---
     baseline_config = dict(
@@ -229,7 +230,7 @@ def exercise3_3(**kwargs):
     axes[0, 0].set_ylabel('Forward speed (m/s)')
     axes[1, 0].set_ylabel('CoT (J/m)')
     plt.tight_layout()
-    plt.savefig(os.path.join(PLOT_PATH, 'disruption_ablation_run_multiple_3_3.png'))
+    plt.savefig(os.path.join(results_dir, 'disruption_ablation_run_multiple_3_3.png'), dpi=150)
 
     # ---- Direct comparison: baseline/simulation.hdf5 vs mixed_demo/simulation.hdf5 ----
     baseline_file = os.path.join(BASE_PATH, 'baseline', 'simulation.hdf5')
@@ -269,7 +270,7 @@ def exercise3_3(**kwargs):
         ax_cmp.legend()
 
         fig_cmp.tight_layout()
-        fig_cmp.savefig(os.path.join(PLOT_PATH, 'baseline_vs_mixed_demo_3_3.png'), dpi=150)
+        fig_cmp.savefig(os.path.join(results_dir, 'baseline_vs_mixed_demo_3_3.png'), dpi=150)
 
         # ---- Joint angles comparison (first 6s): baseline vs mixed_demo ----
         # ---- Joint angles comparison (first 6s): baseline vs mixed_demo ----
@@ -333,7 +334,7 @@ def exercise3_3(**kwargs):
             axs[2].grid(True)
 
             fig4.tight_layout()
-            fig4.savefig(os.path.join(PLOT_PATH, 'baseline_vs_mixed_joint_angles_0s_6s_3_3.png'), dpi=150)
+            fig4.savefig(os.path.join(results_dir, 'baseline_vs_mixed_joint_angles_0s_6s_3_3.png'), dpi=150)
         else:
             print("ATTENTION: no data in [0s, 6s] window for one of the files.")
 

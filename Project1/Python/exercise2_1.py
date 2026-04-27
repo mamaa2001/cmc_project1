@@ -20,6 +20,8 @@ PLOT_PATH = 'results'
 
 def post_processing(base_path):
     """Post processing"""
+    os.makedirs(os.path.join(base_path, PLOT_PATH), exist_ok=True)
+
     # Load HDF5
     sim_result = base_path + 'simulation.hdf5'
     with h5py.File(sim_result, "r") as f:
@@ -61,17 +63,18 @@ def post_processing(base_path):
     # Plot θ
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
-    plt.figure()
+    fig_theta = plt.figure()
     for i in range(8):
         c = colors[i]
-        plt.plot(t_plot, theta_left[mask, i],  label=f"θ_L{i}", color=c)
+        plt.plot(t_plot, theta_left[mask, i], label=f"θ_L{i}", color=c)
         plt.plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--', color=c)
-
     plt.xlabel("Time [s]")
     plt.ylabel("Phase θ")
     plt.title("Time evolution of phases (θ)")
     plt.legend(ncol=2)
-    plt.show()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(base_path, PLOT_PATH, "phases_theta_2_1.png"), dpi=150)
 
     # Plot r
     plt.figure()
@@ -80,6 +83,8 @@ def post_processing(base_path):
         plt.plot(t_plot, r_right[mask, i], label=f"r_R{i}", linestyle='--')
     plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
     plt.title("Time evolution of amplitudes (r)"); plt.legend(); plt.grid()
+    plt.tight_layout()
+    plt.savefig(os.path.join(base_path, PLOT_PATH, "amplitudes_r_2_1.png"), dpi=150)
 
     # Plot sum
     plt.figure()
@@ -87,6 +92,8 @@ def post_processing(base_path):
         plt.plot(t_plot, motor_sum[mask, i], label=f"sum_{i}")
     plt.xlabel("Time [s]"); plt.ylabel("Sum L+R")
     plt.title("Motor output sum (L+R)"); plt.legend(); plt.grid()
+    plt.tight_layout()
+    plt.savefig(os.path.join(base_path, PLOT_PATH, "motor_sum_2_1.png"), dpi=150)
 
     # Plot diff
     plt.figure()
@@ -94,6 +101,8 @@ def post_processing(base_path):
         plt.plot(t_plot, motor_diff[mask, i], label=f"diff_{i}")
     plt.xlabel("Time [s]"); plt.ylabel("Diff L-R")
     plt.title("Motor output difference (L-R)"); plt.legend(); plt.grid()
+    plt.tight_layout()
+    plt.savefig(os.path.join(base_path, PLOT_PATH, "motor_diff_2_1.png"), dpi=150)
 
     #########################################################################
 
@@ -147,33 +156,15 @@ def post_processing(base_path):
     axs[2].legend()
     axs[2].grid(True)
 
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+    fig.savefig(os.path.join(base_path, PLOT_PATH, "joint_angles_2_1.png"), dpi=150)
 
-    ###################### Center of Mass Trajectory ##################
-
-    com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
-
-    # Extract x and y (horizontal plane)
-    com_x = com_positions[:, 0]
-    com_y = com_positions[:, 1]
-
-    # Plot trajectory
-    plt.figure()
-    plt.plot(com_x, com_y)
-    plt.xlabel("X position")
-    plt.ylabel("Y position")
-    plt.title("Center of Mass Trajectory")
-    plt.axis('equal')
-    plt.grid()
-    plt.show()
-    
     #########################################################################
 
 
 def main(**kwargs):
     """Run exercise 2.1 simulation and post-processing pipeline."""
-    os.makedirs(PLOT_PATH, exist_ok=True)
+    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
     controller = {
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config': {

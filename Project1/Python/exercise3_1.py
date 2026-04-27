@@ -26,6 +26,9 @@ PLOT_PATH = 'results'
 
 def post_processing_3_1():
 
+    results_dir = os.path.join(BASE_PATH, PLOT_PATH)
+    os.makedirs(results_dir, exist_ok=True)
+
     with open(os.path.join(BASE_PATH, 'controller_with_sf.pkl'), 'rb') as f:
         controller_with = pickle.load(f)
     with open(os.path.join(BASE_PATH, 'controller_without_sf.pkl'), 'rb') as f:
@@ -115,8 +118,7 @@ def post_processing_3_1():
     axes1[1, 1].grid()
 
     fig1.tight_layout()
-    os.makedirs(PLOT_PATH, exist_ok=True)
-    fig1.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r_3_1.png'), dpi=150)
+    fig1.savefig(os.path.join(results_dir, 'oscillator_states_theta_r_3_1.png'), dpi=150)
 
     #############################################################################################################
 
@@ -175,7 +177,7 @@ def post_processing_3_1():
     axes2[1, 1].grid()
 
     fig2.tight_layout()
-    fig2.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor_3_1.png'), dpi=150)
+    fig2.savefig(os.path.join(results_dir, 'oscillator_states_motor_3_1.png'), dpi=150)
 
     #############################################################################################################
     
@@ -239,7 +241,7 @@ def post_processing_3_1():
     axes3[1].grid()
 
     fig3.tight_layout()
-    fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory_3_1.png'), dpi=150)
+    fig3.savefig(os.path.join(results_dir, 'com_trajectory_3_1.png'), dpi=150)
 
     #############################################################################################################
     
@@ -323,7 +325,7 @@ def post_processing_3_1():
     axs[2].grid(True)
 
     fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles_3_1.png'), dpi=150)
+    fig4.savefig(os.path.join(BASE_PATH, PLOT_PATH, 'joint_angles_3_1.png'), dpi=150)
     '''
 
     # V2

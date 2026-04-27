@@ -157,7 +157,7 @@ def post_processing():
     axs[2].grid(True)
 
     fig1.tight_layout()
-    fig1.savefig(os.path.join(PLOT_PATH, "joint_angles_0_6s_1_2.png"), dpi=150)
+    fig1.savefig(os.path.join(BASE_PATH, PLOT_PATH, "joint_angles_0_6s_1_2.png"), dpi=150)
     plt.show()
     # Compute CoM (mean over links)
     com_positions = sensor_data_links_positions.mean(axis=1)  # shape: (time, 3)
@@ -175,13 +175,13 @@ def post_processing():
     ax2.axis('equal')
     ax2.grid(True)
     fig2.tight_layout()
-    fig2.savefig(os.path.join(PLOT_PATH, "com_trajectory_1_2.png"), dpi=150)
+    fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "com_trajectory_1_2.png"), dpi=150)
     plt.show()
 
 
 def main(**kwargs):
     """ex1.1 main"""
-    os.makedirs(PLOT_PATH, exist_ok=True)
+    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
     controller = {
         'loader': 'cmc_controllers.wave_controller.WaveController',
         'config': {'freq': 2.0,
