@@ -75,15 +75,15 @@ def post_processing_3_1():
 
     # ---- Figure 1: theta and r ----
     fig1, axes1 = plt.subplots(2, 2, figsize=(14, 10))
-    fig1.suptitle('Oscillator states: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+    fig1.suptitle('Oscillator states: with (w_ipsi=3 [-]) vs without (w_ipsi=0 [-]) stretch feedback')
 
     # theta with
     for idx, j in enumerate(joints):
         axes1[0, 0].plot(t, theta_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[0, 0].plot(t, theta_right_with[mask, j], color=colors[idx], linestyle='--', label=f'joint {j} right')
     axes1[0, 0].set_title('Phase θ — with stretch feedback')
-    axes1[0, 0].set_xlabel('Time (s)')
-    axes1[0, 0].set_ylabel('Phase (rad)')
+    axes1[0, 0].set_xlabel('Time [s]')
+    axes1[0, 0].set_ylabel('Phase [rad]')
     axes1[0, 0].legend(fontsize=7)
     axes1[0, 0].grid()
 
@@ -92,8 +92,8 @@ def post_processing_3_1():
         axes1[0, 1].plot(t, theta_left_without[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[0, 1].plot(t, theta_right_without[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes1[0, 1].set_title('Phase θ — without stretch feedback')
-    axes1[0, 1].set_xlabel('Time (s)')
-    axes1[0, 1].set_ylabel('Phase (rad)')
+    axes1[0, 1].set_xlabel('Time [s]')
+    axes1[0, 1].set_ylabel('Phase [rad]')
     axes1[0, 1].legend(fontsize=7)
     axes1[0, 1].grid()
 
@@ -102,8 +102,8 @@ def post_processing_3_1():
         axes1[1, 0].plot(t, r_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[1, 0].plot(t, r_right_with[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes1[1, 0].set_title('Amplitude r — with stretch feedback')
-    axes1[1, 0].set_xlabel('Time (s)')
-    axes1[1, 0].set_ylabel('Amplitude')
+    axes1[1, 0].set_xlabel('Time [s]')
+    axes1[1, 0].set_ylabel('Amplitude [-]')
     axes1[1, 0].legend(fontsize=7)
     axes1[1, 0].grid()
 
@@ -112,8 +112,8 @@ def post_processing_3_1():
         axes1[1, 1].plot(t, r_left_without[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[1, 1].plot(t, r_right_without[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes1[1, 1].set_title('Amplitude r — without stretch feedback')
-    axes1[1, 1].set_xlabel('Time (s)')
-    axes1[1, 1].set_ylabel('Amplitude')
+    axes1[1, 1].set_xlabel('Time [s]')
+    axes1[1, 1].set_ylabel('Amplitude [-]')
     axes1[1, 1].legend(fontsize=7)
     axes1[1, 1].grid()
 
@@ -138,14 +138,14 @@ def post_processing_3_1():
     # ---- Figure 2: motor sum and diff ----
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
     fig2, axes2 = plt.subplots(2, 2, figsize=(14, 10))
-    fig2.suptitle('Motor outputs: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+    fig2.suptitle('Motor outputs: with (w_ipsi=3 [-]) vs without (w_ipsi=0 [-]) stretch feedback')
 
     # sum with
     for idx, j in enumerate(joints):
         axes2[0, 0].plot(t, motor_sum_with[mask, j], color=colors[idx], label=f'jsum_{j}')
     axes2[0, 0].set_title('Motor sum (ML+MR) — with stretch feedback')
-    axes2[0, 0].set_xlabel('Time (s)')
-    axes2[0, 0].set_ylabel('ML + MR')
+    axes2[0, 0].set_xlabel('Time [s]')
+    axes2[0, 0].set_ylabel('ML + MR [-]')
     axes2[0, 0].legend(fontsize=7)
     axes2[0, 0].grid()
 
@@ -153,8 +153,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[0, 1].plot(t, motor_sum_without[mask, j], color=colors[idx], label=f'sum_{j}')
     axes2[0, 1].set_title('Motor sum (ML+MR) — without stretch feedback')
-    axes2[0, 1].set_xlabel('Time (s)')
-    axes2[0, 1].set_ylabel('ML + MR')
+    axes2[0, 1].set_xlabel('Time [s]')
+    axes2[0, 1].set_ylabel('ML + MR [-]')
     axes2[0, 1].legend(fontsize=7)
     axes2[0, 1].grid()
 
@@ -162,8 +162,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[1, 0].plot(t, motor_diff_with[mask, j], color=colors[idx], label=f'diff_{j}')
     axes2[1, 0].set_title('Motor diff (ML-MR) — with stretch feedback')
-    axes2[1, 0].set_xlabel('Time (s)')
-    axes2[1, 0].set_ylabel('ML - MR')
+    axes2[1, 0].set_xlabel('Time [s]')
+    axes2[1, 0].set_ylabel('ML - MR [-]')
     axes2[1, 0].legend(fontsize=7)
     axes2[1, 0].grid()
 
@@ -171,8 +171,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[1, 1].plot(t, motor_diff_without[mask, j], color=colors[idx], label=f'diff_{j}')
     axes2[1, 1].set_title('Motor diff (ML-MR) — without stretch feedback')
-    axes2[1, 1].set_xlabel('Time (s)')
-    axes2[1, 1].set_ylabel('ML - MR')
+    axes2[1, 1].set_xlabel('Time [s]')
+    axes2[1, 1].set_ylabel('ML - MR [-]')
     axes2[1, 1].legend(fontsize=7)
     axes2[1, 1].grid()
 
@@ -224,19 +224,19 @@ def post_processing_3_1():
 
     # ---- Figure 3: CoM trajectory ----
     fig3, axes3 = plt.subplots(1, 2, figsize=(14, 5))
-    fig3.suptitle('CoM trajectory: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+    fig3.suptitle('CoM trajectory: with (w_ipsi=3 [-]) vs without (w_ipsi=0 [-]) stretch feedback')
 
     axes3[0].plot(com_x_with, com_y_with)
     axes3[0].set_title('CoM trajectory — with stretch feedback')
-    axes3[0].set_xlabel('X position (m)')
-    axes3[0].set_ylabel('Y position (m)')
+    axes3[0].set_xlabel('X position [m]')
+    axes3[0].set_ylabel('Y position [m]')
     axes3[0].axis('equal')
     axes3[0].grid()
 
     axes3[1].plot(com_x_without, com_y_without)
     axes3[1].set_title('CoM trajectory — without stretch feedback')
-    axes3[1].set_xlabel('X position (m)')
-    axes3[1].set_ylabel('Y position (m)')
+    axes3[1].set_xlabel('X position [m]')
+    axes3[1].set_ylabel('Y position [m]')
     axes3[1].axis('equal')
     axes3[1].grid()
 
@@ -387,8 +387,8 @@ def post_processing_3_1():
     neural_amp_without = np.mean(peak_amp_without)
 
     print("=== Neural Metrics ===")
-    print(f"With stretch feedback:    neural_freq={neural_freq_with:.3f} Hz,  neural_amp={ neural_amp_with:.3f}")
-    print(f"Without stretch feedback: neural_freq={ neural_freq_without:.3f} Hz, neural_amp={ neural_amp_without:.3f}")
+    print(f"With stretch feedback:    neural_freq={neural_freq_with:.3f} [Hz],  neural_amp={ neural_amp_with:.3f} [-]")
+    print(f"Without stretch feedback: neural_freq={ neural_freq_without:.3f} [Hz], neural_amp={ neural_amp_without:.3f} [-]")
 
     ######## Forward speed ############
     
@@ -396,8 +396,8 @@ def post_processing_3_1():
     forward_speed_without, _ = compute_mechanical_speed(links_positions_without, links_velocities_without)
     print("=== Other Metrics ===")
     print("Forward speed")
-    print(f"With stretch feedback:    forward_speed={forward_speed_with:.3f}")
-    print(f"Without stretch feedback: forward_speed={forward_speed_without:.3f}")
+    print(f"With stretch feedback:    forward_speed={forward_speed_with:.3f} [m/s]")
+    print(f"Without stretch feedback: forward_speed={forward_speed_without:.3f} [m/s]")
 
     ########## CoT ############
     
@@ -410,8 +410,8 @@ def post_processing_3_1():
         joints_velocities_without[transient:]
     )
     print("CoT")
-    print(f"With stretch feedback:    CoT={CoT_with:.3f}") 
-    print(f"Without stretch feedback: CoT={CoT_without:.3f}")
+    print(f"With stretch feedback:    CoT={CoT_with:.3f} [J/m]") 
+    print(f"Without stretch feedback: CoT={CoT_without:.3f} [J/m]")
     
 
     

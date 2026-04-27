@@ -224,11 +224,11 @@ def exercise3_3(**kwargs):
         axes[0, i_setup].set_title(f'{setup_name} — Speed')
         axes[1, i_setup].set_title(f'{setup_name} — CoT')
         for ax in axes[:, i_setup]:
-            ax.set_xlabel('Disruption probability (%)')
+            ax.set_xlabel('Disruption probability [%]')
             ax.legend()
 
-    axes[0, 0].set_ylabel('Forward speed (m/s)')
-    axes[1, 0].set_ylabel('CoT (J/m)')
+    axes[0, 0].set_ylabel('Forward speed [m/s]')
+    axes[1, 0].set_ylabel('CoT [J/m]')
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, 'disruption_ablation_run_multiple_3_3.png'), dpi=150)
 
@@ -263,8 +263,8 @@ def exercise3_3(**kwargs):
         ax_cmp.plot(com_b[:, 0], com_b[:, 1], label='Baseline', alpha=0.9)
         ax_cmp.plot(com_m[:, 0], com_m[:, 1], label='Mixed demo', alpha=0.9)
         ax_cmp.set_title('CoM trajectory')
-        ax_cmp.set_xlabel('X position (m)')
-        ax_cmp.set_ylabel('Y position (m)')
+        ax_cmp.set_xlabel('X position [m]')
+        ax_cmp.set_ylabel('Y position [m]')
         ax_cmp.axis('equal')
         ax_cmp.grid(True)
         ax_cmp.legend()

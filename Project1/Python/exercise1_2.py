@@ -171,7 +171,7 @@ def exercise1_2(**kwargs):
 
         ax.set_title(title)
         ax.set_xlabel('A [-]')
-        ax.set_ylabel('TWL [Body length]')
+        ax.set_ylabel('TWL [-]')
 
         # Show actual parameter values on axes
         ax.set_xticks(np.arange(len(amp_axis)))

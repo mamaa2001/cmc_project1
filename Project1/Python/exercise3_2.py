@@ -195,7 +195,7 @@ def exercise3_2(**kwargs):
     ax2.scatter(w_vals, cot_vals, s=45, alpha=0.9, color='tab:orange')
     ax2.set_title('CoT vs w_ipsi')
     ax2.set_xlabel('w_ipsi [-]')
-    ax2.set_ylabel('CoT [-]')
+    ax2.set_ylabel('CoT [J/m]')
     ax2.grid(True, alpha=0.3)
     fig2.tight_layout()
     fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "cot_vs_w_ipsi_3_2.png"), dpi=150)
@@ -251,7 +251,7 @@ def exercise3_2(**kwargs):
 
     ax4.set_title('Peak Amplitude vs w_ipsi (all channels)')
     ax4.set_xlabel('w_ipsi [-]')
-    ax4.set_ylabel('Peak amplitude [a.u.]')
+    ax4.set_ylabel('Peak amplitude [-]')
     ax4.grid(True, alpha=0.3)
     ax4.legend(ncol=2, fontsize=8)
     fig4.tight_layout()

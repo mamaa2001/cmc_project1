@@ -25,12 +25,11 @@ def get_frequency_and_amplitude(time, signal):
     fft_values = np.fft.rfft(signal - np.mean(signal))
 
     amplitude_spectrum = np.abs(fft_values) / n
-
     idx = np.argmax(amplitude_spectrum[1:]) + 1
 
     freq = freqs[idx]
-    amplitude = 2 * amplitude_spectrum[idx] * 180 / np.pi # Convertir en degrés
-    phase = np.angle(fft_values[idx])  * 180 / np.pi
+    amplitude = 2 * amplitude_spectrum[idx]   # keep same unit as signal (rad here)
+    phase = np.angle(fft_values[idx])         # radians
 
     return freq, amplitude, phase
 
@@ -41,9 +40,8 @@ def get_animal_data(path):
     amp = np.zeros(8)
     ipls = np.zeros(7)
 
-
     times = data[10:-10, 0]
-    joint_angles = data[10:-10, 1:9]
+    joint_angles = np.deg2rad(data[10:-10, 1:9])  # convert animal angles to rad
 
     n_joints = 8
 
@@ -55,7 +53,7 @@ def get_animal_data(path):
         _, _, phase_i_plus_1 = get_frequency_and_amplitude(times, joint_angles[:, i + 1])
         ipls[i] = (phase_i_plus_1 - phase_i) % (2 * np.pi)
 
-    return freq, np.deg2rad(amp), ipls
+    return freq, amp, ipls
 
 def get_sim_data(path):
 
@@ -113,7 +111,7 @@ def exercise2_3(**kwargs):
 
     data = np.genfromtxt(ANIMAL_DATA_PATH, delimiter=',', skip_header=1)
     time_animal = data[:, 0]
-    joints_animal = data[:, 1:]
+    joints_animal = np.deg2rad(data[:, 1:])  # convert to rad for consistent plotting
 
     with open(ANIMAL_DATA_PATH, 'r') as f:
         header = f.readline().strip().split(',')
@@ -121,9 +119,7 @@ def exercise2_3(**kwargs):
 
     # Synchroniser les longueurs
     min_len = min(len(sim_times), len(time_animal), sensor_data_joints_positions.shape[0])
-    joints_actifs = sensor_data_joints_positions[:min_len, indices_actifs]
-    joints_actifs = (joints_actifs * 180 / np.pi )# * (1/np.sqrt(6.5)) # Ratio f_simulation/f_animal  = sqrt(6.5)
-
+    joints_actifs = sensor_data_joints_positions[:min_len, indices_actifs]  # already in rad
 
     # Start simulation after 0.2 sec 
     start_time = 0.2  # seconds
@@ -134,11 +130,11 @@ def exercise2_3(**kwargs):
 
     fig, axs = plt.subplots(2, 1, figsize=(12, 10))
 
-    # Simulation Joints 
+    # Simulation Joints
     for i, idx in enumerate(indices_actifs):
         axs[0].plot(time_cut, joints_actifs_cut[:, i], label=noms_actifs[i])
     axs[0].set_title('Simulation - Active Joints')
-    axs[0].set_ylabel('Angle [deg]')
+    axs[0].set_ylabel('Angle [rad]')
     axs[0].legend()
     axs[0].grid(True)
 
@@ -146,7 +142,7 @@ def exercise2_3(**kwargs):
     for i in range(joints_animal.shape[1]):
         axs[1].plot(time_animal[:min_len], joints_animal[:min_len, i], label=joint_names_animal[i])
     axs[1].set_title('Animal Joints')
-    axs[1].set_ylabel('Angle [deg]')
+    axs[1].set_ylabel('Angle [rad]')
     axs[1].legend()
     axs[1].grid(True)
 
@@ -163,8 +159,8 @@ def exercise2_3(**kwargs):
     ipl_error = np.mean((ipls_sim - ipls_animal)**2)**0.5
 
     print(f"Frequency Error: {freq_error:.3f} Hz")
-    print(f"Amplitude Error: {amp_error:.3f} deg")
-    print(f"IPLs Error: {ipl_error:.3f} deg")
+    print(f"Amplitude Error: {amp_error:.3f} rad")
+    print(f"IPLs Error: {ipl_error:.3f} rad")
 
     plot = kwargs.pop('plot', False)
     if plot:

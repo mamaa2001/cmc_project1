@@ -60,49 +60,72 @@ def post_processing(base_path):
     mask   = sim_times <= 5.0
     t_plot = sim_times[mask]
 
-    # Plot θ
+    # Plot θ and r combined
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
-    fig_theta = plt.figure()
+    fig, axs = plt.subplots(2, 1, figsize=(14, 10))
+    
+    # Phases θ
     for i in range(8):
         c = colors[i]
-        plt.plot(t_plot, theta_left[mask, i], label=f"θ_L{i}", color=c)
-        plt.plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--', color=c)
-    plt.xlabel("Time [s]")
-    plt.ylabel("Phase θ")
-    plt.title("Time evolution of phases (θ)")
-    plt.legend(ncol=2)
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(base_path, PLOT_PATH, "phases_theta_2_1.png"), dpi=150)
+        axs[0].plot(t_plot, theta_left[mask, i], label=f"θ_L{i}", color=c)
+        axs[0].plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--', color=c)
+    axs[0].set_ylabel("Phase θ [rad]")
+    axs[0].set_title("Time evolution of phases (θ)")
+    axs[0].legend(ncol=2, fontsize=8)
+    axs[0].grid(True)
 
-    # Plot r
-    plt.figure()
+    # Amplitudes r
     for i in range(8):
-        plt.plot(t_plot, r_left[mask, i],  label=f"r_L{i}")
-        plt.plot(t_plot, r_right[mask, i], label=f"r_R{i}", linestyle='--')
-    plt.xlabel("Time [s]"); plt.ylabel("Amplitude r")
-    plt.title("Time evolution of amplitudes (r)"); plt.legend(); plt.grid()
-    plt.tight_layout()
-    plt.savefig(os.path.join(base_path, PLOT_PATH, "amplitudes_r_2_1.png"), dpi=150)
+        c = colors[i]
+        axs[1].plot(t_plot, r_left[mask, i], label=f"r_L{i}", color=c)
+        axs[1].plot(t_plot, r_right[mask, i], label=f"r_R{i}", linestyle='--', color=c)
+    axs[1].set_xlabel("Time [s]")
+    axs[1].set_ylabel("Amplitude r [-]")
+    axs[1].set_title("Time evolution of amplitudes (r)")
+    axs[1].legend(ncol=2, fontsize=8)
+    axs[1].grid(True)
 
-    # Plot sum
-    plt.figure()
-    for i in range(8):
-        plt.plot(t_plot, motor_sum[mask, i], label=f"sum_{i}")
-    plt.xlabel("Time [s]"); plt.ylabel("Sum L+R")
-    plt.title("Motor output sum (L+R)"); plt.legend(); plt.grid()
-    plt.tight_layout()
-    plt.savefig(os.path.join(base_path, PLOT_PATH, "motor_sum_2_1.png"), dpi=150)
+    fig.tight_layout()
+    fig.savefig(os.path.join(base_path, PLOT_PATH, "phases_theta_amplitudes_r_2_1.png"), dpi=150)
 
-    # Plot diff
-    plt.figure()
+    # Fused plot: motor sum and motor difference
+    fig_sd, axs_sd = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
+
+    # Sum
     for i in range(8):
-        plt.plot(t_plot, motor_diff[mask, i], label=f"diff_{i}")
-    plt.xlabel("Time [s]"); plt.ylabel("Diff L-R")
-    plt.title("Motor output difference (L-R)"); plt.legend(); plt.grid()
-    plt.tight_layout()
-    plt.savefig(os.path.join(base_path, PLOT_PATH, "motor_diff_2_1.png"), dpi=150)
+        axs_sd[0].plot(t_plot, motor_sum[mask, i], label=f"sum_{i}")
+    axs_sd[0].set_ylabel("Sum L+R  [-]")
+    axs_sd[0].set_title("Motor output sum (L+R)")
+    axs_sd[0].legend(ncol=2, fontsize=8)
+    axs_sd[0].grid(True)
+
+    # Difference
+    for i in range(8):
+        axs_sd[1].plot(t_plot, motor_diff[mask, i], label=f"diff_{i}")
+    axs_sd[1].set_xlabel("Time [s]")
+    axs_sd[1].set_ylabel("Diff L-R [-]")
+    axs_sd[1].set_title("Motor output difference (L-R)")
+    axs_sd[1].legend(ncol=2, fontsize=8)
+    axs_sd[1].grid(True)
+
+    fig_sd.tight_layout()
+    fig_sd.savefig(os.path.join(base_path, PLOT_PATH, "motor_sum_diff_2_1.png"), dpi=150)
+
+    # CoM trajectory (same style as exercise1_1)
+    com_positions = sensor_data_links_positions.mean(axis=1)  # [time, xyz]
+    com_x = com_positions[:, 0]
+    com_y = com_positions[:, 1]
+
+    fig_com, ax_com = plt.subplots(figsize=(6, 6))
+    ax_com.plot(com_x, com_y)
+    ax_com.set_xlabel("X position [m]")
+    ax_com.set_ylabel("Y position [m]")
+    ax_com.set_title("Center of Mass Trajectory")
+    ax_com.axis("equal")
+    ax_com.grid(True)
+    fig_com.tight_layout()
+    fig_com.savefig(os.path.join(base_path, PLOT_PATH, "com_trajectory_2_1.png"), dpi=150)
 
     #########################################################################
 
@@ -119,9 +142,9 @@ def post_processing(base_path):
     joints_actifs = sensor_data_joints_positions[:min_len, indices_actifs]
     joints_passifs = sensor_data_joints_positions[:min_len, indices_passifs]
 
-    ### In degrees ###
-    joints_actifs = joints_actifs * 180 / np.pi
-    joints_passifs = joints_passifs * 180 / np.pi
+    # Keep radians for consistency across project
+    # joints_actifs = joints_actifs * 180 / np.pi
+    # joints_passifs = joints_passifs * 180 / np.pi
 
 
     noms_actifs = [joints_names_decoded[i] for i in indices_actifs]
@@ -133,7 +156,7 @@ def post_processing(base_path):
     for i, idx in enumerate(indices_actifs):
         axs[0].plot(times[:min_len], joints_actifs[:, i], label=noms_actifs[i])
     axs[0].set_title('Active Joints')
-    axs[0].set_ylabel('Angle [deg]')
+    axs[0].set_ylabel('Angle [rad]')
     axs[0].legend()
     axs[0].grid(True)
 
@@ -141,7 +164,7 @@ def post_processing(base_path):
     for i, idx in enumerate(indices_passifs):
         axs[1].plot(times[:min_len], joints_passifs[:, i], label=noms_passifs[i])
     axs[1].set_title('Passive Joints')
-    axs[1].set_ylabel('Angle [deg]')
+    axs[1].set_ylabel('Angle [rad]')
     axs[1].legend()
     axs[1].grid(True)
 
@@ -152,7 +175,7 @@ def post_processing(base_path):
         axs[2].plot(times[:min_len], joints_all[:, i], label=noms_all[i])
     axs[2].set_title('All Joints')
     axs[2].set_xlabel('Time [s]')
-    axs[2].set_ylabel('Angle [deg]')
+    axs[2].set_ylabel('Angle [rad]')
     axs[2].legend()
     axs[2].grid(True)
 
