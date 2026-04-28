@@ -103,15 +103,7 @@ def exercise2_3(**kwargs):
 
     #### Analyze animal data ####
     freq_animal, amp_animal, ipls_animal = get_animal_data(ANIMAL_DATA_PATH)
-    print("Frequencies Animal:", np.mean(freq_animal))
-    print("Amplitudes (r) Animal:", np.mean(amp_animal))
-    print("IPLs Animal :", np.mean(ipls_animal))
-
-    ### Analyze simulation data ###
     freq_sim, amp_sim, ipls_sim = get_sim_data(sim_result)
-    print("Simulation Frequency:", np.mean(freq_sim))
-    print("Simulation Amplitude (r):", np.mean(amp_sim))
-    print("Simulation IPLs:", np.mean(ipls_sim))
 
     data = np.genfromtxt(ANIMAL_DATA_PATH, delimiter=',', skip_header=1)
     time_animal = data[:, 0]
@@ -132,25 +124,53 @@ def exercise2_3(**kwargs):
     time_cut = time_cut - time_cut[0]
     joints_actifs_cut = joints_actifs[mask]
 
-    fig, axs = plt.subplots(2, 1, figsize=(12, 10))
+    # ---- Pas besoin de synchroniser les longueurs, on trace chacun sur son propre temps ----
+    
+    # set figure size to width:height = 5:2
+    fig, axs = plt.subplots(1,2, figsize=(10, 4))
 
-    # Simulation Joints
+    # L'animal a été filmé sur environ 0.75s
+    animal_duration = 0.75        
+    t_animal_start = 0.0   
+
+    # La Magie de Froude : T_robot = T_animal / CONVERSION_RATIO
+    # On calcule la durée équivalente pour le robot géant
+    scaled_duration = animal_duration / CONVERSION_RATIO
+    
+    t_sim_start = 2.375   # On skip le régime transitoire de la simulation
+
+    # Masques pour isoler les bonnes fenêtres temporelles respectives
+    mask_sim = (sim_times >= t_sim_start) & (sim_times <= t_sim_start + scaled_duration)
+    mask_anim = (time_animal >= t_animal_start) & (time_animal <= t_animal_start + animal_duration)
+
+    # Création des axes de temps relatifs
+    t_sim_plot = sim_times[mask_sim] - t_sim_start
+    t_anim_plot = time_animal[mask_anim] - t_animal_start
+    
+    # ÉTAPE CLÉ : On étire le temps de l'animal pour qu'il corresponde au temps du robot
+    t_anim_plot_scaled = t_anim_plot / CONVERSION_RATIO
+
+    # 1. Simulation Joints (plot in radians)
     for i, idx in enumerate(indices_actifs):
-        axs[0].plot(time_cut, joints_actifs_cut[:, i], label=noms_actifs[i])
-    axs[0].set_title('Simulation - Active Joints')
+        axs[0].plot(t_sim_plot, sensor_data_joints_positions[mask_sim, idx], label=noms_actifs[i])
+    axs[0].set_title('Simulation - Active Joints (Steady State)')
     axs[0].set_ylabel('Angle [rad]')
-    axs[0].legend()
+    axs[0].set_xlim(0, scaled_duration) 
+    axs[0].legend(loc='upper right', fontsize=8, ncol=2)
     axs[0].grid(True)
 
-    # Animal Joints
+    # 2. Animal Joints (Time-scaled, already in radians)
     for i in range(joints_animal.shape[1]):
-        axs[1].plot(time_animal[:min_len], joints_animal[:min_len, i], label=joint_names_animal[i])
-    axs[1].set_title('Animal Joints')
+        axs[1].plot(t_anim_plot_scaled, joints_animal[mask_anim, i], label=joint_names_animal[i])
+    axs[1].set_title('Animal Joints (Time Scaled by Froude Ratio)')
+    axs[1].set_xlabel('Scaled Relative Time [s] (Equivalent Robot Time)')
     axs[1].set_ylabel('Angle [rad]')
-    axs[1].legend()
+    axs[1].set_xlim(0, scaled_duration)
+    axs[1].legend(loc='upper right', fontsize=8, ncol=2)
     axs[1].grid(True)
 
     plt.tight_layout()
+
     fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, "sim_vs_animal_joint_angles_2_3.png"), dpi=150)
     # plt.show()  # remove unconditional show
 
@@ -166,10 +186,24 @@ def exercise2_3(**kwargs):
     # IPLs
     ipl_error = np.mean((ipls_sim - ipls_animal)**2)**0.5
 
+    print("=== Animal Data (Raw) ===")
+    print(f"Frequencies Animal: {np.mean(freq_animal):.3f} Hz")
+    print(f"Amplitudes (r) Animal: {np.mean(amp_animal):.3f} rad")
+    print(f"IPLs Animal : {np.mean(ipls_animal):.3f} rad\n")
+
+    print("=== Simulation Data ===")
+    print(f"Simulation Frequency: {np.mean(freq_sim):.3f} Hz")
+    print(f"Simulation Amplitude (r): {np.mean(amp_sim):.3f} rad")
+    print(f"Simulation IPLs: {np.mean(ipls_sim):.3f} rad\n")
+
+    print("=== Errors (with Froude Scaling for Frequency) ===")
+    # On calcule la fréquence scalée juste pour l'affichage
+    freq_animal_scaled = freq_animal * CONVERSION_RATIO
+    print(f"(Note: Animal frequency scaled for robot size is {np.mean(freq_animal_scaled):.3f} Hz)")
     print(f"Frequency Error: {freq_error:.3f} Hz")
     print(f"Amplitude Error: {amp_error:.3f} rad")
     print(f"IPLs Error: {ipl_error:.3f} rad")
-
+    '''
     fig2, axs2 = plt.subplots(1, 2, figsize=(12, 5))
 
     # Amplitude Envelope
@@ -191,7 +225,7 @@ def exercise2_3(**kwargs):
     axs2[1].legend()
 
     fig2.tight_layout()
-    fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "amplitude_ipl_comparison_2_3.png"), dpi=150)
+    fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "amplitude_ipl_comparison_2_3.png"), dpi=150)'''
 
     plot = kwargs.pop('plot', False)
     if plot:
