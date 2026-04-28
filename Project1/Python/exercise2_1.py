@@ -63,7 +63,7 @@ def post_processing(base_path):
     # Plot θ and r combined
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
-    fig, axs = plt.subplots(2, 1, figsize=(14, 10))
+    fig, axs = plt.subplots(1,2, figsize=(14, 10))
     
     # Phases θ
     for i in range(8):
@@ -90,7 +90,7 @@ def post_processing(base_path):
     fig.savefig(os.path.join(base_path, PLOT_PATH, "phases_theta_amplitudes_r_2_1.png"), dpi=150)
 
     # Fused plot: motor sum and motor difference
-    fig_sd, axs_sd = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
+    fig_sd, axs_sd = plt.subplots(1, 2, figsize=(14, 10), sharex=True)
 
     # Sum
     for i in range(8):
@@ -146,15 +146,20 @@ def post_processing(base_path):
     # joints_actifs = joints_actifs * 180 / np.pi
     # joints_passifs = joints_passifs * 180 / np.pi
 
-
     noms_actifs = [joints_names_decoded[i] for i in indices_actifs]
     noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
+
+    # Filter to first 5 seconds
+    mask_joints = times <= 5.0
+    times_plot = times[mask_joints]
+    joints_actifs_plot = joints_actifs[mask_joints, :]
+    joints_passifs_plot = joints_passifs[mask_joints, :]
 
     fig, axs = plt.subplots(3, 1, figsize=(12, 10))
 
     # Active Joints
     for i, idx in enumerate(indices_actifs):
-        axs[0].plot(times[:min_len], joints_actifs[:, i], label=noms_actifs[i])
+        axs[0].plot(times_plot, joints_actifs_plot[:, i], label=noms_actifs[i])
     axs[0].set_title('Active Joints')
     axs[0].set_ylabel('Angle [rad]')
     axs[0].legend()
@@ -162,17 +167,17 @@ def post_processing(base_path):
 
     # Passive Joints
     for i, idx in enumerate(indices_passifs):
-        axs[1].plot(times[:min_len], joints_passifs[:, i], label=noms_passifs[i])
+        axs[1].plot(times_plot, joints_passifs_plot[:, i], label=noms_passifs[i])
     axs[1].set_title('Passive Joints')
     axs[1].set_ylabel('Angle [rad]')
     axs[1].legend()
     axs[1].grid(True)
 
     # All Joints
-    joints_all = np.concatenate([joints_actifs, joints_passifs], axis=1)
+    joints_all = np.concatenate([joints_actifs_plot, joints_passifs_plot], axis=1)
     noms_all = noms_actifs + noms_passifs
     for i in range(joints_all.shape[1]):
-        axs[2].plot(times[:min_len], joints_all[:, i], label=noms_all[i])
+        axs[2].plot(times_plot, joints_all[:, i], label=noms_all[i])
     axs[2].set_title('All Joints')
     axs[2].set_xlabel('Time [s]')
     axs[2].set_ylabel('Angle [rad]')

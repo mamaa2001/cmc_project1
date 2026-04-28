@@ -84,6 +84,10 @@ def exercise2_3(**kwargs):
     #pylog.warning("TODO: 2.3 Analyze the provided animal data and compare the animal locomotion performance with your implemented controller.")
     # pylog.set_level('critical')
 
+    results_dir = os.path.join(BASE_PATH, PLOT_PATH)
+    os.makedirs(BASE_PATH, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
+
     # Load HDF5 from 2_1
     sim_result = 'logs/exercise2_1/' + 'simulation.hdf5'
     with h5py.File(sim_result, "r") as f:
@@ -147,10 +151,14 @@ def exercise2_3(**kwargs):
     axs[1].grid(True)
 
     plt.tight_layout()
-    plt.show()
+    fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, "sim_vs_animal_joint_angles_2_3.png"), dpi=150)
+    # plt.show()  # remove unconditional show
 
     # Fréquence
-    freq_error = np.mean((freq_sim - freq_animal)**2)**0.5
+    freq_animal_scaled = freq_animal * CONVERSION_RATIO
+    
+
+    freq_error = np.mean((freq_sim - freq_animal_scaled)**2)**0.5
 
     # Amplitude
     amp_error = np.mean((amp_sim - amp_animal)**2)**0.5
@@ -161,6 +169,29 @@ def exercise2_3(**kwargs):
     print(f"Frequency Error: {freq_error:.3f} Hz")
     print(f"Amplitude Error: {amp_error:.3f} rad")
     print(f"IPLs Error: {ipl_error:.3f} rad")
+
+    fig2, axs2 = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Amplitude Envelope
+    axs2[0].plot(range(8), amp_sim, marker='o', label='Simulation', linewidth=2)
+    axs2[0].plot(range(8), amp_animal, marker='s', label='Animal', linewidth=2)
+    axs2[0].set_title('Amplitude Envelope')
+    axs2[0].set_xlabel('Joint Index (0=Head, 7=Tail) [-]')
+    axs2[0].set_ylabel('Amplitude [rad]')
+    axs2[0].grid(True)
+    axs2[0].legend()
+
+    # Local IPLs
+    axs2[1].plot(range(7), ipls_sim, marker='o', label='Simulation', linewidth=2)
+    axs2[1].plot(range(7), ipls_animal, marker='s', label='Animal', linewidth=2)
+    axs2[1].set_title('Intersegmental Phase Lags (IPL)')
+    axs2[1].set_xlabel('Joint Pair Index [-]')
+    axs2[1].set_ylabel('Phase Lag [rad]')
+    axs2[1].grid(True)
+    axs2[1].legend()
+
+    fig2.tight_layout()
+    fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "amplitude_ipl_comparison_2_3.png"), dpi=150)
 
     plot = kwargs.pop('plot', False)
     if plot:

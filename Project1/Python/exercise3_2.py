@@ -235,12 +235,7 @@ def exercise3_2(**kwargs):
                 label=f'Channel {j}'
             )
         # Optional summary curve
-        amp_mean = np.mean(amp_vals, axis=1)
-        ax4.plot(
-            w_vals, amp_mean,
-            color='black', linewidth=2.2, alpha=0.9,
-            label='Mean (all channels)'
-        )
+
     else:
         # Fallback if amplitude is already 1D
         ax4.plot(
