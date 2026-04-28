@@ -22,7 +22,7 @@ from simulate import runsim
 BASE_PATH = 'logs/exercise3_1/'
 PLOT_PATH = 'results'
 
-######################################### début code Estelle #################################################
+######################################### code Estelle #################################################
 
 def post_processing_3_1():
 
@@ -58,7 +58,6 @@ def post_processing_3_1():
 
     
     joints = list(range(8))   # which joints to plot
-    #colors = plt.cm.viridis(np.linspace(0, 1, len(joints)))
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
     # Extract phases
@@ -134,7 +133,6 @@ def post_processing_3_1():
     motor_sum_without  = motor_left_without + motor_right_without
     motor_diff_without = motor_left_without - motor_right_without
 
-
     # ---- Figure 2: motor sum and diff ----
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
     fig2, axes2 = plt.subplots(2, 2, figsize=(14, 10))
@@ -188,11 +186,6 @@ def post_processing_3_1():
    
     links_positions_without  = sensor_data_links_without[:, :, 7:10]
     links_velocities_without = sensor_data_links_without[:, :, 14:17]
-
-  
-    # Joints
-    #joint_angles_with    = joints_array_with[:, :8, 0]    # (n_iterations, 8)
-    #joint_angles_without = joints_array_without[:, :8, 0]
     
     joints_names_decoded = [name.decode('utf-8') for name in joints_names]
     indices_actifs  = list(range(8))
@@ -245,52 +238,6 @@ def post_processing_3_1():
 
     #############################################################################################################
     
-    '''
-    # ---- Figure 4: ----
-
-    joints_to_plot = list(range(8))  # subset for clarity
-    #colors = plt.cm.viridis(np.linspace(0, 1, len(joints_to_plot)))
-    colors = plt.cm.tab10(np.linspace(0, 1, 8))
-
-    fig4, axes4 = plt.subplots(1, 2, figsize=(14, 5))
-    fig4.suptitle('Body joint angles: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
-
-    for idx, j in enumerate(joints_to_plot):
-        axes4[0].plot(t, joint_angles_with[mask, j], color=colors[idx], label=f'Joint {j}')
-    axes4[0].set_title('Joint angles — with stretch feedback')
-    axes4[0].set_xlabel('Time [s]')
-    axes4[0].set_ylabel('Angle [rad]')
-    axes4[0].legend(fontsize=7)
-    axes4[0].grid()
-
-    for idx, j in enumerate(joints_to_plot):
-        axes4[1].plot(t, joint_angles_without[mask, j], color=colors[idx], label=f'Joint {j}')
-    axes4[1].set_title('Joint angles — without stretch feedback')
-    axes4[1].set_xlabel('Time [s]')
-    axes4[1].set_ylabel('Angle [rad]')
-    axes4[1].legend(fontsize=7)
-    axes4[1].grid()
-
-    fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
-    plt.show()
-    '''
-    # Avec passive joints
-    
-    # V1
-    # ---- Figure 4: Joint angles ----
-    '''
-    joints_names_decoded = [name.decode('utf-8') for name in joints_names]
-    indices_actifs  = list(range(8))
-    indices_passifs = [16, 17]
-    noms_actifs  = [joints_names_decoded[i] for i in indices_actifs]
-    noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
-
-    joint_angles_with_active    = joints_array_with[:, indices_actifs, 0]
-    joint_angles_with_passive   = joints_array_with[:, indices_passifs, 0]
-    joint_angles_without_active  = joints_array_without[:, indices_actifs, 0]
-    joint_angles_without_passive = joints_array_without[:, indices_passifs, 0]
-    '''
     colors = plt.cm.tab10.colors[:8]
 
     fig4, axs = plt.subplots(3, 1, figsize=(14, 12))
@@ -326,49 +273,7 @@ def post_processing_3_1():
 
     fig4.tight_layout()
     fig4.savefig(os.path.join(BASE_PATH, PLOT_PATH, 'joint_angles_3_1.png'), dpi=150)
-    '''
-
-    # V2
-    # ---- Figure 4: Joint angles (active + passive) ----
-
-    fig4, axs = plt.subplots(3, 2, figsize=(16, 12))
-    fig4.suptitle('Joint angles: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
-
-    for col, (active, passive, label) in enumerate([
-        (joint_angles_with_active,    joint_angles_with_passive,    'with stretch feedback'),
-        (joint_angles_without_active, joint_angles_without_passive, 'without stretch feedback'),
-    ]):
-        all_angles = np.concatenate([active, passive], axis=1)
-        noms_all   = noms_actifs + noms_passifs
-
-        # Active joints
-        for i, name in enumerate(noms_actifs):
-            axs[0, col].plot(t, active[mask, i], label=name)
-        axs[0, col].set_title(f'Active Joints — {label}')
-        axs[0, col].set_ylabel('Angle [rad]')
-        axs[0, col].legend(fontsize=7)
-        axs[0, col].grid(True)
-
-        # Passive joints
-        for i, name in enumerate(noms_passifs):
-            axs[1, col].plot(t, passive[mask, i], label=name)
-        axs[1, col].set_title(f'Passive Joints — {label}')
-        axs[1, col].set_ylabel('Angle [rad]')
-        axs[1, col].legend(fontsize=7)
-        axs[1, col].grid(True)
-
-        # All joints
-        for i, name in enumerate(noms_all):
-            axs[2, col].plot(t, all_angles[mask, i], label=name)
-        axs[2, col].set_title(f'All Joints — {label}')
-        axs[2, col].set_xlabel('Time [s]')
-        axs[2, col].set_ylabel('Angle [rad]')
-        axs[2, col].legend(fontsize=7)
-        axs[2, col].grid(True)
-
-    fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
-    '''
+    
     ########### Neural metrics #########
 
     # skip transient (first 2s)

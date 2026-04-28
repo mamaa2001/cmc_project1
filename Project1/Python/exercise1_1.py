@@ -111,10 +111,8 @@ def post_processing():
     times = sim_times[:sensor_data_joints_positions.shape[0]]
     mask_6s = times <= 6.0
 
-    # L'astuce pour avoir les vraies 10 couleurs de base sans en sauter aucune !
     colors = plt.cm.tab10.colors 
 
-    # ---- 2. Dessin des graphiques ----
     fig1, axs = plt.subplots(3, 1, figsize=(14, 12))
     fig1.suptitle('Joint angles over time (0–6 s)')
 
@@ -140,7 +138,7 @@ def post_processing():
     axs[1].legend(fontsize=8, ncol=2)
     axs[1].grid(True)
 
-    # Passive joints (Vérifie qu'elles existent bien dans le tableau)
+    # Passive joints 
     if sensor_data_joints_positions.shape[1] > 17:
         for i in range(len(indices_passifs)):
             idx = indices_passifs[i]

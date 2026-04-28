@@ -143,7 +143,7 @@ def exercise3_2(**kwargs):
             'init_phase': INIT_PHASE,
         },
     }
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=controller,
         base_path=BASE_PATH,
@@ -154,7 +154,7 @@ def exercise3_2(**kwargs):
             'runtime_n_iterations': 20001,
             'runtime_buffer_size': 20001,
         },
-    )'''
+    )
 
     metrics = []
     for w_ipsi_val in w_ipsi_range:
@@ -177,7 +177,7 @@ def exercise3_2(**kwargs):
 
     figs = []
 
-    # 1) Forward speed (2D scatter)
+    # Forward speed (2D scatter)
     fig1 = plt.figure(figsize=(8, 6))
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(w_vals, fwd_vals, s=45, alpha=0.9)
@@ -189,7 +189,7 @@ def exercise3_2(**kwargs):
     fig1.savefig(os.path.join(BASE_PATH, PLOT_PATH, "forward_speed_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig1)
 
-    # 2) CoT (2D scatter)
+    # CoT (2D scatter)
     fig2 = plt.figure(figsize=(8, 6))
     ax2 = fig2.add_subplot(1, 1, 1)
     ax2.scatter(w_vals, cot_vals, s=45, alpha=0.9, color='tab:orange')
@@ -201,11 +201,10 @@ def exercise3_2(**kwargs):
     fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "cot_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig2)
 
-    # 3) Peak frequency: single plot using mean across joints
+    # Peak frequency: single plot using mean across joints
     fig3 = plt.figure(figsize=(8, 6))
     ax3 = fig3.add_subplot(1, 1, 1)
 
-    # Robust to either shape (N, 8) or (N,)
     if freq_vals.ndim == 2:
         freq_mean = np.mean(freq_vals, axis=1)
     else:
@@ -222,22 +221,19 @@ def exercise3_2(**kwargs):
     fig3.savefig(os.path.join(BASE_PATH, PLOT_PATH, "peak_frequency_vs_w_ipsi_3_2.png"), dpi=150)
     figs.append(fig3)
 
-    # 4) Peak amplitude: combined in a single plot
+    # Peak amplitude: combined in a single plot
     fig4 = plt.figure(figsize=(9, 6))
     ax4 = fig4.add_subplot(1, 1, 1)
 
     if amp_vals.ndim == 2:
-        # One curve per channel
         for j in range(amp_vals.shape[1]):
             ax4.plot(
                 w_vals, amp_vals[:, j],
                 marker='o', markersize=3, linewidth=1.2, alpha=0.8,
                 label=f'Channel {j}'
             )
-        # Optional summary curve
 
     else:
-        # Fallback if amplitude is already 1D
         ax4.plot(
             w_vals, amp_vals,
             marker='o', markersize=4, linewidth=1.4, alpha=0.9,

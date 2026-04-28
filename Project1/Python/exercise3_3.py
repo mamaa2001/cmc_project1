@@ -91,7 +91,7 @@ def exercise3_3(**kwargs):
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config' : baseline_config}
 
-    #runsim(controller=controller_base, base_path=BASE_PATH+'baseline/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
+    runsim(controller=controller_base, base_path=BASE_PATH+'baseline/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
 
     # --- Mixed disruption demo (20%/20%) ---
     mixed_config = {**baseline_config,
@@ -102,11 +102,11 @@ def exercise3_3(**kwargs):
         'loader': 'cmc_controllers.CPG_controller.CPGController',
         'config' : mixed_config}
 
-    #runsim(controller=controller_mixed, base_path=BASE_PATH+'mixed_demo/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
+    runsim(controller=controller_mixed, base_path=BASE_PATH+'mixed_demo/',runtime_buffer_size=10001, runtime_n_iterations=10001, recording=None)
 
     # Building of all configurations (Two setups × three disruption types × five probabilities = 30 configs:)
     probs = np.linspace(0, 0.15, 5)
-    '''configs = []
+    configs = []
     log_paths = []
 
     for setup_name, w_ipsi, rostral, caudal in [
@@ -132,7 +132,7 @@ def exercise3_3(**kwargs):
                 })
                 log_paths.append(
                     f"{BASE_PATH}{setup_name}/{disruption_type}/p{p_s:.3f}_{p_c:.3f}/"
-                )'''
+                )
     grid_combined = {
         'disruption_p_sensors': probs,
         'disruption_p_couplings': probs,
@@ -140,12 +140,12 @@ def exercise3_3(**kwargs):
         'coupling_weights_caudal': [COUPLING_WEIGHTS_CAUDAL],   
         'w_ipsi': [10.0] # Capteurs activés
     }
-    '''run_multiple(MAX_WORKERS, controller_base, BASE_PATH + 'combined/', grid_combined, common_kwargs={
+    run_multiple(MAX_WORKERS, controller_base, BASE_PATH + 'combined/', grid_combined, common_kwargs={
                     'fast': True,
                     'headless': True,
                     'runtime_n_iterations': 20001,
                     'runtime_buffer_size': 20001,
-                },)'''
+                },)
     grid_decoupled = {
         'disruption_p_sensors': probs,
         'disruption_p_couplings': probs,
@@ -153,12 +153,12 @@ def exercise3_3(**kwargs):
         'coupling_weights_caudal': [0.0],  # Spine cut
         'w_ipsi': [10.0] # Capteurs activés
     }
-    '''run_multiple(MAX_WORKERS, controller_base, BASE_PATH + 'decoupled/', grid_decoupled, common_kwargs={
+    run_multiple(MAX_WORKERS, controller_base, BASE_PATH + 'decoupled/', grid_decoupled, common_kwargs={
                     'fast': True,
                     'headless': True,
                     'runtime_n_iterations': 20001,
                     'runtime_buffer_size': 20001,
-                },)'''
+                },)
     # Loading results and computing metrics
     speeds = np.zeros((2, 3, 5))   # [setup, disruption_type, prob]
     cots   = np.zeros((2, 3, 5))
@@ -171,8 +171,6 @@ def exercise3_3(**kwargs):
     ]
 
     for i_setup, setup_name in enumerate(['combined', 'decoupled']):
-        
-        # Définir les poids fixes selon le setup
         if setup_name == 'combined':
             rostral_str = "5.000"
             caudal_str  = "5.000"
@@ -182,9 +180,6 @@ def exercise3_3(**kwargs):
             
         for i_type, (disruption_type, p_sensors, p_couplings) in enumerate(disruption_configs):
             for i_p, (p_s, p_c) in enumerate(zip(p_sensors, p_couplings)):
-                
-                # 1. On reconstruit le nom exact comme dans ton ex 3.2
-                # (L'astuce {:.4f}[:5] permet d'avoir '0.037' au lieu de '0.038' pour coller à FARMS)
                 ps_str = f"{p_s:.4f}"[:5]
                 pc_str = f"{p_c:.4f}"[:5]
                 
@@ -193,11 +188,9 @@ def exercise3_3(**kwargs):
                                f"coupling_weights_rostral{rostral_str}_"
                                f"coupling_weights_caudal{caudal_str}_"
                                f"w_ipsi10.000.hdf5")
-                
-                # Chemin complet vers le fichier HDF5
+
                 target_path = os.path.join(BASE_PATH, setup_name, folder_name)
                 
-                # 2. Lecture directe si le fichier existe
                 if os.path.exists(target_path):
                     try:
                         sim_times, pos, vel, j_pos, j_vel, j_torq = load_sim_data(target_path)
@@ -212,7 +205,7 @@ def exercise3_3(**kwargs):
                 else:
                     print(f"ATTENTION: Fichier introuvable -> {target_path}")
 
-    # Plotting 
+
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
     labels = ['Muted Sensors', 'Removed Couplings', 'Mixed']
 
@@ -237,20 +230,8 @@ def exercise3_3(**kwargs):
     mixed_file = os.path.join(BASE_PATH, 'mixed_demo', 'simulation.hdf5')
 
     if os.path.exists(baseline_file) and os.path.exists(mixed_file):
-        # Load both runs
-        t_b, pos_b, vel_b, jpos_b, jvel_b, jtorq_b = load_sim_data(baseline_file, skip_start = 0)
-        t_m, pos_m, vel_m, jpos_m, jvel_m, jtorq_m = load_sim_data(mixed_file, skip_start=0)
-
-        # Metrics
-        speed_b, _ = compute_mechanical_speed(links_positions=pos_b, links_velocities=vel_b)
-        speed_m, _ = compute_mechanical_speed(links_positions=pos_m, links_velocities=vel_m)
-
-        _, cot_b = compute_mechanical_energy_and_cot(
-            times=t_b, links_positions=pos_b, joints_torques=jtorq_b, joints_velocities=jvel_b
-        )
-        _, cot_m = compute_mechanical_energy_and_cot(
-            times=t_m, links_positions=pos_m, joints_torques=jtorq_m, joints_velocities=jvel_m
-        )
+        t_b, pos_b, _, jpos_b, _, _ = load_sim_data(baseline_file, skip_start = 0)
+        t_m, pos_m, _, jpos_m, _,_ = load_sim_data(mixed_file, skip_start=0)
 
         # CoM trajectories
         com_b = pos_b.mean(axis=1)  # [time, xyz]
@@ -272,8 +253,6 @@ def exercise3_3(**kwargs):
         fig_cmp.tight_layout()
         fig_cmp.savefig(os.path.join(results_dir, 'baseline_vs_mixed_demo_3_3.png'), dpi=150)
 
-        # ---- Joint angles comparison (first 6s): baseline vs mixed_demo ----
-        # ---- Joint angles comparison (first 6s): baseline vs mixed_demo ----
         colors = plt.cm.tab10.colors[:8]
         t_rel_b = t_b - t_b[0]
         t_rel_m = t_m - t_m[0]
@@ -282,12 +261,10 @@ def exercise3_3(**kwargs):
 
         if np.any(mask_b) and np.any(mask_m):
             
-            # 1. Extraction des vrais noms depuis le HDF5 (Méthode Ex 3.1)
             with h5py.File(baseline_file, "r") as f:
                 joints_names = f['FARMSLISTanimats']['0']['sensors']['joints']['names'][:]
             joints_names_decoded = [name.decode('utf-8') for name in joints_names]
             
-            # 2. Les BONS indices découverts !
             indices_actifs  = list(range(8)) # Dos (0 à 7)
             indices_passifs = [16, 17]       # Pitch passifs (16 et 17)
             

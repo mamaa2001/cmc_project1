@@ -102,13 +102,13 @@ def exercise2_2(**kwargs):
     }
     
 
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example,
         common_kwargs={'fast': True, 'headless': True},
-    )'''
+    )
     
     drive_range_2 = np.linspace(2.0,4.0,9)
     parameter_grid_example_2 = {
@@ -116,13 +116,13 @@ def exercise2_2(**kwargs):
         'drive_left': drive_range_2
     }
     
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example_2,
         common_kwargs={'fast': True, 'headless': True},
-    )'''
+    )
 
     plot = kwargs.pop('plot', False)
     if plot:
@@ -161,7 +161,6 @@ def exercise2_2(**kwargs):
         drive_right_vals = np.array([m['drive right'] for m in metrics_2])
         drive_left_vals = np.array([m['drive left'] for m in metrics_2])
 
-        # ---- Heatmaps (same palette + value in each square) ----
         shared_cmap = "viridis"
 
         def plot_annotated_heatmap(grid, x_vals, y_vals, title, xlabel, ylabel, cbar_label, filename, fmt=".3f", frame_abs_min=False):
@@ -184,7 +183,6 @@ def exercise2_2(**kwargs):
                     txt_color = "white" if norm(val) < 0.6 else "black"
                     ax.text(j, i, format(val, fmt), ha="center", va="center", color=txt_color, fontsize=8)
 
-            # Frame lowest and highest values
             min_idx = np.unravel_index(np.nanargmin(grid), grid.shape)
             max_idx = np.unravel_index(np.nanargmax(grid), grid.shape)
 
@@ -197,7 +195,6 @@ def exercise2_2(**kwargs):
                 fill=False, edgecolor="red", linewidth=2.5
             ))
 
-            # Frame lowest absolute value if requested
             if frame_abs_min:
                 abs_min_idx = np.unravel_index(np.nanargmin(np.abs(grid)), grid.shape)
                 ax.add_patch(Rectangle(
@@ -211,7 +208,6 @@ def exercise2_2(**kwargs):
             fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, filename), dpi=150)
             plt.close(fig)
 
-        # Grid 1: rows=drive, cols=PL
         unique_drive = np.sort(np.unique(drive_vals))
         unique_PL = np.sort(np.unique(PL_vals))
         forward_speed_grid = forward_speed_vals.reshape(len(unique_drive), len(unique_PL))
@@ -241,7 +237,6 @@ def exercise2_2(**kwargs):
             fmt=".3f",
         )
 
-        # Grid 2: rows=drive_right, cols=drive_left
         unique_drive_right = np.sort(np.unique(drive_right_vals))
         unique_drive_left = np.sort(np.unique(drive_left_vals))
         mean_curvatures_vals = np.array([m['curvature mean'] for m in metrics_2])
@@ -260,7 +255,6 @@ def exercise2_2(**kwargs):
             frame_abs_min=True,
         )
 
-        # Grid of CoM trajectories (one subplot per drive_right/drive_left pair)
         fig3, axes = plt.subplots(
             3,
             3,

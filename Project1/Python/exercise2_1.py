@@ -43,9 +43,8 @@ def post_processing(base_path):
 
     state = controller_data['state']  # (2501, 48)
 
-    # Colonnes 0-15 : phases θ entrelacées (gauche=pairs, droite=impairs)
-    theta_left  = state[:, slice(0, 16, 2)]   # cols 0,2,4,6,8,10,12,14  → 8 oscillateurs gauche
-    theta_right = state[:, slice(1, 17, 2)]   # cols 1,3,5,7,9,11,13,15  → 8 oscillateurs droite
+    theta_left  = state[:, slice(0, 16, 2)]   # cols 0,2,4,6,8,10,12,14  → 8 left oscillator
+    theta_right = state[:, slice(1, 17, 2)]   # cols 1,3,5,7,9,11,13,15  → 8 right oscillator
 
     # Colonnes 16-31 : amplitudes r 
     r_left  = state[:, slice(16, 32, 2)]      # cols 16,18,20,22,24,26,28,30
@@ -141,10 +140,6 @@ def post_processing(base_path):
 
     joints_actifs = sensor_data_joints_positions[:min_len, indices_actifs]
     joints_passifs = sensor_data_joints_positions[:min_len, indices_passifs]
-
-    # Keep radians for consistency across project
-    # joints_actifs = joints_actifs * 180 / np.pi
-    # joints_passifs = joints_passifs * 180 / np.pi
 
     noms_actifs = [joints_names_decoded[i] for i in indices_actifs]
     noms_passifs = [joints_names_decoded[i] for i in indices_passifs]

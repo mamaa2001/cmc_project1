@@ -120,13 +120,13 @@ def exercise1_2(**kwargs):
         'amp': example_amp_range,
     }
 
-    '''run_multiple(
+    run_multiple(
         max_workers=MAX_WORKERS,
         controller=base_controller,
         base_path=BASE_PATH,
         parameter_grid=parameter_grid_example,
         common_kwargs={'fast': True, 'headless': True},
-    )'''
+    )
 
     #pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
     
@@ -148,7 +148,6 @@ def exercise1_2(**kwargs):
     cot_vals = np.array([m['CoT'] for m in metrics])
     ipls_vals = np.array([m['average_ipls'] for m in metrics])
 
-    # Reshape flat metric arrays into 2D grids: rows=twl, cols=amp
     n_twl = len(parameter_grid_example['twl'])
     n_amp = len(parameter_grid_example['amp'])
 
@@ -157,11 +156,9 @@ def exercise1_2(**kwargs):
     ipls_grid = ipls_vals.reshape(n_twl, n_amp)
 
 
-    # Separate annotated heatmaps (one figure per metric)
     amp_axis = parameter_grid_example['amp']
     twl_axis = parameter_grid_example['twl']
 
-    # Use one common colormap for all plots
     shared_cmap = 'viridis'
 
     def plot_annotated_heatmap(grid, title, cmap, cbar_label, filename, value_fmt=".2f"):
@@ -173,13 +170,11 @@ def exercise1_2(**kwargs):
         ax.set_xlabel('A [-]')
         ax.set_ylabel('TWL [-]')
 
-        # Show actual parameter values on axes
         ax.set_xticks(np.arange(len(amp_axis)))
         ax.set_xticklabels([f"{v:.2f}" for v in amp_axis], rotation=45, ha='right')
         ax.set_yticks(np.arange(len(twl_axis)))
         ax.set_yticklabels([f"{v:.2f}" for v in twl_axis])
 
-        # Annotate each cell with its value
         norm = colors.Normalize(vmin=np.nanmin(grid), vmax=np.nanmax(grid))
         for i in range(grid.shape[0]):
             for j in range(grid.shape[1]):
@@ -188,7 +183,6 @@ def exercise1_2(**kwargs):
                 ax.text(j, i, format(val, value_fmt),
                         ha='center', va='center', color=txt_color, fontsize=8)
 
-        # Frame lowest and highest values
         min_idx = np.unravel_index(np.nanargmin(grid), grid.shape)
         max_idx = np.unravel_index(np.nanargmax(grid), grid.shape)
 

@@ -124,33 +124,26 @@ def exercise2_3(**kwargs):
     time_cut = time_cut - time_cut[0]
     joints_actifs_cut = joints_actifs[mask]
 
-    # ---- Pas besoin de synchroniser les longueurs, on trace chacun sur son propre temps ----
-    
-    # set figure size to width:height = 5:2
     fig, axs = plt.subplots(1,2, figsize=(10, 4))
 
-    # L'animal a été filmé sur environ 0.75s
     animal_duration = 0.75        
     t_animal_start = 0.0   
 
-    # La Magie de Froude : T_robot = T_animal / CONVERSION_RATIO
-    # On calcule la durée équivalente pour le robot géant
+    # CONVERSION
     scaled_duration = animal_duration / CONVERSION_RATIO
     
-    t_sim_start = 2.375   # On skip le régime transitoire de la simulation
+    t_sim_start = 2.375   
 
-    # Masques pour isoler les bonnes fenêtres temporelles respectives
+    # Mask
     mask_sim = (sim_times >= t_sim_start) & (sim_times <= t_sim_start + scaled_duration)
     mask_anim = (time_animal >= t_animal_start) & (time_animal <= t_animal_start + animal_duration)
 
-    # Création des axes de temps relatifs
     t_sim_plot = sim_times[mask_sim] - t_sim_start
     t_anim_plot = time_animal[mask_anim] - t_animal_start
     
-    # ÉTAPE CLÉ : On étire le temps de l'animal pour qu'il corresponde au temps du robot
+    #CONVERSION
     t_anim_plot_scaled = t_anim_plot / CONVERSION_RATIO
 
-    # 1. Simulation Joints (plot in radians)
     for i, idx in enumerate(indices_actifs):
         axs[0].plot(t_sim_plot, sensor_data_joints_positions[mask_sim, idx], label=noms_actifs[i])
     axs[0].set_title('Simulation - Active Joints (Steady State)')
@@ -159,7 +152,6 @@ def exercise2_3(**kwargs):
     axs[0].legend(loc='upper right', fontsize=8, ncol=2)
     axs[0].grid(True)
 
-    # 2. Animal Joints (Time-scaled, already in radians)
     for i in range(joints_animal.shape[1]):
         axs[1].plot(t_anim_plot_scaled, joints_animal[mask_anim, i], label=joint_names_animal[i])
     axs[1].set_title('Animal Joints (Time Scaled by Froude Ratio)')
@@ -172,18 +164,17 @@ def exercise2_3(**kwargs):
     plt.tight_layout()
 
     fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, "sim_vs_animal_joint_angles_2_3.png"), dpi=150)
-    # plt.show()  # remove unconditional show
 
-    # Fréquence
+    # Frequency scaling
     freq_animal_scaled = freq_animal * CONVERSION_RATIO
     
-
+    #Frequency error
     freq_error = np.mean((freq_sim - freq_animal_scaled)**2)**0.5
 
-    # Amplitude
+    # Amplitude error
     amp_error = np.mean((amp_sim - amp_animal)**2)**0.5
 
-    # IPLs
+    # IPLs error
     ipl_error = np.mean((ipls_sim - ipls_animal)**2)**0.5
 
     print("=== Animal Data (Raw) ===")
@@ -197,35 +188,11 @@ def exercise2_3(**kwargs):
     print(f"Simulation IPLs: {np.mean(ipls_sim):.3f} rad\n")
 
     print("=== Errors (with Froude Scaling for Frequency) ===")
-    # On calcule la fréquence scalée juste pour l'affichage
     freq_animal_scaled = freq_animal * CONVERSION_RATIO
     print(f"(Note: Animal frequency scaled for robot size is {np.mean(freq_animal_scaled):.3f} Hz)")
     print(f"Frequency Error: {freq_error:.3f} Hz")
     print(f"Amplitude Error: {amp_error:.3f} rad")
     print(f"IPLs Error: {ipl_error:.3f} rad")
-    '''
-    fig2, axs2 = plt.subplots(1, 2, figsize=(12, 5))
-
-    # Amplitude Envelope
-    axs2[0].plot(range(8), amp_sim, marker='o', label='Simulation', linewidth=2)
-    axs2[0].plot(range(8), amp_animal, marker='s', label='Animal', linewidth=2)
-    axs2[0].set_title('Amplitude Envelope')
-    axs2[0].set_xlabel('Joint Index (0=Head, 7=Tail) [-]')
-    axs2[0].set_ylabel('Amplitude [rad]')
-    axs2[0].grid(True)
-    axs2[0].legend()
-
-    # Local IPLs
-    axs2[1].plot(range(7), ipls_sim, marker='o', label='Simulation', linewidth=2)
-    axs2[1].plot(range(7), ipls_animal, marker='s', label='Animal', linewidth=2)
-    axs2[1].set_title('Intersegmental Phase Lags (IPL)')
-    axs2[1].set_xlabel('Joint Pair Index [-]')
-    axs2[1].set_ylabel('Phase Lag [rad]')
-    axs2[1].grid(True)
-    axs2[1].legend()
-
-    fig2.tight_layout()
-    fig2.savefig(os.path.join(BASE_PATH, PLOT_PATH, "amplitude_ipl_comparison_2_3.png"), dpi=150)'''
 
     plot = kwargs.pop('plot', False)
     if plot:
