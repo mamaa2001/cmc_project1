@@ -62,13 +62,14 @@ def post_processing(base_path):
     # Plot θ and r combined
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
-    fig, axs = plt.subplots(1,2, figsize=(14, 10))
+    fig, axs = plt.subplots(1,2, figsize=(10,4))
     
     # Phases θ
     for i in range(8):
         c = colors[i]
         axs[0].plot(t_plot, theta_left[mask, i], label=f"θ_L{i}", color=c)
         axs[0].plot(t_plot, theta_right[mask, i], label=f"θ_R{i}", linestyle='--', color=c)
+    axs[0].set_xlabel('Time [s]')
     axs[0].set_ylabel("Phase θ [rad]")
     axs[0].set_title("Time evolution of phases (θ)")
     axs[0].legend(ncol=2, fontsize=8)
@@ -89,11 +90,12 @@ def post_processing(base_path):
     fig.savefig(os.path.join(base_path, PLOT_PATH, "phases_theta_amplitudes_r_2_1.png"), dpi=150)
 
     # Fused plot: motor sum and motor difference
-    fig_sd, axs_sd = plt.subplots(1, 2, figsize=(14, 10), sharex=True)
+    fig_sd, axs_sd = plt.subplots(1, 2, figsize=(10,4), sharex=True)
 
     # Sum
     for i in range(8):
         axs_sd[0].plot(t_plot, motor_sum[mask, i], label=f"sum_{i}")
+    axs_sd[0].set_xlabel('Time [s]')
     axs_sd[0].set_ylabel("Sum L+R  [-]")
     axs_sd[0].set_title("Motor output sum (L+R)")
     axs_sd[0].legend(ncol=2, fontsize=8)
