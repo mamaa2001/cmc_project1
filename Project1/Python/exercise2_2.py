@@ -4,6 +4,7 @@
 import os
 import h5py
 import numpy as np
+import warnings
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from matplotlib.patches import Rectangle
@@ -58,7 +59,9 @@ def load_metrics_from_hdf5(hdf5_path):
     timestep = sim_times[1]-sim_times[0]
     CoM_traj_filtered = get_filtered_signals(CoM_traj, signal_dt=timestep, fcut_lp=0.5)
     
-    curvature_mean = compute_trajectory_curvature(trajectory=CoM_traj_filtered, timestep=timestep)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        curvature_mean = compute_trajectory_curvature(trajectory=CoM_traj_filtered, timestep=timestep)
 
     return speed_forward, speed_lateral, cot, CoM_traj, curvature_mean
 
@@ -93,12 +96,18 @@ def exercise2_2(**kwargs):
                 size=16)}}
     
     drive_range = np.linspace(2.0,4.0,10)
-    PL_range = np.linspace(np.pi/16,3*np.pi/8,10)
+    PL_values = np.linspace(np.pi/16, 3*np.pi/8, 10)
+    PL_range = [np.ones(7) * val for val in PL_values]
     
 
     parameter_grid_example = {
         'drive_right': drive_range,
         'PL': PL_range
+    }
+
+    parameter_grid_example_readable = { #to be able to read the .hdf5 files with strings
+        'drive_right': drive_range,
+        'PL': PL_values
     }
     
 
@@ -128,10 +137,10 @@ def exercise2_2(**kwargs):
     if plot:
         metrics = []
         metrics_2 = []
-        for drive_val in parameter_grid_example['drive_right']:
-            for PL_val in parameter_grid_example['PL']:
+        for drive_val in parameter_grid_example_readable['drive_right']:
+            for PL_val in parameter_grid_example_readable['PL']:
                 sim_result = BASE_PATH + \
-                f'simulation_drive_right{drive_val:0.3f}_PL{PL_val:0.3f}.hdf5'
+                f'simulation_drive_right{drive_val:0.3f}_PLarr7_{PL_val:0.3f}.hdf5'
                 v_fwd,_, cot,_,_ = load_metrics_from_hdf5(sim_result)
                 int_results = {
                     'drive': drive_val,
