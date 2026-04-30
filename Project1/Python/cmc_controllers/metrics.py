@@ -336,8 +336,8 @@ def compute_mechanical_energy_and_cot(times: np.ndarray,
     dt = times[1]-times[0]  # we assume that the dt is constant, which is ok
     Power = np.maximum(joints_torques * joints_velocities, 0)
     energy = dt * np.sum(Power)
-    com_final = np.sum(links_positions[-1, :, 0] * LINKS_MASSES) / TOTAL_MASS
-    com_initial = np.sum(links_positions[0, :, 0] * LINKS_MASSES) / TOTAL_MASS
-    Dfwd = np.abs(com_final - com_initial)
+    com_final = np.sum(links_positions[-1, :, :2] * LINKS_MASSES[:, None], axis=0) / TOTAL_MASS
+    com_initial = np.sum(links_positions[0, :, :2] * LINKS_MASSES[:, None], axis=0) / TOTAL_MASS
+    Dfwd = np.linalg.norm(com_final - com_initial)
     cot = energy / Dfwd if Dfwd > 0 else np.inf
     return energy, cot
