@@ -20,9 +20,9 @@ from simulate import runsim
 
 
 BASE_PATH = 'logs/exercise3_1/'
-PLOT_PATH = 'results'
+PLOT_PATH = os.path.join(BASE_PATH, 'results')
 
-######################################### début code Estelle #################################################
+######################################### code Estelle #################################################
 
 def post_processing_3_1():
 
@@ -55,7 +55,6 @@ def post_processing_3_1():
 
     
     joints = list(range(8))   # which joints to plot
-    #colors = plt.cm.viridis(np.linspace(0, 1, len(joints)))
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
     # Extract phases
@@ -79,8 +78,8 @@ def post_processing_3_1():
         axes1[0, 0].plot(t, theta_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[0, 0].plot(t, theta_right_with[mask, j], color=colors[idx], linestyle='--', label=f'joint {j} right')
     axes1[0, 0].set_title('Phase θ — with stretch feedback')
-    axes1[0, 0].set_xlabel('Time (s)')
-    axes1[0, 0].set_ylabel('Phase (rad)')
+    axes1[0, 0].set_xlabel('Time [s]')
+    axes1[0, 0].set_ylabel('Phase [rad]')
     axes1[0, 0].legend(fontsize=7)
     axes1[0, 0].grid()
 
@@ -89,8 +88,8 @@ def post_processing_3_1():
         axes1[0, 1].plot(t, theta_left_without[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[0, 1].plot(t, theta_right_without[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes1[0, 1].set_title('Phase θ — without stretch feedback')
-    axes1[0, 1].set_xlabel('Time (s)')
-    axes1[0, 1].set_ylabel('Phase (rad)')
+    axes1[0, 1].set_xlabel('Time [s]')
+    axes1[0, 1].set_ylabel('Phase [rad]')
     axes1[0, 1].legend(fontsize=7)
     axes1[0, 1].grid()
 
@@ -99,8 +98,8 @@ def post_processing_3_1():
         axes1[1, 0].plot(t, r_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[1, 0].plot(t, r_right_with[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes1[1, 0].set_title('Amplitude r — with stretch feedback')
-    axes1[1, 0].set_xlabel('Time (s)')
-    axes1[1, 0].set_ylabel('Amplitude')
+    axes1[1, 0].set_xlabel('Time [s]')
+    axes1[1, 0].set_ylabel('Amplitude [-]')
     axes1[1, 0].legend(fontsize=7)
     axes1[1, 0].grid()
 
@@ -109,14 +108,14 @@ def post_processing_3_1():
         axes1[1, 1].plot(t, r_left_without[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes1[1, 1].plot(t, r_right_without[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes1[1, 1].set_title('Amplitude r — without stretch feedback')
-    axes1[1, 1].set_xlabel('Time (s)')
-    axes1[1, 1].set_ylabel('Amplitude')
+    axes1[1, 1].set_xlabel('Time [s]')
+    axes1[1, 1].set_ylabel('Amplitude [-]')
     axes1[1, 1].legend(fontsize=7)
     axes1[1, 1].grid()
 
     fig1.tight_layout()
     os.makedirs(PLOT_PATH, exist_ok=True)
-    fig1.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r.png'), dpi=150)
+    fig1.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r_3_1.png'), dpi=150)
 
     #############################################################################################################
 
@@ -142,8 +141,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[0, 0].plot(t, motor_sum_with[mask, j], color=colors[idx], label=f'jsum_{j}')
     axes2[0, 0].set_title('Motor sum (ML+MR) — with stretch feedback')
-    axes2[0, 0].set_xlabel('Time (s)')
-    axes2[0, 0].set_ylabel('ML + MR')
+    axes2[0, 0].set_xlabel('Time [s]')
+    axes2[0, 0].set_ylabel('ML + MR [-]')
     axes2[0, 0].legend(fontsize=7)
     axes2[0, 0].grid()
 
@@ -151,8 +150,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[0, 1].plot(t, motor_sum_without[mask, j], color=colors[idx], label=f'sum_{j}')
     axes2[0, 1].set_title('Motor sum (ML+MR) — without stretch feedback')
-    axes2[0, 1].set_xlabel('Time (s)')
-    axes2[0, 1].set_ylabel('ML + MR')
+    axes2[0, 1].set_xlabel('Time [s]')
+    axes2[0, 1].set_ylabel('ML + MR [-]')
     axes2[0, 1].legend(fontsize=7)
     axes2[0, 1].grid()
 
@@ -160,8 +159,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[1, 0].plot(t, motor_diff_with[mask, j], color=colors[idx], label=f'diff_{j}')
     axes2[1, 0].set_title('Motor diff (ML-MR) — with stretch feedback')
-    axes2[1, 0].set_xlabel('Time (s)')
-    axes2[1, 0].set_ylabel('ML - MR')
+    axes2[1, 0].set_xlabel('Time [s]')
+    axes2[1, 0].set_ylabel('ML - MR [-]')
     axes2[1, 0].legend(fontsize=7)
     axes2[1, 0].grid()
 
@@ -169,13 +168,13 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes2[1, 1].plot(t, motor_diff_without[mask, j], color=colors[idx], label=f'diff_{j}')
     axes2[1, 1].set_title('Motor diff (ML-MR) — without stretch feedback')
-    axes2[1, 1].set_xlabel('Time (s)')
-    axes2[1, 1].set_ylabel('ML - MR')
+    axes2[1, 1].set_xlabel('Time [s]')
+    axes2[1, 1].set_ylabel('ML - MR [-]')
     axes2[1, 1].legend(fontsize=7)
     axes2[1, 1].grid()
 
     fig2.tight_layout()
-    fig2.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor.png'), dpi=150)
+    fig2.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor_3_1.png'), dpi=150)
 
     #############################################################################################################
     
@@ -222,20 +221,20 @@ def post_processing_3_1():
 
     axes3[0].plot(com_x_with, com_y_with)
     axes3[0].set_title('CoM trajectory — with stretch feedback')
-    axes3[0].set_xlabel('X position (m)')
-    axes3[0].set_ylabel('Y position (m)')
+    axes3[0].set_xlabel('X position [m]')
+    axes3[0].set_ylabel('Y position [m]')
     axes3[0].axis('equal')
     axes3[0].grid()
 
     axes3[1].plot(com_x_without, com_y_without)
     axes3[1].set_title('CoM trajectory — without stretch feedback')
-    axes3[1].set_xlabel('X position (m)')
-    axes3[1].set_ylabel('Y position (m)')
+    axes3[1].set_xlabel('X position [m]')
+    axes3[1].set_ylabel('Y position [m]')
     axes3[1].axis('equal')
     axes3[1].grid()
 
     fig3.tight_layout()
-    fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory.png'), dpi=150)
+    fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory_3_1.png'), dpi=150)
 
     #############################################################################################################
     # ---- Figure 4: joint angles ----
@@ -250,6 +249,7 @@ def post_processing_3_1():
         axs[0].plot(t, joint_angles_with_active[mask, i],    color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} with')
         axs[0].plot(t, joint_angles_without_active[mask, i], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} without')
     axs[0].set_title('Active Joints 0-3')
+    #axs[0].set_xlabel('Time [s]')
     axs[0].set_ylabel('Angle [rad]')
     axs[0].legend(fontsize=7, ncol=2)
     axs[0].grid(True)
@@ -259,6 +259,7 @@ def post_processing_3_1():
         axs[1].plot(t, joint_angles_with_active[mask, i],    color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} with')
         axs[1].plot(t, joint_angles_without_active[mask, i], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} without')
     axs[1].set_title('Active Joints 4-7')
+    #axs[1].set_xlabel('Time [s]')
     axs[1].set_ylabel('Angle [rad]')
     axs[1].legend(fontsize=7, ncol=2)
     axs[1].grid(True)
@@ -274,7 +275,7 @@ def post_processing_3_1():
     axs[2].grid(True)
 
     fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
+    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles_3_1.png'), dpi=150)
     
     # ---- Figure 5: theta and r ONLY WITH STRETCH----
     fig5, axes5 = plt.subplots(1, 2, figsize=(14, 5))
@@ -285,8 +286,8 @@ def post_processing_3_1():
         axes5[0].plot(t, theta_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes5[0].plot(t, theta_right_with[mask, j], color=colors[idx], linestyle='--', label=f'joint {j} right')
     axes5[0].set_title('Phase θ — with stretch feedback')
-    axes5[0].set_xlabel('Time (s)')
-    axes5[0].set_ylabel('Phase (rad)')
+    axes5[0].set_xlabel('Time [s]')
+    axes5[0].set_ylabel('Phase [rad]')
     axes5[0].legend(fontsize=7)
     axes5[0].grid()
 
@@ -295,14 +296,14 @@ def post_processing_3_1():
         axes5[1].plot(t, r_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
         axes5[1].plot(t, r_right_with[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
     axes5[1].set_title('Amplitude r — with stretch feedback')
-    axes5[1].set_xlabel('Time (s)')
-    axes5[1].set_ylabel('Amplitude')
+    axes5[1].set_xlabel('Time [s]')
+    axes5[1].set_ylabel('Amplitude [-]')
     axes5[1].legend(fontsize=7)
     axes5[1].grid()
 
     fig5.tight_layout()
     os.makedirs(PLOT_PATH, exist_ok=True)
-    fig5.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r_ONLY_STRETCH.png'), dpi=150)
+    fig5.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r_ONLY_STRETCH_3_1.png'), dpi=150)
 
     #############################################################################################################
 
@@ -315,8 +316,8 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes6[0].plot(t, motor_sum_with[mask, j], color=colors[idx], label=f'jsum_{j}')
     axes6[0].set_title('Motor sum (ML+MR) — with stretch feedback')
-    axes6[0].set_xlabel('Time (s)')
-    axes6[0].set_ylabel('ML + MR')
+    axes6[0].set_xlabel('Time [s]')
+    axes6[0].set_ylabel('ML + MR [-]')
     axes6[0].legend(fontsize=7)
     axes6[0].grid()
 
@@ -324,13 +325,13 @@ def post_processing_3_1():
     for idx, j in enumerate(joints):
         axes6[1].plot(t, motor_diff_with[mask, j], color=colors[idx], label=f'diff_{j}')
     axes6[1].set_title('Motor diff (ML-MR) — with stretch feedback')
-    axes6[1].set_xlabel('Time (s)')
-    axes6[1].set_ylabel('ML - MR')
+    axes6[1].set_xlabel('Time [s]')
+    axes6[1].set_ylabel('ML - MR [-]')
     axes6[1].legend(fontsize=7)
     axes6[1].grid()
 
     fig6.tight_layout()
-    fig6.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor_ONLY_STRETCH.png'), dpi=150)
+    fig6.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor_ONLY_STRETCH_3_1.png'), dpi=150)
 
     #############################################################################################################
     
@@ -345,6 +346,7 @@ def post_processing_3_1():
         axs[0].plot(t, joint_angles_with_active[mask, i],    color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} with')
         axs[0].plot(t, joint_angles_without_active[mask, i], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} without')
     axs[0].set_title('Active Joints 0-3')
+    #axs[0].set_xlabel('Time [s]')
     axs[0].set_ylabel('Angle [rad]')
     axs[0].legend(fontsize=7, ncol=2)
     axs[0].grid(True)
@@ -354,12 +356,13 @@ def post_processing_3_1():
         axs[1].plot(t, joint_angles_with_active[mask, i],    color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} with')
         axs[1].plot(t, joint_angles_without_active[mask, i], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} without')
     axs[1].set_title('Active Joints 4-7')
+    axs[1].set_xlabel('Time [s]')
     axs[1].set_ylabel('Angle [rad]')
     axs[1].legend(fontsize=7, ncol=2)
     axs[1].grid(True)
 
     fig7.tight_layout()
-    fig7.savefig(os.path.join(PLOT_PATH, 'joint_angles_ACTIVE.png'), dpi=150)
+    fig7.savefig(os.path.join(PLOT_PATH, 'joint_angles_ACTIVE_3_1.png'), dpi=150)
     
 
     ########### Neural metrics #########
@@ -380,8 +383,8 @@ def post_processing_3_1():
     neural_amp_without = np.mean(peak_amp_without)
 
     print("=== Neural Metrics ===")
-    print(f"With stretch feedback:    neural_freq={neural_freq_with:.3f} Hz,  neural_amp={ neural_amp_with:.3f}")
-    print(f"Without stretch feedback: neural_freq={ neural_freq_without:.3f} Hz, neural_amp={ neural_amp_without:.3f}")
+    print(f"With stretch feedback:    neural_freq={neural_freq_with:.3f} [Hz],  neural_amp={ neural_amp_with:.3f} [-]")
+    print(f"Without stretch feedback: neural_freq={ neural_freq_without:.3f} [Hz], neural_amp={ neural_amp_without:.3f} [-]")
 
     ######## Forward speed ############
     
@@ -389,8 +392,8 @@ def post_processing_3_1():
     forward_speed_without, _ = compute_mechanical_speed(links_positions_without, links_velocities_without)
     print("=== Other Metrics ===")
     print("Forward speed")
-    print(f"With stretch feedback:    forward_speed={forward_speed_with:.3f}")
-    print(f"Without stretch feedback: forward_speed={forward_speed_without:.3f}")
+    print(f"With stretch feedback:    forward_speed={forward_speed_with:.3f} [m/s]")
+    print(f"Without stretch feedback: forward_speed={forward_speed_without:.3f} [m/s]")
 
     ########## CoT ############
     
@@ -403,8 +406,8 @@ def post_processing_3_1():
         joints_velocities_without[transient:]
     )
     print("CoT")
-    print(f"With stretch feedback:    CoT={CoT_with:.3f}") 
-    print(f"Without stretch feedback: CoT={CoT_without:.3f}")
+    print(f"With stretch feedback:    CoT={CoT_with:.3f} [J/m]") 
+    print(f"Without stretch feedback: CoT={CoT_without:.3f} [J/m]")
     
 
     
