@@ -187,10 +187,6 @@ def post_processing_3_1():
     links_positions_without  = sensor_data_links_without[:, :, 7:10]
     links_velocities_without = sensor_data_links_without[:, :, 14:17]
 
-  
-    # Joints
-    #joint_angles_with    = joints_array_with[:, :8, 0]    # (n_iterations, 8)
-    #joint_angles_without = joints_array_without[:, :8, 0]
     
     joints_names_decoded = [name.decode('utf-8') for name in joints_names]
     indices_actifs  = list(range(8))
@@ -242,53 +238,8 @@ def post_processing_3_1():
     fig3.savefig(os.path.join(PLOT_PATH, 'com_trajectory.png'), dpi=150)
 
     #############################################################################################################
-    
-    '''
-    # ---- Figure 4: ----
+    # ---- Figure 4: joint angles ----
 
-    joints_to_plot = list(range(8))  # subset for clarity
-    #colors = plt.cm.viridis(np.linspace(0, 1, len(joints_to_plot)))
-    colors = plt.cm.tab10(np.linspace(0, 1, 8))
-
-    fig4, axes4 = plt.subplots(1, 2, figsize=(14, 5))
-    fig4.suptitle('Body joint angles: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
-
-    for idx, j in enumerate(joints_to_plot):
-        axes4[0].plot(t, joint_angles_with[mask, j], color=colors[idx], label=f'Joint {j}')
-    axes4[0].set_title('Joint angles — with stretch feedback')
-    axes4[0].set_xlabel('Time [s]')
-    axes4[0].set_ylabel('Angle [rad]')
-    axes4[0].legend(fontsize=7)
-    axes4[0].grid()
-
-    for idx, j in enumerate(joints_to_plot):
-        axes4[1].plot(t, joint_angles_without[mask, j], color=colors[idx], label=f'Joint {j}')
-    axes4[1].set_title('Joint angles — without stretch feedback')
-    axes4[1].set_xlabel('Time [s]')
-    axes4[1].set_ylabel('Angle [rad]')
-    axes4[1].legend(fontsize=7)
-    axes4[1].grid()
-
-    fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
-    plt.show()
-    '''
-    # Avec passive joints
-    
-    # V1
-    # ---- Figure 4: Joint angles ----
-    '''
-    joints_names_decoded = [name.decode('utf-8') for name in joints_names]
-    indices_actifs  = list(range(8))
-    indices_passifs = [16, 17]
-    noms_actifs  = [joints_names_decoded[i] for i in indices_actifs]
-    noms_passifs = [joints_names_decoded[i] for i in indices_passifs]
-
-    joint_angles_with_active    = joints_array_with[:, indices_actifs, 0]
-    joint_angles_with_passive   = joints_array_with[:, indices_passifs, 0]
-    joint_angles_without_active  = joints_array_without[:, indices_actifs, 0]
-    joint_angles_without_passive = joints_array_without[:, indices_passifs, 0]
-    '''
     colors = plt.cm.tab10(np.linspace(0, 1, 8))
 
     fig4, axs = plt.subplots(3, 1, figsize=(14, 12))
@@ -324,49 +275,93 @@ def post_processing_3_1():
 
     fig4.tight_layout()
     fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
-    '''
+    
+    # ---- Figure 5: theta and r ONLY WITH STRETCH----
+    fig5, axes5 = plt.subplots(1, 2, figsize=(14, 5))
+    fig5.suptitle('Oscillator states: with stretch feedback (w_ipsi=3)')
 
-    # V2
-    # ---- Figure 4: Joint angles (active + passive) ----
+    # theta with
+    for idx, j in enumerate(joints):
+        axes5[0].plot(t, theta_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
+        axes5[0].plot(t, theta_right_with[mask, j], color=colors[idx], linestyle='--', label=f'joint {j} right')
+    axes5[0].set_title('Phase θ — with stretch feedback')
+    axes5[0].set_xlabel('Time (s)')
+    axes5[0].set_ylabel('Phase (rad)')
+    axes5[0].legend(fontsize=7)
+    axes5[0].grid()
 
-    fig4, axs = plt.subplots(3, 2, figsize=(16, 12))
-    fig4.suptitle('Joint angles: with (w_ipsi=3) vs without (w_ipsi=0) stretch feedback')
+    # r with
+    for idx, j in enumerate(joints):
+        axes5[1].plot(t, r_left_with[mask, j],  color=colors[idx], linestyle='-', label=f'joint {j} left')
+        axes5[1].plot(t, r_right_with[mask, j], color=colors[idx], linestyle='--',label=f'joint {j} right')
+    axes5[1].set_title('Amplitude r — with stretch feedback')
+    axes5[1].set_xlabel('Time (s)')
+    axes5[1].set_ylabel('Amplitude')
+    axes5[1].legend(fontsize=7)
+    axes5[1].grid()
 
-    for col, (active, passive, label) in enumerate([
-        (joint_angles_with_active,    joint_angles_with_passive,    'with stretch feedback'),
-        (joint_angles_without_active, joint_angles_without_passive, 'without stretch feedback'),
-    ]):
-        all_angles = np.concatenate([active, passive], axis=1)
-        noms_all   = noms_actifs + noms_passifs
+    fig5.tight_layout()
+    os.makedirs(PLOT_PATH, exist_ok=True)
+    fig5.savefig(os.path.join(PLOT_PATH, 'oscillator_states_theta_r_ONLY_STRETCH.png'), dpi=150)
 
-        # Active joints
-        for i, name in enumerate(noms_actifs):
-            axs[0, col].plot(t, active[mask, i], label=name)
-        axs[0, col].set_title(f'Active Joints — {label}')
-        axs[0, col].set_ylabel('Angle [rad]')
-        axs[0, col].legend(fontsize=7)
-        axs[0, col].grid(True)
+    #############################################################################################################
 
-        # Passive joints
-        for i, name in enumerate(noms_passifs):
-            axs[1, col].plot(t, passive[mask, i], label=name)
-        axs[1, col].set_title(f'Passive Joints — {label}')
-        axs[1, col].set_ylabel('Angle [rad]')
-        axs[1, col].legend(fontsize=7)
-        axs[1, col].grid(True)
+    # ---- Figure 6: motor sum and diff ONLY WITH STRETCH FEEDBACK ----
+    colors = plt.cm.tab10(np.linspace(0, 1, 8))
+    fig6, axes6 = plt.subplots(1, 2, figsize=(14, 5))
+    fig6.suptitle('Motor outputs: with stretch feedback (w_ipsi=3)')
 
-        # All joints
-        for i, name in enumerate(noms_all):
-            axs[2, col].plot(t, all_angles[mask, i], label=name)
-        axs[2, col].set_title(f'All Joints — {label}')
-        axs[2, col].set_xlabel('Time [s]')
-        axs[2, col].set_ylabel('Angle [rad]')
-        axs[2, col].legend(fontsize=7)
-        axs[2, col].grid(True)
+    # sum with
+    for idx, j in enumerate(joints):
+        axes6[0].plot(t, motor_sum_with[mask, j], color=colors[idx], label=f'jsum_{j}')
+    axes6[0].set_title('Motor sum (ML+MR) — with stretch feedback')
+    axes6[0].set_xlabel('Time (s)')
+    axes6[0].set_ylabel('ML + MR')
+    axes6[0].legend(fontsize=7)
+    axes6[0].grid()
 
-    fig4.tight_layout()
-    fig4.savefig(os.path.join(PLOT_PATH, 'joint_angles.png'), dpi=150)
-    '''
+    # diff with
+    for idx, j in enumerate(joints):
+        axes6[1].plot(t, motor_diff_with[mask, j], color=colors[idx], label=f'diff_{j}')
+    axes6[1].set_title('Motor diff (ML-MR) — with stretch feedback')
+    axes6[1].set_xlabel('Time (s)')
+    axes6[1].set_ylabel('ML - MR')
+    axes6[1].legend(fontsize=7)
+    axes6[1].grid()
+
+    fig6.tight_layout()
+    fig6.savefig(os.path.join(PLOT_PATH, 'oscillator_states_motor_ONLY_STRETCH.png'), dpi=150)
+
+    #############################################################################################################
+    
+    # ---- Figure 7: joint angles ONLY ACTIVE ----
+    colors = plt.cm.tab10(np.linspace(0, 1, 8))
+
+    fig7, axs = plt.subplots(2, 1, figsize=(14, 8))
+    fig7.suptitle('Joint angles: with (—) vs without (--) stretch feedback')
+
+    # Active joints 0-3
+    for i in range(4):
+        axs[0].plot(t, joint_angles_with_active[mask, i],    color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} with')
+        axs[0].plot(t, joint_angles_without_active[mask, i], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} without')
+    axs[0].set_title('Active Joints 0-3')
+    axs[0].set_ylabel('Angle [rad]')
+    axs[0].legend(fontsize=7, ncol=2)
+    axs[0].grid(True)
+
+    # Active joints 4-7
+    for i in range(4, 8):
+        axs[1].plot(t, joint_angles_with_active[mask, i],    color=colors[i], linestyle='-',  label=f'{noms_actifs[i]} with')
+        axs[1].plot(t, joint_angles_without_active[mask, i], color=colors[i], linestyle='--', label=f'{noms_actifs[i]} without')
+    axs[1].set_title('Active Joints 4-7')
+    axs[1].set_ylabel('Angle [rad]')
+    axs[1].legend(fontsize=7, ncol=2)
+    axs[1].grid(True)
+
+    fig7.tight_layout()
+    fig7.savefig(os.path.join(PLOT_PATH, 'joint_angles_ACTIVE.png'), dpi=150)
+    
+
     ########### Neural metrics #########
 
     # skip transient (first 2s)
@@ -456,8 +451,8 @@ def main(**kwargs):
         recording=None,#'animation3_1_with_sf.mp4',
         hdf5_name='simulation_with_sf.hdf5',
         controller_name='controller_with_sf.pkl',
-        runtime_n_iterations=1001,
-        runtime_buffer_size=1001,
+        runtime_n_iterations=2501,
+        runtime_buffer_size=2501,
         fast=fast,
         headless=headless,
     )
@@ -469,8 +464,8 @@ def main(**kwargs):
         recording=None, #'animation3_1_without_sf.mp4',
         hdf5_name='simulation_without_sf.hdf5',
         controller_name='controller_without_sf.pkl',
-        runtime_n_iterations=1001,
-        runtime_buffer_size=1001,
+        runtime_n_iterations=2501,
+        runtime_buffer_size=2501,
         fast=fast,
         headless=headless,
     )
