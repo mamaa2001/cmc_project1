@@ -78,21 +78,75 @@ class RobotParameters(dict):
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
-        pylog.error('Coupling weights must be set')
+        #pylog.error('Coupling weights must be set')
+
+        # freq = taille 32 (nombre oscillateurs), 16 premiers les oscillateurs du corps, 16 suivants les oscillateurs des pattes
+
+        for i in range(self.n_oscillators_body):
+            self.freqs[i] = parameters.freqs[0] 
+        
+        for i in range(self.n_oscillators_body, self.n_oscillators):
+            self.freqs[i] = parameters.freqs[1] 
+
 
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
         pylog.error('Coupling weights must be set')
 
+        
+
     def set_phase_bias(self, parameters):
         """Set phase bias"""
         pylog.error('Phase bias must be set')
 
+        self.phase_bias[:] = 0.0
+        
+        if parameters.phase_lag_body is not None:
+            phase_lag = parameters.phase_lag_body
+        else:
+            phase_lag = 2 * np.pi / self.n_body_joints
+        
+        for i in range(self.n_oscillators_body - 1):
+            self.phase_bias[i, i + 1] = phase_lag
+            self.phase_bias[i + 1, i] = -phase_lag
+        
+        phase_lag_limb = getattr(parameters, 'phase_lag_limb', np.pi)
+        
+        if self.n_oscillators_legs >= 4:
+            for i in range(2):
+                idx_left = self.n_oscillators_body + i
+                idx_right = self.n_oscillators_body + 2 + i
+                self.phase_bias[idx_left, idx_right] = phase_lag_limb
+                self.phase_bias[idx_right, idx_left] = -phase_lag_limb
+
+
+
+
     def set_amplitudes_rate(self, parameters):
         """Set amplitude rates"""
-        pylog.error('Convergence rates must be set')
+        #pylog.error('Convergence rates must be set')
+
+        rate_body = getattr(parameters, 'rate_body', 20.0)
+        rate_limb = getattr(parameters, 'rate_limb', 20.0)
+        
+        # Oscillateurs du corps
+        self.rates[:self.n_oscillators_body] = rate_body
+        
+        # Oscillateurs des pattes
+        self.rates[self.n_oscillators_body:] = rate_limb
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
-        pylog.error('Nominal amplitudes must be set')
 
+        #pylog.error('Nominal amplitudes must be set')
+        
+        amp_body = getattr(parameters, 'amp_body', 
+                          getattr(parameters, 'amplitude_body', 0.2))
+        amp_limb = getattr(parameters, 'amp_limb', 
+                          getattr(parameters, 'amplitude_limb', 0.3))
+        
+        # Oscillateurs du corps
+        self.nominal_amplitudes[:self.n_oscillators_body] = amp_body
+        
+        # Oscillateurs des pattes
+        self.nominal_amplitudes[self.n_oscillators_body:] = amp_limb
