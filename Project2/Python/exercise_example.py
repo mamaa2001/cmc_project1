@@ -61,7 +61,7 @@ def exercise_example(timestep, n_simulations=1):
             # fast=True,  # For fast mode (not real-time)
             # headless=True,  # For headless mode (No GUI, could be faster)
             output=f'logs/example/sim_{simulation_i}',
-            record=True,  # Record video
+            record=False,  # Record video
             # video savging path
             record_path=f"logs/example/video_{simulation_i}.mp4",
             verbose=True,

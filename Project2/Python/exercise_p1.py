@@ -36,6 +36,7 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         drive=drive,
         amplitude_gradient=None,
         phase_lag_body=None,
+        test_value = 10,
         # Feel free to include parameters
     )
     pylog.warning(

@@ -43,6 +43,7 @@ class RobotParameters(dict):
 
     def update(self, parameters):
         """Update network from parameters"""
+        print(f"test: {parameters.test_value}")
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
         self.set_phase_bias(parameters)  # psi_ij
@@ -78,21 +79,27 @@ class RobotParameters(dict):
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
+        #there is 2 frequencies one for the bpdy and one for the legs
+        #shape of the freq: np.zeros(self.n_oscillators)
         pylog.error('Coupling weights must be set')
 
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
+        #shape fo the coupling weights np.zeros([self.n_oscillators,self.n_oscillators,])
         pylog.error('Coupling weights must be set')
 
     def set_phase_bias(self, parameters):
         """Set phase bias"""
+        #shape fo the phase bias np.zeros([self.n_oscillators,self.n_oscillators,])
         pylog.error('Phase bias must be set')
 
     def set_amplitudes_rate(self, parameters):
         """Set amplitude rates"""
+        #shape of the rate np.zeros(self.n_oscillators)
         pylog.error('Convergence rates must be set')
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
+        #shape of the nominal amplitude np.zeros(self.n_oscillators)
         pylog.error('Nominal amplitudes must be set')
 
