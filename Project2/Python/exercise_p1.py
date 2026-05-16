@@ -32,14 +32,20 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     # Simulation setup
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
+
+    if np.isscalar(drive):
+        drive_vec = np.full(n_iterations, drive)
+    else:
+        drive_vec = np.asarray(drive)
+
     sim_parameters = SimulationParameters(
         drive=drive,
         amplitude_gradient=None,
         phase_lag_body=None,
         # Feel free to include parameters
     )
-    pylog.warning(
-        'Modify the scalar drive to be a vector of length n_iterations. By doing so the drive will be modified to be drive[i] at each time step i.')
+    #pylog.warning(
+    #    'Modify the scalar drive to be a vector of length n_iterations. By doing so the drive will be modified to be drive[i] at each time step i.')
     state = SalamandraState.salamandra_robot(n_iterations, n_oscillators=32)
     network = SalamandraNetwork(
         sim_parameters,
@@ -68,8 +74,8 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     freqs_log[0, :] = network.robot_parameters.freqs
 
     # comment below pass to run file
-    pylog.warning('Remove the pass to run your code!!')
-    pass
+    #pylog.warning('Remove the pass to run your code!!')
+    #pass
 
     pylog.warning(
         'Implement plots here, try to plot the various logged data to check the implementation')
@@ -79,6 +85,9 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         if update:
             network.robot_parameters.update(
                 SimulationParameters(
+                    drive=drive_vec[i + 1],
+                    amplitude_gradient=None,
+                    phase_lag_body=None,
                 )
             )
         network.step(i, time0, timestep)
@@ -94,7 +103,46 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     ))
 
     # Implement plots of network results
-    pylog.warning('Implement plots')
+    #pylog.warning('Implement plots')
+
+
+    # ── Plots (mirrors Figures 4 & 5 from Ijspeert 2007) ────────────────────
+    fig, axes = plt.subplots(4, 1, figsize=(10, 10), sharex=True)
+    fig.suptitle('Network dynamics (drive ramp 0→6)')
+
+    # Panel A: body oscillator outputs  x_i = r_i(1 + cos(φ_i))
+    body_output = amplitudes_log[:, :16] * (1 + np.cos(phases_log[:, :16]))
+    for idx in osc_left:   # left side only, less clutter
+        axes[0].plot(times, body_output[:, idx], lw=0.8)
+    axes[0].set_ylabel('x Body (left)')
+    axes[0].set_title('A – Body oscillator outputs')
+
+    # Panel B: limb oscillator outputs
+    limb_output = amplitudes_log[:, 16:] * (1 + np.cos(phases_log[:, 16:]))
+    for idx in range(0, 16, 4):   # one oscillator per limb
+        axes[1].plot(times, limb_output[:, idx], lw=0.8, label=f'limb {idx//4}')
+    axes[1].set_ylabel('x Limb')
+    axes[1].set_title('B – Limb oscillator outputs')
+    axes[1].legend(fontsize=7, loc='upper left')
+
+    # Panel C: instantaneous frequencies
+    axes[2].plot(times, freqs_log[:, 0], label='Body', lw=1.2)
+    axes[2].plot(times, freqs_log[:, 16], label='Limb', lw=1.2, linestyle='--')
+    axes[2].set_ylabel('Freq [Hz]')
+    axes[2].set_title('C – Frequencies')
+    axes[2].legend(fontsize=8)
+
+    # Panel D: drive ramp
+    axes[3].plot(times, drive_vec, color='red', lw=1.2)
+    axes[3].axhline(1.0, color='gray', linestyle=':', lw=0.8, label='walk threshold')
+    axes[3].axhline(3.0, color='blue', linestyle=':', lw=0.8, label='swim threshold')
+    axes[3].axhline(5.0, color='black', linestyle=':', lw=0.8, label='saturation')
+    axes[3].set_ylabel('Drive d')
+    axes[3].set_xlabel('Time [s]')
+    axes[3].set_title('D – Drive')
+    axes[3].legend(fontsize=7)
+
+    plt.tight_layout()
 
     return
 
@@ -102,7 +150,14 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
 def exercise_1a_networks(plot, timestep=1e-2):
     """[Project 1] Exercise 1: """
 
-    run_network(duration=5)
+    duration = 40.0
+    times = np.arange(0, duration, timestep)
+    drive_ramp = np.linspace(0, 6, len(times))
+
+    run_network(duration=duration, update=True, drive=drive_ramp, timestep=timestep)
+
+    
+    #run_network(duration=5)
 
     # Show plots
     if True:
