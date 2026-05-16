@@ -151,7 +151,7 @@ class RobotParameters(dict):
         #
         #   Limb → body coupling:
         #     • each limb girdle+ couples to the nearest body oscillators
-        #       (forelimbs → segments 0-1, hindlimbs → segments 6-7 (might change) of the chain)
+        #       (forelimbs → segments 0-1, hindlimbs → segments 4-5 of the chain)
 
 
         w = self.coupling_weights
@@ -219,12 +219,12 @@ class RobotParameters(dict):
 
         # Limb → body coupling (girdle+ only)
         # Forelimbs couple near the head (pair 0-1, body osc 0-3)
-        # Hindlimbs couple near the tail (pair 6-7, body osc 12-15)
+        # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
         limb_to_body = [
             (limb_bases['FL_L'], [0, 2]),   # FL-L girdle+ → left body osc 0,2
             (limb_bases['FL_R'], [1, 3]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [12, 14]), # HL-L girdle+ → left body osc 12,14
-            (limb_bases['HL_R'], [13, 15]), # HL-R girdle+ → right body osc 13,15
+            (limb_bases['HL_L'], [8, 10]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9, 11]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
