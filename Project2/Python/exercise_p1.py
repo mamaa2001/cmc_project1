@@ -11,6 +11,7 @@ from salamandra_simulation.parse_args import save_plots
 from salamandra_simulation.save_figures import save_figures
 from simulation_parameters import SimulationParameters
 from network import SalamandraNetwork
+from plot_results import *
 
 
 @dataclass
@@ -42,7 +43,7 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         drive=drive,
         amplitude_gradient=None,
         phase_lag_body=None,
-        test_value = 10,
+        #test_value = 10,
         # Feel free to include parameters
     )
     #pylog.warning(
@@ -107,44 +108,14 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     #pylog.warning('Implement plots')
 
 
-    # ── Plots (mirrors Figures 4 & 5 from Ijspeert 2007) ────────────────────
-    fig, axes = plt.subplots(4, 1, figsize=(10, 10), sharex=True)
-    fig.suptitle('Network dynamics (drive ramp 0→6)')
-
-    # Panel A: body oscillator outputs  x_i = r_i(1 + cos(φ_i))
-    body_output = amplitudes_log[:, :16] * (1 + np.cos(phases_log[:, :16]))
-    for idx in osc_left:   # left side only, less clutter
-        axes[0].plot(times, body_output[:, idx], lw=0.8)
-    axes[0].set_ylabel('x Body (left)')
-    axes[0].set_title('A – Body oscillator outputs')
-
-    # Panel B: limb oscillator outputs
-    limb_output = amplitudes_log[:, 16:] * (1 + np.cos(phases_log[:, 16:]))
-    for idx in range(0, 16, 4):   # one oscillator per limb
-        axes[1].plot(times, limb_output[:, idx], lw=0.8, label=f'limb {idx//4}')
-    axes[1].set_ylabel('x Limb')
-    axes[1].set_title('B – Limb oscillator outputs')
-    axes[1].legend(fontsize=7, loc='upper left')
-
-    # Panel C: instantaneous frequencies
-    axes[2].plot(times, freqs_log[:, 0], label='Body', lw=1.2)
-    axes[2].plot(times, freqs_log[:, 16], label='Limb', lw=1.2, linestyle='--')
-    axes[2].set_ylabel('Freq [Hz]')
-    axes[2].set_title('C – Frequencies')
-    axes[2].legend(fontsize=8)
-
-    # Panel D: drive ramp
-    axes[3].plot(times, drive_vec, color='red', lw=1.2)
-    axes[3].axhline(1.0, color='gray', linestyle=':', lw=0.8, label='walk threshold')
-    axes[3].axhline(3.0, color='blue', linestyle=':', lw=0.8, label='swim threshold')
-    axes[3].axhline(5.0, color='black', linestyle=':', lw=0.8, label='saturation')
-    axes[3].set_ylabel('Drive d')
-    axes[3].set_xlabel('Time [s]')
-    axes[3].set_title('D – Drive')
-    axes[3].legend(fontsize=7)
-
-    plt.tight_layout()
-
+    fig, axes = plot_network_dynamics(
+        times=times,
+        phases_log=phases_log,
+        amplitudes_log=amplitudes_log,
+        freqs_log=freqs_log,
+        drive_vec=drive_vec,
+        title='Network dynamics (drive ramp 0→6)'
+    )
     return
 
 

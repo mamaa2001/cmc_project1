@@ -43,7 +43,7 @@ class RobotParameters(dict):
 
     def update(self, parameters):
         """Update network from parameters"""
-        print(f"test: {parameters.test_value}")
+        #print(f"test: {parameters.test_value}")
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
         self.set_phase_bias(parameters)  # psi_ij
