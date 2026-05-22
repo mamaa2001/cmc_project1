@@ -107,7 +107,8 @@ class RobotParameters(dict):
                 self.freqs[i] = 2
         pylog.error('Coupling weights must be set')
             """
-        drive = parameters.drive
+        #drive = parameters.drive
+        drive = getattr(parameters,'drive', 2.0) #put 2 as a drive if no drive in parameter
         if np.isscalar(drive):
             d = float(drive)
         else:
@@ -158,10 +159,10 @@ class RobotParameters(dict):
         #     • each limb girdle+ couples to the nearest body oscillators
         #       (forelimbs → segments 0-1, hindlimbs → segments 4-5 of the chain)
 
-
+        weight = getattr(parameters, 'spine_limb_weight', 10.0) #put 10 if no spine_limb_weight is given in parameters
         w = self.coupling_weights
         w[:] = 0.0
-        weight = 10.0
+        #weight = 10.0 #
 
         # ----- Axial body chain -----
         n_body = self.n_oscillators_body   # 16
@@ -328,7 +329,8 @@ class RobotParameters(dict):
         #pylog.error('Convergence rates must be set')
 
         #### estelle code #####
-        self.rates[:] = 20.0 # from paper
+        self.rates[:] = getattr(parameters,'rates', 20.0)
+        #self.rates[:] = 20.0 # from paper
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
@@ -336,7 +338,9 @@ class RobotParameters(dict):
         #pylog.error('Nominal amplitudes must be set')
 
         #### estelle code ##########
-        drive = parameters.drive
+        #drive = parameters.drive
+        drive = getattr(parameters,'drive', 2.0) #put 2 as a drive if no drive in parameter
+
         if np.isscalar(drive):
             d = float(drive)
         else:
