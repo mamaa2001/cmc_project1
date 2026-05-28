@@ -121,7 +121,7 @@ def get_phase_lag(
 
     # johanne code
     phase_lag = 2*np.pi*sig_freq*n_lag*sig_dt
-    pylog.warning("TODO: 1.2")
+    #pylog.warning("TODO: 1.2")
     return phase_lag
 
 
@@ -257,7 +257,7 @@ def compute_mechanical_speed(links_positions: np.ndarray,
         speed_forward[idx] = np.dot(v_com, direction_fwd)
         speed_lateral[idx] = np.dot(v_com, direction_left)
 
-        pylog.warning("TODO: 1.2 Compute the forward and lateral speed of CoM with")
+        #pylog.warning("TODO: 1.2 Compute the forward and lateral speed of CoM with")
         # projections on PCA direction
 
     return np.mean(speed_forward), np.mean(speed_lateral)
@@ -331,11 +331,13 @@ def compute_mechanical_energy_and_cot(times: np.ndarray,
     Compute the integration of traveled distance for the CoM of the robot (useful varibles: LINKS_MASSES, TOTAL_MASS)
     """
 
-    pylog.warning("TODO: 1.2 Compute energy and CoT")
+    #pylog.warning("TODO: 1.2 Compute energy and CoT")
     # johanne code
-    Power = np.maximum(joints_torques * joints_velocities, 0) 
-    energy = times * np.sum(Power)
-    Dfwd = np.sum(links_positions[-1, :, 0] * LINKS_MASSES) / TOTAL_MASS - np.sum(links_positions[0, :, 0] * LINKS_MASSES) / TOTAL_MASS #différence de position du CoM entre le début et la fin
-    cot = energy / Dfwd
+    dt = times[1]-times[0]  # we assume that the dt is constant, which is ok
+    Power = np.maximum(joints_torques * joints_velocities, 0)
+    energy = dt * np.sum(Power)
+    com_final = np.sum(links_positions[-1, :, :2] * LINKS_MASSES[:, None], axis=0) / TOTAL_MASS
+    com_initial = np.sum(links_positions[0, :, :2] * LINKS_MASSES[:, None], axis=0) / TOTAL_MASS
+    Dfwd = np.linalg.norm(com_final - com_initial)
+    cot = energy / Dfwd if Dfwd > 0 else np.inf
     return energy, cot
-

@@ -7,6 +7,7 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib.patches import Rectangle
 
 from farms_core import pylog
 
@@ -98,20 +99,21 @@ def get_metrics(twl, amp):
 
 def exercise1_2(**kwargs):
     """ex1.2 main"""
-    os.makedirs(PLOT_PATH, exist_ok=True)
+    os.makedirs(BASE_PATH, exist_ok=True)
+    os.makedirs(os.path.join(BASE_PATH, PLOT_PATH), exist_ok=True)
     base_controller = {
         'loader': 'cmc_controllers.wave_controller.WaveController',
         'config': {
             'freq': 1.5,
-            'twl': 1.0,
-            'amp': 10.0}}
-    pylog.warning("TODO: 1.2 Adapt the parameter space according to needs.")
+            'twl': 0.2,
+            'amp': 1.0}}
+    #pylog.warning("TODO: 1.2 Adapt the parameter space according to needs.")
     # Hint: You don't need to test all combinations of parameters with complexity of O(n^3)
     # You can replace range with list of length 1 to keep some parameters fixed
     # while testing others O(n^2) or O(n)
 
-    example_twl_range = np.linspace(0.2, 1.2, 3)
-    example_amp_range = np.linspace(1.0, 3.0, 3)
+    example_twl_range = np.linspace(0.2, 1.5, 10)
+    example_amp_range = np.linspace(1.0, 4.0, 10)
 
     parameter_grid_example = {
         'twl': example_twl_range,
@@ -126,9 +128,107 @@ def exercise1_2(**kwargs):
         common_kwargs={'fast': True, 'headless': True},
     )
 
-    pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
-    post_processing()
+    #pylog.warning("TODO: 1.3 Analyze the results of multiple simulations")
+    
+    #To displya the metrics
+    metrics = []
+    for twl_val in parameter_grid_example['twl']:
+        for amp_val in parameter_grid_example['amp']:
+            v_fwd, cot, mean_ipls = get_metrics(twl=twl_val, amp=amp_val)
+            int_results = {
+                'twl': twl_val,
+                'amp': amp_val,
+                'forward_speed': v_fwd,
+                'CoT': cot,
+                'average_ipls': mean_ipls
+            }
+            metrics.append(int_results)
 
+    forward_speed_vals = np.array([m['forward_speed'] for m in metrics])
+    cot_vals = np.array([m['CoT'] for m in metrics])
+    ipls_vals = np.array([m['average_ipls'] for m in metrics])
+
+    n_twl = len(parameter_grid_example['twl'])
+    n_amp = len(parameter_grid_example['amp'])
+
+    forward_speed_grid = forward_speed_vals.reshape(n_twl, n_amp)
+    cot_grid = cot_vals.reshape(n_twl, n_amp)
+    ipls_grid = ipls_vals.reshape(n_twl, n_amp)
+
+
+    amp_axis = parameter_grid_example['amp']
+    twl_axis = parameter_grid_example['twl']
+
+    shared_cmap = 'viridis'
+
+    def plot_annotated_heatmap(grid, title, cmap, cbar_label, filename, value_fmt=".2f"):
+        fig, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
+
+        im = ax.imshow(grid, origin='lower', aspect='auto', cmap=cmap)
+
+        ax.set_title(title)
+        ax.set_xlabel('A [-]')
+        ax.set_ylabel('TWL [-]')
+
+        ax.set_xticks(np.arange(len(amp_axis)))
+        ax.set_xticklabels([f"{v:.2f}" for v in amp_axis], rotation=45, ha='right')
+        ax.set_yticks(np.arange(len(twl_axis)))
+        ax.set_yticklabels([f"{v:.2f}" for v in twl_axis])
+
+        norm = colors.Normalize(vmin=np.nanmin(grid), vmax=np.nanmax(grid))
+        for i in range(grid.shape[0]):
+            for j in range(grid.shape[1]):
+                val = grid[i, j]
+                txt_color = 'white' if norm(val) < 0.6 else 'black'
+                ax.text(j, i, format(val, value_fmt),
+                        ha='center', va='center', color=txt_color, fontsize=8)
+
+        min_idx = np.unravel_index(np.nanargmin(grid), grid.shape)
+        max_idx = np.unravel_index(np.nanargmax(grid), grid.shape)
+
+        ax.add_patch(Rectangle(
+            (min_idx[1] - 0.5, min_idx[0] - 0.5), 1, 1,
+            fill=False, edgecolor='red', linewidth=2.5
+        ))
+        ax.add_patch(Rectangle(
+            (max_idx[1] - 0.5, max_idx[0] - 0.5), 1, 1,
+            fill=False, edgecolor='red', linewidth=2.5
+        ))
+
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label(cbar_label)
+
+        fig.savefig(os.path.join(BASE_PATH, PLOT_PATH, filename), dpi=150)
+
+    plot_annotated_heatmap(
+        forward_speed_grid,
+        'Forward speed at f = 2 Hz',
+        shared_cmap,
+        'Forward speed [m/s]',
+        'Forward_speed_1_3.png',
+        value_fmt=".3f",
+    )
+
+    plot_annotated_heatmap(
+        cot_grid,
+        'CoT at f = 2 Hz',
+        shared_cmap,
+        'CoT [J/m]',
+        'CoT_1_3.png',
+        value_fmt=".3f",
+    )
+
+    plot_annotated_heatmap(
+        ipls_grid,
+        r'Average $IPL_{neur}$ at f = 2 Hz',
+        shared_cmap,
+        r'Average $IPL_{neur}$ [rad]',
+        'IPL_neur_1_3.png',
+        value_fmt=".3f",
+    )
+    
+
+    plt.show()
 
 if __name__ == '__main__':
     exercise1_2(plot=True)

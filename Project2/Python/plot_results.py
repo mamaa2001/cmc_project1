@@ -165,6 +165,53 @@ def sum_torques(joints_data):
     """
     return np.sum(np.abs(joints_data[:, :]))
 
+def plot_network_dynamics(times, phases_log, amplitudes_log, freqs_log, drive_vec, title='Network dynamics (drive ramp 0→6)'):
+    """
+    Plots the network dynamics mirroring Figures 4 & 5 from Ijspeert 2007.
+    """
+
+    fig, axes = plt.subplots(4, 1, figsize=(10, 10), sharex=True)
+    fig.suptitle(title)
+
+    # Indices for the left side of the body
+    osc_left = np.arange(0, 16, 2)
+
+    # Panel A: body oscillator outputs  x_i = r_i(1 + cos(φ_i))
+    body_output = amplitudes_log[:, :16] * (1 + np.cos(phases_log[:, :16]))
+    for idx in osc_left:   # left side only, less clutter
+        axes[0].plot(times, body_output[:, idx], lw=0.8)
+    axes[0].set_ylabel('x Body (left)')
+    axes[0].set_title('A – Body oscillator outputs')
+
+    # Panel B: limb oscillator outputs
+    limb_output = amplitudes_log[:, 16:] * (1 + np.cos(phases_log[:, 16:]))
+    for idx in range(0, 16, 4):   # one oscillator per limb
+        axes[1].plot(times, limb_output[:, idx], lw=0.8, label=f'limb {idx//4}')
+    axes[1].set_ylabel('x Limb')
+    axes[1].set_title('B – Limb oscillator outputs')
+    axes[1].legend(fontsize=7, loc='upper left')
+
+    # Panel C: instantaneous frequencies
+    axes[2].plot(times, freqs_log[:, 0], label='Body', lw=1.2)
+    axes[2].plot(times, freqs_log[:, 16], label='Limb', lw=1.2, linestyle='--')
+    axes[2].set_ylabel('Freq [Hz]')
+    axes[2].set_title('C – Frequencies')
+    axes[2].legend(fontsize=8)
+
+    # Panel D: drive ramp
+    axes[3].plot(times, drive_vec, color='red', lw=1.2)
+    axes[3].axhline(1.0, color='gray', linestyle=':', lw=0.8, label='walk threshold')
+    axes[3].axhline(3.0, color='blue', linestyle=':', lw=0.8, label='swim threshold')
+    axes[3].axhline(5.0, color='black', linestyle=':', lw=0.8, label='saturation')
+    axes[3].set_ylabel('Drive d')
+    axes[3].set_xlabel('Time [s]')
+    axes[3].set_title('D – Drive')
+    axes[3].legend(fontsize=7)
+
+    plt.tight_layout()
+    
+    return fig, axes
+
 
 def main(plot=True):
     """Main"""

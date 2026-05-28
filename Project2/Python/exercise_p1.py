@@ -11,6 +11,7 @@ from salamandra_simulation.parse_args import save_plots
 from salamandra_simulation.save_figures import save_figures
 from simulation_parameters import SimulationParameters
 from network import SalamandraNetwork
+from plot_results import *
 
 
 @dataclass
@@ -32,14 +33,21 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     # Simulation setup
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
+
+    if np.isscalar(drive):
+        drive_vec = np.full(n_iterations, drive)
+    else:
+        drive_vec = np.asarray(drive)
+
     sim_parameters = SimulationParameters(
         drive=drive,
         amplitude_gradient=None,
         phase_lag_body=None,
+        #test_value = 10,
         # Feel free to include parameters
     )
-    pylog.warning(
-        'Modify the scalar drive to be a vector of length n_iterations. By doing so the drive will be modified to be drive[i] at each time step i.')
+    #pylog.warning(
+    #    'Modify the scalar drive to be a vector of length n_iterations. By doing so the drive will be modified to be drive[i] at each time step i.')
     state = SalamandraState.salamandra_robot(n_iterations, n_oscillators=32)
     network = SalamandraNetwork(
         sim_parameters,
@@ -68,8 +76,8 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     freqs_log[0, :] = network.robot_parameters.freqs
 
     # comment below pass to run file
-    pylog.warning('Remove the pass to run your code!!')
-    pass
+    #pylog.warning('Remove the pass to run your code!!')
+    #pass
 
     pylog.warning(
         'Implement plots here, try to plot the various logged data to check the implementation')
@@ -79,6 +87,9 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         if update:
             network.robot_parameters.update(
                 SimulationParameters(
+                    drive=drive_vec[i + 1],
+                    amplitude_gradient=None,
+                    phase_lag_body=None,
                 )
             )
         network.step(i, time0, timestep)
@@ -94,15 +105,31 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     ))
 
     # Implement plots of network results
-    pylog.warning('Implement plots')
+    #pylog.warning('Implement plots')
 
+
+    fig, axes = plot_network_dynamics(
+        times=times,
+        phases_log=phases_log,
+        amplitudes_log=amplitudes_log,
+        freqs_log=freqs_log,
+        drive_vec=drive_vec,
+        title='Network dynamics (drive ramp 0→6)'
+    )
     return
 
 
 def exercise_1a_networks(plot, timestep=1e-2):
     """[Project 1] Exercise 1: """
 
-    run_network(duration=5)
+    duration = 40.0
+    times = np.arange(0, duration, timestep)
+    drive_ramp = np.linspace(0, 6, len(times))
+
+    run_network(duration=duration, update=True, drive=drive_ramp, timestep=timestep)
+
+    
+    #run_network(duration=5)
 
     # Show plots
     if True:
