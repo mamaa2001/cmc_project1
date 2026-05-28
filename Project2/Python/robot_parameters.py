@@ -50,7 +50,7 @@ class RobotParameters(dict):
         self.set_amplitudes_rate(parameters)  # a_i
         self.set_nominal_amplitudes(parameters)  # R_i
 
-    def stelbow_front(self, time, iteration, salamandra_data):
+    def step(self, time, iteration, salamandra_data):
         """Stelbow_front function called at each iteration
 
         Parameters
@@ -317,9 +317,14 @@ class RobotParameters(dict):
                 psi[i_R_next, i_R] = -phase_lag
 
         # ----- Limb oscillators -----
-        limb_bases = [16, 20, 24, 28]
+        limb_bases = {
+            'FL_L': 16, # front limb left
+            'FL_R': 20, # front limb right
+            'HL_L': 24, # hind limb left
+            'HL_R': 28, # hind limb right
+        }
 
-        for base in limb_bases:
+        for base in limb_bases.values():
             girdle_front, girdle_back = base, base + 1
             elbow_front, elbow_back = base + 2, base + 3
 
@@ -354,10 +359,10 @@ class RobotParameters(dict):
             psi[b, a] = np.pi
         
         limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6, 8]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7, 9]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:

@@ -19,7 +19,7 @@ def exercise_walk(timestep, n_simulations = 1):
             spawn_orientation=[0, 0, np.pi/2],
             drive=drive,  # An example of parameter part of the grid search
             amplitudes=[1, 2, 3],  # Just an example
-            phase_lag_body=0,  # or np.zeros(n_joints) for example
+            phase_lag_body=None,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
             # ...
         )
