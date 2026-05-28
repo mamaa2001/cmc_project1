@@ -7,8 +7,8 @@ from farms_core import pylog
 class RobotParameters(dict):
     """Robot parameters"""
 
-    __getattr__ = dict.__getitem
-    __setattr__ = dict.__setitem
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
 
     def __init__(self, parameters):
         super().__init__()
@@ -245,6 +245,7 @@ class RobotParameters(dict):
         # Limb → body coupling (girdle+ only)
         # Forelimbs couple near the head (pair 0-1, body osc 0-3)
         # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
+        
         limb_to_body = [
             (limb_bases['FL_L'], [0, 2, 4, 6, 8]),   # FL-L girdle+ → left body osc 0,2
             (limb_bases['FL_R'], [1, 3, 5, 7, 9]),   # FL-R girdle+ → right body osc 1,3
