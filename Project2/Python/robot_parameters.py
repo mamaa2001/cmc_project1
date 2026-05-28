@@ -249,8 +249,8 @@ class RobotParameters(dict):
         limb_to_body = [
             (limb_bases['FL_L'], [2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
             (limb_bases['FL_R'], [3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['HL_L'], [8, 10, 12]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9, 11, 13]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
@@ -288,11 +288,11 @@ class RobotParameters(dict):
         phase_lag = (
             parameters.phase_lag_body
             if (hasattr(parameters, 'phase_lag_body') and parameters.phase_lag_body is not None)
-            else 5*np.pi / 2*self.n_body_joints   # ~0.785 rad ≈ π/4
+            else 2*np.pi / self.n_body_joints   # ~0.785 rad ≈ π/4
         )
         anti_phase = np.pi
         psi_intra_limb_contra = np.pi
-        psi_intra_limb_ipsi = np.pi/3
+        psi_intra_limb_ipsi = np.pi/2
         psi_limb_body = 0
 
         # ----- Axial chain -----
@@ -359,10 +359,10 @@ class RobotParameters(dict):
             psi[b, a] = np.pi
         
         limb_to_body = [
-            (limb_bases['FL_L'], [2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
