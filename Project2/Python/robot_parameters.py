@@ -355,7 +355,6 @@ class RobotParameters(dict):
 
         #### estelle code #####
         self.rates[:] = getattr(parameters,'rates', 20.0)
-        #self.rates[:] = 20.0 # from paper
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
