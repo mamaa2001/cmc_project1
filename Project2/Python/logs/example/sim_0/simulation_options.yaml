@@ -62,20 +62,3 @@ extensions:
     azimuth: 70
     elevation: -30
     angular_velocity: 0
-- loader: farms_mujoco.sensors.camera.CameraRecording
-  config:
-    path: logs/example/video_0.mp4
-    animat_id: 0
-    fps: 30
-    speed: 1.0
-    azimuth: -30
-    elevation: -15
-    distance: 2
-    angular_velocity: 0
-    offset:
-    - 0
-    - 0
-    - 0
-    resolution:
-    - 1280
-    - 720

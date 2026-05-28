@@ -19,11 +19,11 @@ def exercise_walk(timestep, n_simulations = 1):
             spawn_orientation=[0, 0, np.pi/2],
             drive=drive,  # An example of parameter part of the grid search
             amplitudes=[1, 2, 3],  # Just an example
-            phase_lag_body=0,  # or np.zeros(n_joints) for example
+            phase_lag_body=None,  # None = default 2π/n_joints travelling wave
             turn=0,  # Another example
             # ...
         )
-        for drive in np.linspace(3, 4, n_simulations)
+        for drive in np.linspace(2.0, 3.0, n_simulations)
         # for amplitudes in ...
         # for ...
     ]
@@ -63,9 +63,5 @@ def exercise_ramp_walk(timestep):
 if __name__ == '__main__':
     exercise_walk(timestep=5e-3)
     #exercise_ramp_swim(timestep=5e-3)
-<<<<<<< HEAD
-    #exercise_ramp_walk(timestep=5e-3)
-=======
     #exercise_ramp_walk(timestep=5e-3)
 
->>>>>>> origin/estelle_branch

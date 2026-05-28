@@ -50,7 +50,7 @@ class RobotParameters(dict):
         self.set_amplitudes_rate(parameters)  # a_i
         self.set_nominal_amplitudes(parameters)  # R_i
 
-    def stelbow_front(self, time, iteration, salamandra_data):
+    def step(self, time, iteration, salamandra_data):
         """Stelbow_front function called at each iteration
 
         Parameters
@@ -247,10 +247,10 @@ class RobotParameters(dict):
         # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
         
         limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6, 8]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7, 9]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
@@ -294,7 +294,7 @@ class RobotParameters(dict):
         )
         anti_phase = np.pi
         psi_intra_limb_contra = np.pi
-        psi_intra_limb_ipsi = np.pi/2
+        psi_intra_limb_ipsi = np.pi/3
         psi_limb_body = 0
 
         # ----- Axial chain -----
@@ -319,9 +319,9 @@ class RobotParameters(dict):
                 psi[i_R_next, i_R] = -phase_lag
 
         # ----- Limb oscillators -----
-        limb_bases = [16, 20, 24, 28]
+        limb_bases = {'FL_L': 16, 'FL_R': 20, 'HL_L': 24, 'HL_R': 28}
 
-        for base in limb_bases:
+        for base in limb_bases.values():
             girdle_front, girdle_back = base, base + 1
             elbow_front, elbow_back = base + 2, base + 3
 
@@ -369,27 +369,6 @@ class RobotParameters(dict):
         # Limb → body: 0 phase bias (already zero, limb in phase with body)
 
 
-        self.phase_bias[:] = 0.0
-        
-        if parameters.phase_lag_body is not None:
-            phase_lag = parameters.phase_lag_body
-        else:
-            phase_lag = 2 * np.pi / self.n_body_joints
-        
-        for i in range(self.n_oscillators_body - 1):
-            self.phase_bias[i, i + 1] = phase_lag
-            self.phase_bias[i + 1, i] = -phase_lag
-        
-        phase_lag_limb = getattr(parameters, 'phase_lag_limb', np.pi)
-        
-        if self.n_oscillators_legs >= 4:
-            for i in range(2):
-                idx_left = self.n_oscillators_body + i
-                idx_right = self.n_oscillators_body + 2 + i
-                self.phase_bias[idx_left, idx_right] = phase_lag_limb
-                self.phase_bias[idx_right, idx_left] = -phase_lag_limb
-
-
 
 
     def set_amplitudes_rate(self, parameters):
@@ -401,46 +380,37 @@ class RobotParameters(dict):
         self.rates[:] = getattr(parameters,'rates', 20.0)
 
     def set_nominal_amplitudes(self, parameters):
-        """Set nominal amplitudes"""
-        #shape of the nominal amplitude np.zeros(self.n_oscillators)
-        #pylog.error('Nominal amplitudes must be set')
+        """Set nominal amplitudes from drive (Ijspeert 2007 Table S1)
 
-        #### estelle code ##########
-        #drive = parameters.drive
-        drive = getattr(parameters,'drive', 2.0) #put 2 as a drive if no drive in parameter
+        Body:  R_body(d) = 0.065*d + 0.196  for 1 < d < 5  (saturates at d=5)
+        Limbs: R_limb(d) = 0.131*d + 0.131  for 1 < d < 3  (zero for d >= 3 or d <= 1)
 
-        if np.isscalar(drive):
-            d = float(drive)
-        else:
-            drive = np.asarray(drive)
-            d = float(drive.flat[0])
+        An optional amplitude_gradient linearly scales body amplitudes head→tail.
+        """
+        drive = getattr(parameters, 'drive', 2.0)
+        d = float(np.asarray(drive).flat[0])
 
-        # Body
-        if 1.0 < d < 5.0:
-            R_body = 0.065 * d + 0.196
-        elif d >= 5.0:
-            R_body = 0.065 * 5.0 + 0.196   # saturate
-        else:
+        # Body oscillators
+        if d <= 1.0:
             R_body = 0.0
+        elif d < 5.0:
+            R_body = 0.065 * d + 0.196
+        else:
+            R_body = 0.065 * 5.0 + 0.196  # saturate at d=5
 
-        # Limbs: only active during walking regime
+        # Limb oscillators: active only in walking regime (1 < d < 3)
         if 1.0 < d < 3.0:
             R_limb = 0.131 * d + 0.131
         else:
-            R_limb = 0.0   # silenced during swimming (d≥3) or below threshold
+            R_limb = 0.0
 
         self.nominal_amplitudes[:self.n_oscillators_body] = R_body
         self.nominal_amplitudes[self.n_oscillators_body:] = R_limb
 
-        #pylog.error('Nominal amplitudes must be set')
-        
-        amp_body = getattr(parameters, 'amp_body', 
-                          getattr(parameters, 'amplitude_body', 0.2))
-        amp_limb = getattr(parameters, 'amp_limb', 
-                          getattr(parameters, 'amplitude_limb', 0.3))
-        
-        # Oscillateurs du corps
-        self.nominal_amplitudes[:self.n_oscillators_body] = amp_body
-        
-        # Oscillateurs des pattes
-        self.nominal_amplitudes[self.n_oscillators_body:] = amp_limb
+        # Optional linear gradient along the body axis (head→tail scaling)
+        gradient = getattr(parameters, 'amplitude_gradient', None)
+        if gradient is not None:
+            scale = np.linspace(1.0, 1.0 + float(gradient), self.n_body_joints)
+            for k in range(self.n_body_joints):
+                self.nominal_amplitudes[2 * k] *= scale[k]
+                self.nominal_amplitudes[2 * k + 1] *= scale[k]
