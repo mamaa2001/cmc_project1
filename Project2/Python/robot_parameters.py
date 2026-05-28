@@ -36,8 +36,8 @@ class RobotParameters(dict):
         # self.feedback_gains_walk = np.zeros(self.n_oscillators)
 
         # # gains for final motor output
-        # self.position_body_gain = parameters.position_body_gain
-        # self.position_limb_gain = parameters.position_limb_gain
+        self.position_body_gain = parameters.position_body_gain
+        self.position_limb_gain = parameters.position_limb_gain
 
         self.update(parameters)
 
@@ -247,8 +247,8 @@ class RobotParameters(dict):
         # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
         
         limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6, 8]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7, 9]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['FL_L'], [2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
             (limb_bases['HL_L'], [10, 12, 14]), # HL-L girdle+ → left body osc 8,10
             (limb_bases['HL_R'], [11, 13, 15]), # HL-R girdle+ → right body osc 9,11
         ]
@@ -288,11 +288,11 @@ class RobotParameters(dict):
         phase_lag = (
             parameters.phase_lag_body
             if (hasattr(parameters, 'phase_lag_body') and parameters.phase_lag_body is not None)
-            else 2 * np.pi / self.n_body_joints   # ~0.785 rad ≈ π/4
+            else 5*np.pi / 2*self.n_body_joints   # ~0.785 rad ≈ π/4
         )
         anti_phase = np.pi
         psi_intra_limb_contra = np.pi
-        psi_intra_limb_ipsi = np.pi/2
+        psi_intra_limb_ipsi = np.pi/3
         psi_limb_body = 0
 
         # ----- Axial chain -----
@@ -330,16 +330,16 @@ class RobotParameters(dict):
 
 
             # Antagonist pairs: anti-phase
-            psi[girdle_front, girdle_back] = psi_intra_limb_contra
-            psi[girdle_back, girdle_front] = -psi_intra_limb_contra
-            psi[elbow_front, elbow_back] = psi_intra_limb_contra
-            psi[elbow_back, elbow_front] = -psi_intra_limb_contra
+            psi[girdle_front, girdle_back] = -psi_intra_limb_contra
+            psi[girdle_back, girdle_front] = psi_intra_limb_contra
+            psi[elbow_front, elbow_back] = -psi_intra_limb_contra
+            psi[elbow_back, elbow_front] = psi_intra_limb_contra
 
             # Girdle leads elbow by π/2 (forward swing then stance)
-            psi[girdle_front, elbow_front] = psi_intra_limb_ipsi
-            psi[elbow_front, girdle_front] = -psi_intra_limb_ipsi
-            psi[girdle_back, elbow_back] = psi_intra_limb_ipsi
-            psi[elbow_back, girdle_back] = -psi_intra_limb_ipsi
+            psi[girdle_front, elbow_front] = -psi_intra_limb_ipsi
+            psi[elbow_front, girdle_front] = psi_intra_limb_ipsi
+            psi[girdle_back, elbow_back] = -psi_intra_limb_ipsi
+            psi[elbow_back, girdle_back] = psi_intra_limb_ipsi
 
         # Inter-limb: trot diagonal → in phase (ψ=0, already zero)
         # Contralateral same girdle → anti-phase
@@ -359,10 +359,10 @@ class RobotParameters(dict):
             psi[b, a] = np.pi
         
         limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['FL_L'], [2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['HL_L'], [10, 12, 14]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [11, 13, 15]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
@@ -378,7 +378,7 @@ class RobotParameters(dict):
         #pylog.error('Convergence rates must be set')
 
         #### estelle code #####
-        self.rates[:] = getattr(parameters,'rates', 20.0)
+        self.rates[:] = getattr(parameters,'rates', 3.0)
         #self.rates[:] = 20.0 # from paper
 
     def set_nominal_amplitudes(self, parameters):
@@ -406,10 +406,11 @@ class RobotParameters(dict):
 
         # Limbs: only active during walking regime
         if 1.0 < d < 3.0:
-            R_limb = 0.131 * d + 0.131
+           # R_limb = 0.131 * d + 0.131
+           R_limb = 0.131 * d + 0.131
         else:
             R_limb = 0.0   # silenced during swimming (d≥3) or below threshold
 
-        self.nominal_amplitudes[:self.n_oscillators_body] = R_body
-        self.nominal_amplitudes[self.n_oscillators_body:] = R_limb
+        self.nominal_amplitudes[:self.n_oscillators_body] = R_body*self.position_body_gain # potentiellement boger dans le if pour seulement quand on marche
+        self.nominal_amplitudes[self.n_oscillators_body:] = R_limb*self.position_limb_gain # potentiellement boger dans le if pour seulement quand on marche
 

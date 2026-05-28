@@ -12,7 +12,7 @@ def exercise_walk(timestep, n_simulations = 1):
     # Parameters
     parameter_set = [
         SimulationParameters(
-            duration=20,  # Simulation duration in [s]
+            duration=50,  # Simulation duration in [s]
             timestep=timestep,  # Simulation timestep in [s]
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             # Orientation in Euler angles [rad]
@@ -21,9 +21,11 @@ def exercise_walk(timestep, n_simulations = 1):
             amplitudes=[1, 2, 3],  # Just an example
             phase_lag_body=None,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
+            position_body_gain = 1/2,
+            position_limb_gain = 2,
             # ...
         )
-        for drive in np.linspace(3, 4, n_simulations)
+        for drive in np.linspace(2, 3, n_simulations)
         # for amplitudes in ...
         # for ...
     ]
