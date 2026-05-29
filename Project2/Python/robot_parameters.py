@@ -36,8 +36,8 @@ class RobotParameters(dict):
         # self.feedback_gains_walk = np.zeros(self.n_oscillators)
 
         # # gains for final motor output
-        self.position_body_gain = parameters.position_body_gain
-        self.position_limb_gain = parameters.position_limb_gain
+        self.position_body_gain = getattr(parameters,'position_body_gain', 1.0) 
+        self.position_limb_gain = getattr(parameters,'position_limb_gain' , 1.0) 
 
         self.update(parameters)
 
@@ -77,13 +77,6 @@ class RobotParameters(dict):
         # print("girdle_frontGS: {}".format(girdle_fronts[4, 0]))
         # print("drive: {}".format(self.sim_parameters.drive))
 
-        @staticmethod
-        def _get_drive(parameters):
-            drive = parameters.drive
-            if np.isscalar(drive):
-                return float(drive)
-            drive = np.asarray(drive)
-            return float(drive[0]) if drive.ndim > 0 else float(drive)
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
@@ -220,12 +213,12 @@ class RobotParameters(dict):
             #w[elbow_front, girdle_back] = weight
 
         # Gait trot, diagonals in phase
-        """
+        
         trot_pairs = [
             (limb_bases['FL_L'], limb_bases['HL_R']),
             (limb_bases['FL_R'], limb_bases['HL_L']),
         ]
-        """
+        
         contralateral_pairs = [
             (limb_bases['FL_L'], limb_bases['FL_R']),
             (limb_bases['HL_L'], limb_bases['HL_R']),
@@ -237,25 +230,28 @@ class RobotParameters(dict):
         for (a, b) in contralateral_pairs:
             w[a, b] = weight_inter_limb_contra
             w[b, a] = weight_inter_limb_contra
+        for (a, b) in trot_pairs:
+            w[a, b] = weight_inter_limb_contra
+            w[b, a] = weight_inter_limb_contra
 
-        for (a, b) in ipsilateral_pairs:
+        """for (a, b) in ipsilateral_pairs:
             w[a, b] = weight_inter_limb_ipsi
-            w[b, a] = weight_inter_limb_ipsi
+            w[b, a] = weight_inter_limb_ipsi"""
 
         # Limb → body coupling (girdle+ only)
         # Forelimbs couple near the head (pair 0-1, body osc 0-3)
         # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
         
         limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6, 8]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7, 9]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['FL_L'], [0,2]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [1,3]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['HL_L'], [8,10]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9,11]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
-                w[limb_osc, b] = weight_limb_body
-                #w[b, limb_osc] = weight
+                #w[limb_osc, b] = weight_limb_body
+                w[b, limb_osc] = weight_limb_body
 
 
 
@@ -343,30 +339,41 @@ class RobotParameters(dict):
 
         # Inter-limb: trot diagonal → in phase (ψ=0, already zero)
         # Contralateral same girdle → anti-phase
-        contra_pairs = [
-            (16, 20),   # FL-L ↔ FL-R
-            (24, 28),   # HL-L ↔ HL-R
+        trot_pairs = [
+            (limb_bases['FL_L'], limb_bases['HL_R']),
+            (limb_bases['FL_R'], limb_bases['HL_L']),
         ]
-        ipsi_pairs = [
-            (16, 24),   # FL-L ↔ FL-R
-            (20, 28),   # HL-L ↔ HL-R
+        
+        contralateral_pairs = [
+            (limb_bases['FL_L'], limb_bases['FL_R']),
+            (limb_bases['HL_L'], limb_bases['HL_R']),
         ]
-        for (a, b) in contra_pairs:
+        ipsilateral_pairs = [
+            (limb_bases['FL_L'], limb_bases['HL_L']),
+            (limb_bases['FL_R'], limb_bases['HL_R']),
+        ]
+        for (a, b) in contralateral_pairs:
             psi[a, b] = np.pi
             psi[b, a] = np.pi
-        for (a, b) in ipsi_pairs:
+
+        for (a, b) in trot_pairs:
+            psi[a, b] = 0.0     
+            psi[b, a] = 0.0
+
+        """for (a, b) in ipsilateral_pairs:
             psi[a, b] = np.pi
-            psi[b, a] = np.pi
+            psi[b, a] = np.pi"""
         
         limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (limb_bases['FL_L'], [0,2]),   # FL-L girdle+ → left body osc 0,2
+            (limb_bases['FL_R'], [1,3]),   # FL-R girdle+ → right body osc 1,3
+            (limb_bases['HL_L'], [8,10]), # HL-L girdle+ → left body osc 8,10
+            (limb_bases['HL_R'], [9,11]), # HL-R girdle+ → right body osc 9,11
         ]
         for (limb_osc, body_oscs) in limb_to_body:
             for b in body_oscs:
-                psi[limb_osc, b] = psi_limb_body
+                #psi[limb_osc, b] = psi_limb_body
+                psi[b, limb_osc] = psi_limb_body
 
 
         # Limb → body: 0 phase bias (already zero, limb in phase with body)
@@ -406,7 +413,6 @@ class RobotParameters(dict):
 
         # Limbs: only active during walking regime
         if 1.0 < d < 3.0:
-           # R_limb = 0.131 * d + 0.131
            R_limb = 0.131 * d + 0.131
         else:
             R_limb = 0.0   # silenced during swimming (d≥3) or below threshold
