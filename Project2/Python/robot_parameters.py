@@ -251,7 +251,6 @@ class RobotParameters(dict):
     
         for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
-                #w[limb_osc, b] = weight_limb_body
                 w[b, limb_osc] = weight_limb_body
 
 
@@ -290,8 +289,7 @@ class RobotParameters(dict):
         anti_phase = np.pi
         psi_intra_limb_contra = np.pi
         psi_intra_limb_ipsi = np.pi/2
-        psi_limb_body = 0
-
+        psi_limb_body = getattr(parameters, 'limb_body_phase_offset', 0.0)
         # ----- Axial chain -----
         for k in range(self.n_body_joints):
             i_L = 2 * k
@@ -350,10 +348,6 @@ class RobotParameters(dict):
             psi[a, b] = np.pi
             psi[b, a] = np.pi
 
-        """for (a, b) in trot_pairs:
-            psi[a, b] = 0.0     
-            psi[b, a] = 0.0"""
-
         for (a, b) in ipsilateral_pairs:
             psi[a, b] = np.pi
             psi[b, a] = np.pi
@@ -361,7 +355,7 @@ class RobotParameters(dict):
         
         for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
-                #psi[limb_osc, b] = psi_limb_body
+                psi[limb_osc, b] = -psi_limb_body
                 psi[b, limb_osc] = psi_limb_body
 
 

@@ -21,8 +21,8 @@ def exercise_walk(timestep, n_simulations = 1):
             amplitudes=[1, 2, 3],  # Just an example
             phase_lag_body=None,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
-            position_body_gain = 1.7,
-            position_limb_gain = 1.3,
+            position_body_gain = 1.8,
+            position_limb_gain = 1.4,
             # ...
         )
         for drive in np.linspace(2, 3, n_simulations)
