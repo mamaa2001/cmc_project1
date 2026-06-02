@@ -32,8 +32,21 @@ class RobotParameters(dict):
         ])
         self.rates = np.zeros(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
-        # self.feedback_gains_swim = np.zeros(self.n_oscillators)
-        # self.feedback_gains_walk = np.zeros(self.n_oscillators)
+        # ----- Limb oscillators -----
+        # Limb base indices: FL-L=16, FL-R=20, HL-L=24, HL-R=28
+        self.limb_bases = {
+            'FL_L': 16, # front limb left
+            'FL_R': 20, # front limb right
+            'HL_L': 24, # hind limb left
+            'HL_R': 28, # hind limb right
+        }
+        #link of limb to spine ooscilators
+        self.limb_to_body = [ 
+            (self.limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
+            (self.limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
+            (self.limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
+            (self.limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+        ]
 
         # # gains for final motor output
         self.position_body_gain = getattr(parameters,'position_body_gain', 1.0) 
@@ -183,16 +196,9 @@ class RobotParameters(dict):
                 w[i_R, i_R_next] = weight_axial_ipsi
                 w[i_R_next, i_R] = weight_axial_ipsi
 
-        # ----- Limb oscillators -----
-        # Limb base indices: FL-L=16, FL-R=20, HL-L=24, HL-R=28
-        limb_bases = {
-            'FL_L': 16, # front limb left
-            'FL_R': 20, # front limb right
-            'HL_L': 24, # hind limb left
-            'HL_R': 28, # hind limb right
-        }
+        
 
-        for base in limb_bases.values():
+        for base in self.limb_bases.values():
             girdle_front, girdle_back = base, base + 1       # girdle antagonists, for first leg : 16,17
             elbow_front, elbow_back = base + 2, base + 3   # elbow antagonists, for first leg : 18,19
 
@@ -215,17 +221,17 @@ class RobotParameters(dict):
         # Gait trot, diagonals in phase
         
         trot_pairs = [
-            (limb_bases['FL_L'], limb_bases['HL_R']),
-            (limb_bases['FL_R'], limb_bases['HL_L']),
+            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
         ]
         
         contralateral_pairs = [
-            (limb_bases['FL_L'], limb_bases['FL_R']),
-            (limb_bases['HL_L'], limb_bases['HL_R']),
+            (self.limb_bases['FL_L'], self.limb_bases['FL_R']),
+            (self.limb_bases['HL_L'], self.limb_bases['HL_R']),
         ]
         ipsilateral_pairs = [
-            (limb_bases['FL_L'], limb_bases['HL_L']),
-            (limb_bases['FL_R'], limb_bases['HL_R']),
+            (self.limb_bases['FL_L'], self.limb_bases['HL_L']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_R']),
         ]
         for (a, b) in contralateral_pairs:
             w[a, b] = weight_inter_limb_contra
@@ -242,13 +248,8 @@ class RobotParameters(dict):
         # Forelimbs couple near the head (pair 0-1, body osc 0-3)
         # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
         
-        limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
-        ]
-        for (limb_osc, body_oscs) in limb_to_body:
+    
+        for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
                 #w[limb_osc, b] = weight_limb_body
                 w[b, limb_osc] = weight_limb_body
@@ -312,15 +313,8 @@ class RobotParameters(dict):
                 psi[i_R, i_R_next] = phase_lag
                 psi[i_R_next, i_R] = -phase_lag
 
-        # ----- Limb oscillators -----
-        limb_bases = {
-            'FL_L': 16, # front limb left
-            'FL_R': 20, # front limb right
-            'HL_L': 24, # hind limb left
-            'HL_R': 28, # hind limb right
-        }
 
-        for base in limb_bases.values():
+        for base in self.limb_bases.values():
             girdle_front, girdle_back = base, base + 1
             elbow_front, elbow_back = base + 2, base + 3
 
@@ -340,17 +334,17 @@ class RobotParameters(dict):
         # Inter-limb: trot diagonal → in phase (ψ=0, already zero)
         # Contralateral same girdle → anti-phase
         trot_pairs = [
-            (limb_bases['FL_L'], limb_bases['HL_R']),
-            (limb_bases['FL_R'], limb_bases['HL_L']),
+            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
         ]
         
         contralateral_pairs = [
-            (limb_bases['FL_L'], limb_bases['FL_R']),
-            (limb_bases['HL_L'], limb_bases['HL_R']),
+            (self.limb_bases['FL_L'], self.limb_bases['FL_R']),
+            (self.limb_bases['HL_L'], self.limb_bases['HL_R']),
         ]
         ipsilateral_pairs = [
-            (limb_bases['FL_L'], limb_bases['HL_L']),
-            (limb_bases['FL_R'], limb_bases['HL_R']),
+            (self.limb_bases['FL_L'], self.limb_bases['HL_L']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_R']),
         ]
         for (a, b) in contralateral_pairs:
             psi[a, b] = np.pi
@@ -364,13 +358,8 @@ class RobotParameters(dict):
             psi[a, b] = np.pi
             psi[b, a] = np.pi"""
         
-        limb_to_body = [
-            (limb_bases['FL_L'], [0,2]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1,3]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8,10]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9,11]), # HL-R girdle+ → right body osc 9,11
-        ]
-        for (limb_osc, body_oscs) in limb_to_body:
+        
+        for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
                 #psi[limb_osc, b] = psi_limb_body
                 psi[b, limb_osc] = psi_limb_body
