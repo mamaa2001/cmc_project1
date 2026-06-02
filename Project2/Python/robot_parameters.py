@@ -220,11 +220,6 @@ class RobotParameters(dict):
 
         # Gait trot, diagonals in phase
         
-        trot_pairs = [
-            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
-            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
-        ]
-        
         contralateral_pairs = [
             (self.limb_bases['FL_L'], self.limb_bases['FL_R']),
             (self.limb_bases['HL_L'], self.limb_bases['HL_R']),
@@ -233,12 +228,17 @@ class RobotParameters(dict):
             (self.limb_bases['FL_L'], self.limb_bases['HL_L']),
             (self.limb_bases['FL_R'], self.limb_bases['HL_R']),
         ]
+        trot_pairs = [
+            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
+        ]
         for (a, b) in contralateral_pairs:
             w[a, b] = weight_inter_limb_contra
             w[b, a] = weight_inter_limb_contra
-        for (a, b) in trot_pairs:
-            w[a, b] = weight_inter_limb_contra
-            w[b, a] = weight_inter_limb_contra
+
+        for (a, b) in ipsilateral_pairs:
+            w[a, b] = weight_inter_limb_ipsi
+            w[b, a] = weight_inter_limb_ipsi
 
         """for (a, b) in ipsilateral_pairs:
             w[a, b] = weight_inter_limb_ipsi
@@ -350,13 +350,13 @@ class RobotParameters(dict):
             psi[a, b] = np.pi
             psi[b, a] = np.pi
 
-        for (a, b) in trot_pairs:
+        """for (a, b) in trot_pairs:
             psi[a, b] = 0.0     
-            psi[b, a] = 0.0
+            psi[b, a] = 0.0"""
 
-        """for (a, b) in ipsilateral_pairs:
+        for (a, b) in ipsilateral_pairs:
             psi[a, b] = np.pi
-            psi[b, a] = np.pi"""
+            psi[b, a] = np.pi
         
         
         for (limb_osc, body_oscs) in self.limb_to_body:
