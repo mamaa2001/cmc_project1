@@ -122,7 +122,7 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
 def exercise_1a_networks(plot, timestep=1e-2):
     """[Project 1] Exercise 1: """
 
-    duration = 20.0
+    duration = 60.0
     times = np.arange(0, duration, timestep)
     drive_ramp = np.linspace(0, 6, len(times))
 

@@ -42,10 +42,10 @@ class RobotParameters(dict):
         }
         #link of limb to spine ooscilators
         self.limb_to_body = [ 
-            (self.limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (self.limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (self.limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (self.limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+            (self.limb_bases['FL_L'], [0, 2,4,6]),   # FL-L girdle+ → left body osc 0,2
+            (self.limb_bases['FL_R'], [1, 3,5,7]),   # FL-R girdle+ → right body osc 1,3
+            (self.limb_bases['HL_L'], [8, 10,12,14]), # HL-L girdle+ → left body osc 8,10
+            (self.limb_bases['HL_R'], [9, 11,13,15]), # HL-R girdle+ → right body osc 9,11
         ]
 
         # # gains for final motor output
@@ -125,7 +125,7 @@ class RobotParameters(dict):
         if 1.0 < d < 5.0:
             nu_body = 0.2 * d + 0.3
         elif d >= 5.0:
-            nu_body = 0.2 * 5.0 + 0.3   # saturate at d=5
+            nu_body = 0 #0.2 * 5.0 + 0.3   # saturate at d=5
         else:
             nu_body = 0.0                 # below threshold → silent
 
@@ -133,7 +133,7 @@ class RobotParameters(dict):
         if 1.0 < d < 3.0:
             nu_limb = 0.2 * d + 0.0
         elif d >= 3.0:
-            nu_limb = 0.2 * 3.0 + 0.0   # saturate at d=3
+            nu_limb =0 # 0.2 * 3.0 + 0.0   # saturate at d=3
         else:
             nu_limb = 0.0                 # above d=3 limbs are silenced
 
@@ -240,9 +240,9 @@ class RobotParameters(dict):
             w[a, b] = weight_inter_limb_ipsi
             w[b, a] = weight_inter_limb_ipsi
 
-        """for (a, b) in ipsilateral_pairs:
-            w[a, b] = weight_inter_limb_ipsi
-            w[b, a] = weight_inter_limb_ipsi"""
+        for (a, b) in trot_pairs:
+            w[a, b] = weight_inter_limb_contra
+            w[b, a] = weight_inter_limb_contra
 
         # Limb → body coupling (girdle+ only)
         # Forelimbs couple near the head (pair 0-1, body osc 0-3)
@@ -281,11 +281,24 @@ class RobotParameters(dict):
         psi[:] = 0.0
 
         # Default phase lag along the body (can be overridden via SimulationParameters)
-        phase_lag = (
-            parameters.phase_lag_body
-            if (hasattr(parameters, 'phase_lag_body') and parameters.phase_lag_body is not None)
-            else 2*np.pi / self.n_body_joints   # ~0.785 rad ≈ π/4
-        )
+        drive = getattr(parameters, 'drive', 2.0)
+        if np.isscalar(drive):
+            d = float(drive)
+        else:
+            drive = np.asarray(drive)
+            d = float(drive.flat[0])
+        if 1.0 < d < 3.0:
+            # Mode MARCHE : on veut une onde stationnaire (pas de décalage de phase le long du corps).
+            # Le couplage fort avec les membres (limb_body_weight) va naturellement 
+            # forcer le corps en "S" (opposition de phase entre le tronc et la queue).
+            phase_lag = 0.0 
+        else:
+            # Mode NAGE : on veut une onde progressive de la tête à la queue.
+            phase_lag = (
+                parameters.phase_lag_body
+                if (hasattr(parameters, 'phase_lag_body') and parameters.phase_lag_body is not None)
+                else -2*np.pi / self.n_body_joints   # ~0.785 rad ≈ π/4
+            )
         anti_phase = np.pi
         psi_intra_limb_contra = np.pi
         psi_intra_limb_ipsi = np.pi/2
@@ -306,10 +319,16 @@ class RobotParameters(dict):
             if k < self.n_body_joints - 1:
                 i_L_next = 2 * (k + 1)
                 i_R_next = 2 * (k + 1) + 1
-                psi[i_L, i_L_next] = phase_lag        # i leads i_next
-                psi[i_L_next, i_L] = -phase_lag
-                psi[i_R, i_R_next] = phase_lag
-                psi[i_R_next, i_R] = -phase_lag
+                if 1.0 < d < 3.0 and k == 3:
+                    current_lag = np.pi  # On coupe le corps en deux blocs opposés
+                else:
+                    current_lag = phase_lag # 0.0 pour la marche (ailleurs), ou l'onde progressive de nage
+                
+                psi[i_L, i_L_next] = current_lag
+                psi[i_L_next, i_L] = -current_lag
+                psi[i_R, i_R_next] = current_lag
+                psi[i_R_next, i_R] = -current_lag
+
 
 
         for base in self.limb_bases.values():
@@ -331,10 +350,6 @@ class RobotParameters(dict):
 
         # Inter-limb: trot diagonal → in phase (ψ=0, already zero)
         # Contralateral same girdle → anti-phase
-        trot_pairs = [
-            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
-            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
-        ]
         
         contralateral_pairs = [
             (self.limb_bases['FL_L'], self.limb_bases['FL_R']),
@@ -344,6 +359,11 @@ class RobotParameters(dict):
             (self.limb_bases['FL_L'], self.limb_bases['HL_L']),
             (self.limb_bases['FL_R'], self.limb_bases['HL_R']),
         ]
+        trot_pairs = [
+            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
+        ]
+
         for (a, b) in contralateral_pairs:
             psi[a, b] = np.pi
             psi[b, a] = np.pi
@@ -351,6 +371,10 @@ class RobotParameters(dict):
         for (a, b) in ipsilateral_pairs:
             psi[a, b] = np.pi
             psi[b, a] = np.pi
+
+        for (a, b) in trot_pairs:
+            psi[a, b] = 0.0  # Force explicitement les diagonales à être en phase
+            psi[b, a] = 0.0
         
         
         for (limb_osc, body_oscs) in self.limb_to_body:
@@ -368,8 +392,7 @@ class RobotParameters(dict):
         #pylog.error('Convergence rates must be set')
 
         #### estelle code #####
-        self.rates[:] = getattr(parameters,'rates', 3.0)
-        #self.rates[:] = 20.0 # from paper
+        self.rates[:] = getattr(parameters,'rates', 100.0)
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
@@ -377,7 +400,6 @@ class RobotParameters(dict):
         #pylog.error('Nominal amplitudes must be set')
 
         #### estelle code ##########
-        #drive = parameters.drive
         drive = getattr(parameters,'drive', 2.0) #put 2 as a drive if no drive in parameter
 
         if np.isscalar(drive):
