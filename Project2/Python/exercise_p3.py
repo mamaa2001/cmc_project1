@@ -155,6 +155,138 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     )
 
 
+def _fill_bursts(ax, t, active, y_low, y_high, color, alpha=0.82):
+    """Fill each continuous active epoch with a colored rectangle."""
+    padded  = np.concatenate([[False], np.asarray(active, bool), [False]])
+    changes = np.diff(padded.astype(int))
+    starts  = np.where(changes ==  1)[0]
+    ends    = np.where(changes == -1)[0]
+    for s, e in zip(starts, ends):
+        ax.fill_between(
+            [t[min(s, len(t)-1)], t[min(e, len(t)-1)]],
+            y_low, y_high,
+            color=color, alpha=alpha, linewidth=0,
+        )
+
+
+def plot_emg_style(state_array, drive_val, mode_label, timestep, n_cycles=3):
+    """
+    EMG-style burst activation diagram (style of Cabelguen et al. recordings).
+
+    Layout head→tail: Forelimb | Spine S1-S4 | Hindlimb | Spine S5-S8
+    Each row has two bands: left muscle (green, upper) / right muscle (red, lower).
+    Dashed vertical lines mark every half-period for easy phase reading.
+    Silent limbs (swimming) are shown as a dim tonic bar.
+    """
+    from matplotlib.patches import Patch
+
+    phases = state_array[:, :32]
+    amps   = state_array[:, 32:64]
+    x      = amps * (1 + np.cos(phases))   # [n_iter, 32]
+
+    half     = x.shape[0] // 2
+    x_ss     = x[half:, :]
+    amps_ss  = amps[half:, :]
+    phases_ss = phases[half:, :]
+    t_ss     = np.arange(x_ss.shape[0]) * timestep
+
+    # Period from body oscillator 0
+    dphase = np.diff(phases_ss[:, 0]) / timestep
+    period = 2 * np.pi / np.nanmean(dphase[dphase > 0])
+
+    n_show = min(int(n_cycles * period / timestep), x_ss.shape[0])
+    x_plt  = x_ss[:n_show, :]
+    a_plt  = amps_ss[:n_show, :]
+    t_plt  = t_ss[:n_show]
+
+    # ── Row definitions (head at top): label, osc_L, osc_R, is_limb ─────────
+    rows = [
+        ('FL',  16, 20, True),    # Forelimb shoulder oscillators
+        ('S1',   0,  1, False),
+        ('S2',   2,  3, False),
+        ('S3',   4,  5, False),
+        ('S4',   6,  7, False),
+        ('HL',  24, 28, True),    # Hindlimb shoulder oscillators
+        ('S5',   8,  9, False),
+        ('S6',  10, 11, False),
+        ('S7',  12, 13, False),
+        ('S8',  14, 15, False),
+    ]
+
+    row_h    = 0.28   # height of one muscle band
+    gap      = 0.04   # gap between upper (L) and lower (R) band
+    row_sep  = 0.88   # pitch between row centres
+    limb_sep = 0.22   # extra spacing around limb rows
+
+    # Assign y-centres bottom-to-top so head ends up at the top of the plot
+    y_centers = []
+    y = 0.0
+    for i in range(len(rows) - 1, -1, -1):
+        y_centers.insert(0, y)
+        extra = limb_sep if (rows[i][3] or (i > 0 and rows[i-1][3])) else 0
+        y += row_sep + extra
+
+    fig, ax = plt.subplots(figsize=(10, 7))
+    fig.suptitle(
+        f'EMG-style muscle activations — {mode_label.upper()}  (drive={drive_val})',
+        fontsize=13,
+    )
+
+    for (label, osc_L, osc_R, is_limb), y_c in zip(rows, y_centers):
+        y_L_lo, y_L_hi = y_c + gap/2,          y_c + gap/2 + row_h
+        y_R_lo, y_R_hi = y_c - gap/2 - row_h,  y_c - gap/2
+
+        limb_silent = is_limb and (a_plt[:, osc_L].mean() < 0.01)
+
+        if limb_silent:
+            # Tonic retraction during swimming — dim filled bar
+            ax.fill_between(t_plt, y_L_lo, y_L_hi, color='green', alpha=0.25)
+            ax.fill_between(t_plt, y_R_lo, y_R_hi, color='red',   alpha=0.25)
+            ax.text(t_plt[-1]/2, y_c, 'tonic (retracted)',
+                    ha='center', va='center', fontsize=7, color='gray', style='italic')
+        else:
+            _fill_bursts(ax, t_plt, x_plt[:, osc_L] > np.mean(x_plt[:, osc_L]),
+                         y_L_lo, y_L_hi, 'green')
+            _fill_bursts(ax, t_plt, x_plt[:, osc_R] > np.mean(x_plt[:, osc_R]),
+                         y_R_lo, y_R_hi, 'red')
+
+        ax.axhline(y_c, color='lightgray', lw=0.4, zorder=0)
+        ax.text(-0.04 * t_plt[-1], y_c, label,
+                fontsize=9, ha='right', va='center',
+                fontweight='bold' if is_limb else 'normal',
+                color='#1a6b1a' if is_limb else 'black')
+
+    # ── Half-period dashed reference lines ───────────────────────────────────
+    for t_ref in np.arange(0, t_plt[-1], period / 2):
+        ax.axvline(t_ref, color='black', lw=0.6, linestyle='--', alpha=0.35, zorder=0)
+
+    # ── Period marker T ──────────────────────────────────────────────────────
+    y_bot = min(y_centers) - 0.65
+    ax.annotate('', xy=(period, y_bot), xytext=(0, y_bot),
+                arrowprops=dict(arrowstyle='<->', color='black', lw=1.2))
+    ax.text(period / 2, y_bot - 0.28, 'T', ha='center', fontsize=11, fontweight='bold')
+
+    # ── Cosmetics ─────────────────────────────────────────────────────────────
+    ax.set_xlim(-0.05 * t_plt[-1], t_plt[-1])
+    ax.set_ylim(y_bot - 0.45, max(y_centers) + 0.55)
+    ax.set_xlabel('Time [s]', fontsize=10)
+    ax.set_yticks([])
+    for spine in ['left', 'top', 'right']:
+        ax.spines[spine].set_visible(False)
+    ax.legend(
+        handles=[Patch(color='green', label='Left muscle'),
+                 Patch(color='red',   label='Right muscle')],
+        fontsize=9, loc='upper right',
+    )
+
+    plt.tight_layout()
+    os.makedirs('./logs/ex3_1/', exist_ok=True)
+    fname = f'./logs/ex3_1/emg_style_{mode_label}.png'
+    plt.savefig(fname, dpi=150)
+    pylog.info(f'Saved: {fname}')
+    plt.show()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 3.1 — Analyze spine movement during walking
 # ─────────────────────────────────────────────────────────────────────────────
@@ -292,6 +424,12 @@ def exercise_3_1_spine_analysis(timestep):
         )
         if label in ('walking', 'swimming'):
             plot_phase_lags_analysis(
+                state_array=state_array,
+                drive_val=drive_val,
+                mode_label=label,
+                timestep=timestep,
+            )
+            plot_emg_style(
                 state_array=state_array,
                 drive_val=drive_val,
                 mode_label=label,
