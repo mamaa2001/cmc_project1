@@ -435,25 +435,6 @@ def exercise_3_1_spine_analysis(timestep):
                 mode_label=label,
                 timestep=timestep,
             )
-    """
-    # ── Comparison plot: phase lags walking vs swimming ──────────────────────
-    fig, ax = plt.subplots(figsize=(8, 4))
-    x = np.arange(7)   # 7 pairs for 8 joints
-    width = 0.35
-    ax.bar(x - width/2, results['walking']['lags'],  width, label='Walking',  color='steelblue')
-    ax.bar(x + width/2, results['swimming']['lags'], width, label='Swimming', color='coral')
-    ax.axhline(2 * np.pi / 8, color='gray', linestyle='--', lw=1,
-               label='Ideal swim lag (2π/8 ≈ 0.785 rad)')
-    ax.set_xticks(x)
-    ax.set_xticklabels([f'{k}→{k+1}' for k in range(7)])
-    ax.set_ylabel('Phase lag [rad]')
-    ax.set_title('Inter-joint phase lags: Walking vs Swimming')
-    ax.legend()
-    plt.tight_layout()
-    plt.savefig('./logs/ex3_1/comparison_walk_vs_swim.png', dpi=150)
-    pylog.info('Saved comparison figure: logs/ex3_1/comparison_walk_vs_swim.png')
-    plt.show()
-    """
 
     return results
     #########################################################################
@@ -503,8 +484,8 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
     ax.set_title('A')
     ax.set_yticks([])
     # Scale bar (π/3 like in paper)
-    ax.plot([times[-1]-1, times[-1]-1], [0, np.pi/3], 'k-', lw=2)
-    ax.text(times[-1]-0.8, np.pi/6, 'π/3', fontsize=8)
+    #ax.plot([times[-1]-1, times[-1]-1], [0, np.pi/3], 'k-', lw=2)
+    #ax.text(times[-1]-0.8, np.pi/6, 'π/3', fontsize=8)
 
     # ── Panel B: limb oscillator outputs ─────────────────────────────────────
     ax = axes[1]
@@ -521,8 +502,8 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
     ax.set_ylabel('x Limb')
     ax.set_title('B')
     ax.set_yticks([])
-    ax.plot([times[-1]-1, times[-1]-1], [0, np.pi/3], 'k-', lw=2)
-    ax.text(times[-1]-0.8, np.pi/6, 'π/3', fontsize=8)
+    #ax.plot([times[-1]-1, times[-1]-1], [0, np.pi/3], 'k-', lw=2)
+    #ax.text(times[-1]-0.8, np.pi/6, 'π/3', fontsize=8)
 
     # ── Panel C: instantaneous frequencies ───────────────────────────────────
     ax = axes[2]
@@ -562,11 +543,202 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
 
     
 
+def _plot_coupling_comparison(results, timestep):
+    """
+    2×2 comparison figure:
+      Top row    — body oscillator traces (3 cycles, steady state)
+      Bottom row — inter-joint phase lag bar chart
+    One column per case (coupled / decoupled).
+    """
+    
+    keys      = ['coupled', 'decoupled']
+    
+    """
+    body_left = np.arange(0, 16, 2)
+    colors    = plt.cm.viridis(np.linspace(0, 1, 8))
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 8), sharey='row')
+    fig.suptitle('Walking: with vs without limb-spine coupling', fontsize=13)
+
+    for col, key in enumerate(keys):
+        sa    = results[key]['state_array']
+        label = results[key]['label']
+        speed = results[key]['speed']
+
+        phases = sa[:, :32]
+        amps   = sa[:, 32:64]
+        x      = amps * (1 + np.cos(phases))
+        n      = x.shape[0]
+        half   = n // 2
+        times  = np.arange(n) * timestep
+
+        # Period estimate
+        dphase = np.diff(phases[half:, 0]) / timestep
+        omega  = np.nanmean(dphase[dphase > 0])
+        period = 2 * np.pi / omega if omega > 0 else 1.0
+        n_show = min(int(3 * period / timestep), n - half)
+
+        # ── Top: stacked body oscillator traces ───────────────────────────
+        ax = axes[0, col]
+        for idx, osc_i in enumerate(body_left):
+            offset = (7 - idx) * 0.8
+            ax.plot(times[half:half + n_show],
+                    x[half:half + n_show, osc_i] + offset,
+                    color=colors[idx], lw=0.9)
+        ax.set_title(f'{label}\nspeed = {speed:.4f} m/s', fontsize=10)
+        ax.set_yticks([])
+        ax.set_xlabel('Time [s]')
+        if col == 0:
+            ax.set_ylabel('x Body oscillators  (head → tail)')
+
+        # ── Bottom: inter-joint phase lags ────────────────────────────────
+        ax2 = axes[1, col]
+        ph   = phases[half:, body_left]
+        lags = [np.mean(np.arctan2(np.sin(ph[:, k] - ph[:, k+1]),
+                                    np.cos(ph[:, k] - ph[:, k+1])))
+                for k in range(7)]
+        lags_deg = np.degrees(lags)
+        bc = ['steelblue' if v >= 0 else 'tomato' for v in lags_deg]
+        ax2.bar([f'J{k}→{k+1}' for k in range(7)], lags_deg,
+                color=bc, edgecolor='k', linewidth=0.5)
+        ax2.axhline(0, color='black', lw=0.8)
+        ax2.axhline(45, color='coral', lw=1.1, linestyle='--',
+                    label='Swim lag (45°)')
+        ax2.set_xlabel('Joint pair')
+        ax2.tick_params(axis='x', labelsize=7)
+        ax2.legend(fontsize=7)
+        if col == 0:
+            ax2.set_ylabel('Phase lag [°]')
+
+    plt.tight_layout()
+    os.makedirs('./logs/ex3_2/', exist_ok=True)
+    plt.savefig('./logs/ex3_2/coupling_comparison.png', dpi=150)
+    pylog.info('Saved: logs/ex3_2/coupling_comparison.png')
+    plt.show()
+    """
+    # ── Speed comparison bar chart ────────────────────────────────────────────
+    speeds = [results[k]['speed'] for k in keys]
+    labels = ['With coupling', 'No coupling']
+    bar_colors = ['steelblue', 'tomato']
+
+    _, ax_spd = plt.subplots(figsize=(5, 4))
+    bars = ax_spd.bar(labels, speeds, color=bar_colors, edgecolor='k', width=0.4)
+    for bar, v in zip(bars, speeds):
+        ax_spd.text(bar.get_x() + bar.get_width() / 2,
+                    v + max(speeds) * 0.02,
+                    f'{v:.4f} m/s', ha='center', va='bottom', fontsize=10)
+    ax_spd.set_ylabel('Forward speed [m/s]')
+    ax_spd.set_title('Walking speed: limb-spine coupling effect')
+    ax_spd.set_ylim(0, max(speeds) * 1.25)
+    ax_spd.spines['top'].set_visible(False)
+    ax_spd.spines['right'].set_visible(False)
+    plt.tight_layout()
+    plt.savefig('./logs/ex3_2/speed_comparison.png', dpi=150)
+    pylog.info('Saved: logs/ex3_2/speed_comparison.png')
+    plt.show()
+
+
 def exercise_3_disable_limb_spine_coupling(timestep):
-    """ Walk with disabled limb-spine limbs """
-    # Use exercise_example.py for reference
-    pass
-    return
+    """
+    Exercise 3.2 — Disable limb-spine coupling and compare with normal walking.
+
+    Runs two walking simulations at drive=2.0:
+      (a) Normal:    limb_spine_weight = 30  (default)
+      (b) Decoupled: limb_spine_weight = 0
+
+    For each case produces:
+      • Paper-style CPG dynamics plot (panels A/B/C/D)
+      • EMG-style burst activation diagram
+      • Phase-lag analysis figure
+    Then produces a combined 2×2 comparison figure.
+    """
+    drive    = 2.0
+    duration = 15
+
+    cases = [ #key, lsw, label
+        ('coupled',    30.0, 'Walking — with limb-spine coupling'),
+        ('decoupled',   0.0, 'Walking — no limb-spine coupling'),
+    ]
+
+    results = {}
+
+    for key, lsw, label in cases:
+        pylog.info(f'Running: {label}')
+
+        sim_parameters = SimulationParameters(
+            duration=duration,
+            timestep=timestep,
+            drive=drive,
+            amplitude_gradient=None,
+            phase_lag_body=None,
+            spawn_position=[0, 0, 0.1],
+            spawn_orientation=[0, 0, np.pi/2],
+            limb_spine_weight=lsw,
+        )
+
+        os.makedirs(f'./logs/ex3_2/{key}/', exist_ok=True)
+        _, sim_data = simulation(
+            sim_parameters=sim_parameters,
+            arena='land',
+            fast=True,
+            headless=True,
+            output=f'./logs/ex3_2/{key}/',
+        )
+
+        state_array = np.array(sim_data.state.array[:])
+        n_iter      = state_array.shape[0]
+        times       = np.arange(n_iter) * timestep
+
+        # Forward speed: load head-link world positions from the saved HDF5 file
+        from farms_amphibious.data.data import AmphibiousExperimentData
+        exp_data  = AmphibiousExperimentData.from_file(
+            f'./logs/ex3_2/{key}/simulation.hdf5'
+        )
+        links_pos = np.array(exp_data.animats[0].sensors.links.urdf_positions())
+        elapsed   = (links_pos.shape[0] - links_pos.shape[0] // 2) * timestep
+        fwd_speed = float(
+            np.linalg.norm(
+                links_pos[-1, 0, :2] - links_pos[links_pos.shape[0] // 2, 0, :2]
+            ) / elapsed
+        )
+
+        results[key] = dict(
+            state_array=state_array,
+            times=times,
+            label=label,
+            speed=fwd_speed,
+        )
+
+        pylog.info(f'  [{label}] forward speed = {fwd_speed:.4f} m/s')
+
+        # ── Per-case plots ────────────────────────────────────────────────
+        drive_vec = np.full(n_iter, drive)
+
+        plot_spine_analysis_paper_style(
+            times=times,
+            state_array=state_array,
+            drive_val=drive_vec,
+            mode_label=f'walk_{key}',
+            timestep=timestep,
+        )
+        plot_emg_style(
+            state_array=state_array,
+            drive_val=drive,
+            mode_label=f'walk_{key}',
+            timestep=timestep,
+        )
+        """
+        plot_phase_lags_analysis(
+            state_array=state_array,
+            drive_val=drive,
+            mode_label=f'walk_{key}',
+            timestep=timestep,
+        )
+        """
+
+    # ── Side-by-side comparison ───────────────────────────────────────────
+    _plot_coupling_comparison(results, timestep)
+    return results
 
 
 def exercise_3_limb_spine_antiphase(timestep):
