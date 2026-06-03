@@ -52,6 +52,13 @@ class RobotParameters(dict):
         self.position_body_gain = getattr(parameters,'position_body_gain', 1.0) 
         self.position_limb_gain = getattr(parameters,'position_limb_gain' , 1.0) 
 
+        self._sim_parameters = parameters
+        drive_raw = getattr(parameters, 'drive', 2.0)
+        self._drive_array = (
+            None if np.isscalar(drive_raw)
+            else np.asarray(drive_raw).copy()
+        )
+
         self.update(parameters)
 
     def update(self, parameters):
@@ -64,31 +71,13 @@ class RobotParameters(dict):
         self.set_nominal_amplitudes(parameters)  # R_i
 
     def step(self, time, iteration, salamandra_data):
-        """Stelbow_front function called at each iteration
-
-        Parameters
-        ----------
-
-        salamanra_data: salamandra_simulation/data.py::SalamandraData
-            Contains the robot data, including network and sensors.
-
-        shoulder_fronts (within the method): Numpy array of shape [9x3]
-            Numpy array of size 9x3 relbow_frontresenting the shoulder_frontS positions of each link
-            of the robot along the body. The first index [0-8] coressponds to
-            the link number from head to tail, and the second index [0,1,2]
-            coressponds to the XYZ axis in world coordinate.
-
-        """
-        # Example to get global coordinates of robot links
-        shoulder_fronts = np.array(
-            salamandra_data.sensors.links.urdf_positions()[iteration, :9],
-        )
-        # Example to update the drive
-        # self.sim_parameters.drive = ...
-        # self.set_frequencies(self.sim_parameters)  # f_i
-        # self.set_nominal_amplitudes(self.sim_parameters)  # R_i
-        # print("shoulder_frontGS: {}".format(shoulder_fronts[4, 0]))
-        # print("drive: {}".format(self.sim_parameters.drive))
+        """Step function called at each iteration"""
+        if self._drive_array is not None:
+            idx = min(iteration, len(self._drive_array) - 1)
+            self._sim_parameters.drive = float(self._drive_array[idx])
+            self.set_frequencies(self._sim_parameters)
+            self.set_nominal_amplitudes(self._sim_parameters)
+            self.set_phase_bias(self._sim_parameters)
 
 
     def set_frequencies(self, parameters):
@@ -137,8 +126,8 @@ class RobotParameters(dict):
         else:
             nu_limb = 0.0                 # above d=3 limbs are silenced
 
-        self.freqs[:self.n_oscillators_body] = nu_body
-        self.freqs[self.n_oscillators_body:] = nu_limb
+        self.freqs[:self.n_oscillators_body] = 2 * np.pi * nu_body
+        self.freqs[self.n_oscillators_body:] = 2 * np.pi * nu_limb
 
         
 

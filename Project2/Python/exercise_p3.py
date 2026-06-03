@@ -96,20 +96,27 @@ def exercise_3_1_spine_analysis(timestep):
     """
 
     configs = [
-        # (drive, arena,  label)
-        (2.0, 'land',  'walking'),
-        (4.0, 'water', 'swimming'),
+        (2.0,  'land',  'walking', 10),
+        (4.0,  'water', 'swimming', 10),
+        (None, 'land',  'ramp',    20),
     ]
 
     results = {}
 
-    for drive_val, arena, label in configs:
+    for drive_val, arena, label, duration in configs:
         pylog.info(f'Running {label} simulation (drive={drive_val}, arena={arena})')
+        n_iter = int(duration / timestep)
+
+        # Build the drive array with exactly n_iter points
+        if label == 'ramp':
+            drive_input = np.linspace(0, 6, n_iter)
+        else:
+            drive_input = drive_val   # scalar, fine
 
         sim_parameters = SimulationParameters(
-            duration=10,
+            duration=duration,
             timestep=timestep,
-            drive=drive_val,
+            drive=drive_input,
             amplitude_gradient=None,
             phase_lag_body=None,
             spawn_position=[0, 0, 0.1],
@@ -125,28 +132,12 @@ def exercise_3_1_spine_analysis(timestep):
             headless=True,
             output=f'./logs/ex3_1/{label}/',
         )
-        #print(type(sim_data.sensors.joints))
-        #print(dir(sim_data.sensors.joints))
-        """pos_test = np.array(sim_data.sensors.joints.positions_all())
-        cmd_test = np.array(sim_data.sensors.joints.cmd_positions())
-        print(f"positions_all shape: {pos_test.shape}, max: {pos_test.max():.4f}, min: {pos_test.min():.4f}")
-        print(f"cmd_positions shape: {cmd_test.shape}, max: {cmd_test.max():.4f}, min: {cmd_test.min():.4f}")
-"""
-        state_array = np.array(sim_data.state.array)
-        print(f"State shape: {state_array.shape}")
-        print(f"Phases max: {state_array[:, :32].max():.4f}")
-        print(f"Amplitudes max: {state_array[:, 32:64].max():.4f}")
+        
+        state_array = np.array(sim_data.state.array[:])
+        phases_debug = state_array[:, :32]
+        amps_debug   = state_array[:, 32:64]
 
-        # Also check if the network even oscillated
-        phases = state_array[:, :32]
-        print(f"Phase range joint 0: {phases[:, 0].min():.3f} to {phases[:, 0].max():.3f}")
-        # ── Extract joint positions ──────────────────────────────────────────
-        # sim_data.sensors.joints.positions_all() → shape [n_iter, n_joints]
-        # First 8 columns = body joints (head→tail)
-        #all_joint_pos = np.array(sim_data.sensors.joints.positions_all())
-        #print(dir(sim_data.sensors.joints))
-        # Replace the all_joint_pos line with this:
-        state_array = np.array(sim_data.state.array)
+
 
         # Phases for left body oscillators (indices 0,2,4,6,8,10,12,14)
         # Amplitudes for same
@@ -205,9 +196,16 @@ def exercise_3_1_spine_analysis(timestep):
             'dominant_freq': dom_freq,
             'drive': drive_val,
         }
+        drive_for_plot = drive_input if label == 'ramp' else np.full(len(times), drive_val)
 
-        plot_spine_analysis(steady_times, steady_pos, lags, drive_val, label)
-
+        #plot_spine_analysis(steady_times, steady_pos, lags, drive_val, label)
+        plot_spine_analysis_paper_style(
+            times=times,
+            state_array=state_array,
+            drive_val=drive_for_plot,
+            mode_label=label,
+            timestep=timestep,
+        )
     # ── Comparison plot: phase lags walking vs swimming ──────────────────────
     fig, ax = plt.subplots(figsize=(8, 4))
     x = np.arange(7)   # 7 pairs for 8 joints
@@ -227,6 +225,111 @@ def exercise_3_1_spine_analysis(timestep):
     plt.show()
 
     return results
+    #########################################################################
+    
+def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, timestep):
+    """
+    Reproduce Figure 2 style from Ijspeert 2007:
+    A - x_i signals from left body oscillators (muscle outputs)
+    B - x_i signals from left limb oscillators  
+    C - Instantaneous frequencies
+    D - Drive signal
+    """
+    drive_label = 'ramp 0→6' if mode_label == 'ramp' else drive_val
+    fig, axes = plt.subplots(4, 1, figsize=(10, 10), sharex=True)
+    fig.suptitle(f'CPG dynamics — {mode_label}  (drive={drive_label})', fontsize=13)
+
+    phases = state_array[:, :32]      # shape [n_iter, 32]
+    amps   = state_array[:, 32:64]    # shape [n_iter, 32]
+
+    # Muscle output: x_i = r_i * (1 + cos(phi_i))
+    x = amps * (1 + np.cos(phases))   # shape [n_iter, 32]
+
+    # Instantaneous frequency: f_i = d(phi_i)/dt / (2*pi)
+    dphi = np.diff(phases, axis=0) / timestep          # shape [n_iter-1, 32]
+    # Wrap to avoid 2pi jumps
+    dphi = np.where(dphi > 0, dphi, np.nan)            # phase only increases
+    inst_freq = dphi / (2 * np.pi)                     # in Hz
+    times_freq = times[1:]
+
+    # Index groups
+    body_left  = np.arange(0, 16, 2)   # [0,2,4,6,8,10,12,14]
+    limb_oscs  = np.arange(16, 32)     # all limb oscillators
+
+    #drive_label = 'ramp 0→6' if mode_label == 'ramp' else drive_val
+    #fig.suptitle(f'CPG dynamics — {mode_label}  (drive={drive_label})', fontsize=13)
+    # ── Panel A: body oscillator outputs (left side) ─────────────────────────
+    ax = axes[0]
+    colors_body = plt.cm.viridis(np.linspace(0, 1, len(body_left)))
+    for idx, osc_i in enumerate(body_left):
+        # Offset each trace vertically like in the paper (stacked)
+        offset = (len(body_left) - 1 - idx) * 0.8
+        ax.plot(times, x[:, osc_i] + offset,
+                color=colors_body[idx], lw=0.8)
+        ax.text(-0.5, offset + 0.3, f'x{osc_i}', fontsize=7,
+                ha='right', va='center', color=colors_body[idx])
+    ax.set_ylabel('x Body (left)')
+    ax.set_title('A')
+    ax.set_yticks([])
+    # Scale bar (π/3 like in paper)
+    ax.plot([times[-1]-1, times[-1]-1], [0, np.pi/3], 'k-', lw=2)
+    ax.text(times[-1]-0.8, np.pi/6, 'π/3', fontsize=8)
+
+    # ── Panel B: limb oscillator outputs ─────────────────────────────────────
+    ax = axes[1]
+    # Show one oscillator per limb (the girdle+ of each)
+    limb_names = ['FL-L', 'FL-R', 'HL-L', 'HL-R']
+    limb_show  = [16, 20, 24, 28]
+    colors_limb = ['steelblue', 'tomato', 'green', 'orange']
+    for idx, (osc_i, name) in enumerate(zip(limb_show, limb_names)):
+        offset = (len(limb_show) - 1 - idx) * 0.8
+        ax.plot(times, x[:, osc_i] + offset,
+                color=colors_limb[idx], lw=0.8, label=name)
+        ax.text(-0.5, offset + 0.3, name, fontsize=7,
+                ha='right', va='center', color=colors_limb[idx])
+    ax.set_ylabel('x Limb')
+    ax.set_title('B')
+    ax.set_yticks([])
+    ax.plot([times[-1]-1, times[-1]-1], [0, np.pi/3], 'k-', lw=2)
+    ax.text(times[-1]-0.8, np.pi/6, 'π/3', fontsize=8)
+
+    # ── Panel C: instantaneous frequencies ───────────────────────────────────
+    ax = axes[2]
+    # Body: mean over left body oscillators
+    freq_body = np.nanmean(inst_freq[:, body_left], axis=1)
+    # Limb: mean over limb girdle oscillators
+    freq_limb = np.nanmean(inst_freq[:, [16, 20, 24, 28]], axis=1)
+    # Smooth with a short window to reduce noise
+    def smooth(x, w=50):
+        return np.convolve(x, np.ones(w)/w, mode='same')
+    ax.plot(times_freq, smooth(freq_body), 'k-',  lw=1.2, label='Body')
+    ax.plot(times_freq, smooth(freq_limb), 'k--', lw=1.2, label='Limb')
+    ax.set_ylabel('Freq [Hz]')
+    ax.set_title('C')
+    ax.set_ylim(bottom=0)
+    ax.legend(fontsize=8)
+
+    # ── Panel D: drive ────────────────────────────────────────────────────────
+    ax = axes[3]
+    ax.plot(times, drive_val, 'k-', lw=1.2)   # already an array from the caller
+    # Threshold lines like in paper
+    ax.axhline(1.0, color='red', linestyle='--', lw=0.8, label='d_low=1')
+    ax.axhline(3.0, color='red', linestyle='--', lw=0.8, label='d_high limb=3')
+    ax.axhline(5.0, color='red', linestyle='--', lw=0.8, label='d_high body=5')
+    ax.set_ylabel('drive d')
+    ax.set_xlabel('Time [s]')
+    ax.set_title('D')
+    ax.legend(fontsize=7)
+    ax.set_ylim(bottom=0)
+
+    plt.tight_layout()
+    os.makedirs('./logs/ex3_1/', exist_ok=True)
+    fname = f'./logs/ex3_1/fig2_style_{mode_label}.png'
+    plt.savefig(fname, dpi=150)
+    pylog.info(f'Saved: {fname}')
+    plt.show()
+
+    
 
 def exercise_3_disable_limb_spine_coupling(timestep):
     """ Walk with disabled limb-spine limbs """
