@@ -543,6 +543,160 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
 
     
 
+def plot_stability_comparison(results, timestep):
+    """
+    Compare lateral deviation and contact regularity between coupled and decoupled walking.
+
+    Figure 1 (3 rows × 2 columns):
+      Row 0 — head trajectory (top-down view)
+      Row 1 — lateral deviation over time
+      Row 2 — gait diagram (foot contact raster)
+
+    Figure 2 — summary bar charts: lateral-deviation σ and contact-interval CV.
+    """
+    from farms_amphibious.data.data import AmphibiousExperimentData
+
+    keys       = ['coupled', 'decoupled']
+    foot_names = ['FL-L', 'FL-R', 'HL-L', 'HL-R']
+    foot_idx   = [10, 12, 14, 16]          # from exercise_p4 hints
+    colors     = {'coupled': 'steelblue', 'decoupled': 'tomato'}
+    threshold  = 0.5                        # contact force threshold [N]
+
+    # ── Load HDF5 sensor data for each case ──────────────────────────────────
+    sensor_data = {}
+    for key in keys:
+        animat   = AmphibiousExperimentData.from_file(
+            results[key]['hdf5_path']
+        ).animats[0]
+
+        links    = np.array(animat.sensors.links.urdf_positions())   # [n, n_links, 3]
+        contacts = np.array(animat.sensors.contacts.totals())         # [n, n_links, 3]
+
+        n      = links.shape[0]
+        half   = n // 2
+
+        # Head xy trajectory (steady-state half only)
+        head_xy = links[half:, 0, :2]
+
+        # Lateral deviation: project onto axis perpendicular to net displacement
+        disp = head_xy[-1] - head_xy[0]
+        fwd  = disp / (np.linalg.norm(disp) + 1e-9)
+        lat  = np.array([-fwd[1], fwd[0]])
+        lat_dev = (head_xy - head_xy[0]) @ lat      # [n_ss]
+
+        # Contact forces per foot (steady state, [n_ss, 4])
+        forces_all  = np.linalg.norm(contacts[half:], axis=2)
+        feet_forces = forces_all[:, foot_idx]
+
+        # Coefficient of variation of inter-contact intervals per foot
+        foot_cv = []
+        for fi in range(4):
+            active = feet_forces[:, fi] > threshold
+            padded = np.concatenate([[False], active, [False]])
+            ch     = np.diff(padded.astype(int))
+            starts = np.where(ch == 1)[0]
+            if len(starts) > 2:
+                intervals = np.diff(starts) * timestep
+                cv = np.std(intervals) / (np.mean(intervals) + 1e-9)
+            else:
+                cv = np.nan
+            foot_cv.append(cv)
+
+        sensor_data[key] = dict(
+            head_xy     = head_xy,
+            lat_dev     = lat_dev,
+            lat_std     = np.std(lat_dev),
+            feet_forces = feet_forces,
+            foot_cv     = np.array(foot_cv),
+        )
+
+    t_ss = np.arange(sensor_data[keys[0]]['lat_dev'].shape[0]) * timestep
+
+    # ── Figure 1: trajectory / lateral deviation / gait diagram ──────────────
+    fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+    fig.suptitle('Stability comparison: with vs without limb-spine coupling', fontsize=13)
+
+    for col, key in enumerate(keys):
+        sd    = sensor_data[key]
+        label = results[key]['label']
+        color = colors[key]
+
+        # Row 0: head trajectory top-down
+        ax = axes[0, col]
+        ax.plot(sd['head_xy'][:, 0], sd['head_xy'][:, 1], color=color, lw=1.0)
+        ax.set_aspect('equal')
+        ax.set_xlabel('x [m]')
+        ax.set_title(label, fontsize=10)
+        if col == 0:
+            ax.set_ylabel('y [m]  (head trajectory)')
+        ax.text(0.03, 0.97, f'Lateral σ = {sd["lat_std"]*100:.2f} cm',
+                transform=ax.transAxes, fontsize=9, va='top',
+                bbox=dict(boxstyle='round,pad=0.3', fc='lightyellow', alpha=0.85))
+
+        # Row 1: lateral deviation over time
+        ax1 = axes[1, col]
+        ax1.plot(t_ss, sd['lat_dev'] * 100, color=color, lw=0.8)
+        ax1.fill_between(t_ss, sd['lat_dev'] * 100, 0, alpha=0.15, color=color)
+        ax1.axhline(0, color='k', lw=0.5, linestyle='--')
+        ax1.set_xlabel('Time [s]')
+        ax1.set_title(f'Lateral deviation  (σ = {sd["lat_std"]*100:.2f} cm)')
+        if col == 0:
+            ax1.set_ylabel('Lateral deviation [cm]')
+
+        # Row 2: gait diagram (contact raster)
+        ax2 = axes[2, col]
+        for fi, (_, fc) in enumerate(zip(foot_names, sd['feet_forces'].T)):
+            _fill_bursts(ax2, t_ss, fc > threshold, fi, fi + 0.75, 'k', alpha=0.85)
+        ax2.set_yticks([fi + 0.375 for fi in range(4)])
+        ax2.set_yticklabels(foot_names, fontsize=9)
+        ax2.set_xlim(0, t_ss[-1])
+        ax2.set_ylim(-0.1, 4)
+        ax2.set_xlabel('Time [s]')
+        ax2.set_title('Gait diagram — foot contacts')
+        ax2.spines['left'].set_visible(False)
+
+    plt.tight_layout()
+    os.makedirs('./logs/ex3_2/', exist_ok=True)
+    plt.savefig('./logs/ex3_2/stability_comparison.png', dpi=150)
+    pylog.info('Saved: logs/ex3_2/stability_comparison.png')
+    plt.show()
+
+    # ── Figure 2: summary bar charts ─────────────────────────────────────────
+    bar_labels     = ['With coupling', 'No coupling']
+    bar_color_list = [colors['coupled'], colors['decoupled']]
+
+    _, (ax_lat, ax_cv) = plt.subplots(1, 2, figsize=(9, 4))
+    plt.suptitle('Stability metrics summary', fontsize=12)
+
+    lat_stds = [sensor_data[k]['lat_std'] * 100 for k in keys]
+    bars = ax_lat.bar(bar_labels, lat_stds, color=bar_color_list, edgecolor='k', width=0.4)
+    for bar, v in zip(bars, lat_stds):
+        ax_lat.text(bar.get_x() + bar.get_width()/2, v + max(lat_stds)*0.03,
+                    f'{v:.2f} cm', ha='center', fontsize=10)
+    ax_lat.set_ylabel('Lateral deviation σ [cm]')
+    ax_lat.set_title('Path straightness  (lower = straighter)')
+    ax_lat.set_ylim(0, max(lat_stds) * 1.3)
+    ax_lat.spines['top'].set_visible(False)
+    ax_lat.spines['right'].set_visible(False)
+
+    mean_cvs = [float(np.nanmean(sensor_data[k]['foot_cv'])) for k in keys]
+    bars2 = ax_cv.bar(bar_labels, mean_cvs, color=bar_color_list, edgecolor='k', width=0.4)
+    for bar, v in zip(bars2, mean_cvs):
+        if not np.isnan(v):
+            ax_cv.text(bar.get_x() + bar.get_width()/2, v + max(mean_cvs)*0.03,
+                       f'{v:.3f}', ha='center', fontsize=10)
+    ax_cv.set_ylabel('Contact-interval CV  (lower = more regular)')
+    ax_cv.set_title('Footfall regularity  (lower = more regular)')
+    ax_cv.set_ylim(0, max(mean_cvs) * 1.3)
+    ax_cv.spines['top'].set_visible(False)
+    ax_cv.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    plt.savefig('./logs/ex3_2/stability_metrics.png', dpi=150)
+    pylog.info('Saved: logs/ex3_2/stability_metrics.png')
+    plt.show()
+
+
 def _plot_coupling_comparison(results, timestep):
     """
     2×2 comparison figure:
@@ -707,6 +861,7 @@ def exercise_3_disable_limb_spine_coupling(timestep):
             times=times,
             label=label,
             speed=fwd_speed,
+            hdf5_path=f'./logs/ex3_2/{key}/simulation.hdf5',
         )
 
         pylog.info(f'  [{label}] forward speed = {fwd_speed:.4f} m/s')
@@ -738,6 +893,7 @@ def exercise_3_disable_limb_spine_coupling(timestep):
 
     # ── Side-by-side comparison ───────────────────────────────────────────
     _plot_coupling_comparison(results, timestep)
+    plot_stability_comparison(results, timestep)
     return results
 
 
