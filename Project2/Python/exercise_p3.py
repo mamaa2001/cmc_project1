@@ -31,46 +31,128 @@ def compute_phase_lags_from_phases(phases_array, body_left_idx):
     return np.array(lags)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# HELPER: plot spine phase lags and joint angles
-# ─────────────────────────────────────────────────────────────────────────────
-def plot_spine_analysis(times, joint_positions, lags_rad, drive_value, mode_label):
+def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     """
-    Two-panel figure:
-      Top   : joint angle time series for all 8 body joints
-      Bottom: phase lag between consecutive joints (bar chart)
-    """
-    fig, axes = plt.subplots(2, 1, figsize=(10, 7))
-    fig.suptitle(f'Spine analysis — {mode_label}  (drive={drive_value})', fontsize=13)
+    Dedicated figure to answer: 'What are the phase lags along the spine?'
 
-    # Panel 1: joint angle traces (left side: joints 0,2,4,6)
+    Panel A — Spatial phase profile: phase of each left body oscillator
+               relative to J0 at a reference instant in steady state.
+    Panel B — Inter-joint phase lags (bar chart, in degrees) with annotated
+               values, compared to the ideal swimming lag (45°/joint).
+    Text box — Mean lag, total lag, wavelength, and dominant frequency.
+    """
+    phases = state_array[:, :32]          # [n_iter, 32]
+
+    body_left_idx = np.arange(0, 16, 2)  # [0,2,4,...,14]  — 8 joints
+
+    # ── Steady-state window (second half) ────────────────────────────────────
+    half = phases.shape[0] // 2
+    phases_ss = phases[half:, :]          # [n_ss, 32]
+
+    # ── Per-joint phase lags ──────────────────────────────────────────────────
+    phases_body = phases_ss[:, body_left_idx]   # [n_ss, 8]
+    lags = []
+    for k in range(7):
+        diff = phases_body[:, k] - phases_body[:, k + 1]
+        lags.append(np.mean(np.arctan2(np.sin(diff), np.cos(diff))))
+    lags = np.array(lags)
+
+    # ── Spatial phase profile (relative to J0) at mid-steady-state ───────────
+    ref_idx   = phases_body.shape[0] // 2
+    phases_ref = np.mod(phases_body[ref_idx, :], 2 * np.pi)
+    phases_rel = np.degrees(np.mod(phases_ref - phases_ref[0], 2 * np.pi))
+   
+    # ── Dominant frequency from CPG phase rate ────────────────────────────────
+    dphase    = np.diff(phases_ss[:, 0]) / timestep   # rad/s
+    dom_freq  = np.nanmean(dphase[dphase > 0]) / (2 * np.pi)
+
+    # ── Summary stats ─────────────────────────────────────────────────────────
+    mean_lag_deg  = np.degrees(np.mean(lags))
+    total_lag_deg = np.degrees(np.sum(lags))
+    wavelength    = 360.0 / abs(mean_lag_deg) if mean_lag_deg != 0 else np.inf
+    pattern       = 'TRAVELING WAVE' if abs(mean_lag_deg) > 10 else 'STANDING WAVE'
+
+    # ── Figure ────────────────────────────────────────────────────────────────
+    fig, axes = plt.subplots(2, 1, figsize=(9, 7))
+    fig.suptitle(
+        f'Phase-lag analysis along spine — {mode_label}  (drive={drive_val})',
+        fontsize=13
+    )
+
+    # Panel A: spatial phase profile
     ax = axes[0]
-    colors = plt.cm.viridis(np.linspace(0, 1, 8))
-    for j in range(8):
-        ax.plot(times, joint_positions[:, j], color=colors[j],
-                lw=0.9, label=f'Joint {j}')
-    ax.set_ylabel('Joint angle [rad]')
-    ax.set_xlabel('Time [s]')
-    ax.set_title('Body joint angles (head→tail)')
-    ax.legend(fontsize=7, ncol=4, loc='upper right')
-
-    # Panel 2: phase lags between consecutive joints
+    joints = np.arange(8)
+    ax.plot(joints, phases_rel, 'o-', color='steelblue', lw=1.8, ms=8, zorder=3)
+    ax.fill_between(joints, phases_rel, alpha=0.15, color='steelblue')
+    ax.axhline(180, color='gray', lw=0.9, linestyle=':', label='180° (anti-phase to J0)')
+    ax.axhline(0,   color='black', lw=0.5, linestyle='--')
+    ax.set_xticks(joints)
+    ax.set_xticklabels([f'J{j}' for j in joints])
+    ax.set_ylabel('Phase relative to J0 [°]')
+    ax.set_xlabel('Body joint  (head → tail)')
+    ax.set_title('A — Spatial phase profile along spine')
+    ax.set_ylim(-10, 370)
+    ax.set_yticks([0, 45, 90, 135, 180, 225, 270, 315, 360])
+    ax.legend(fontsize=8)
+    # Annotate each point
+    for j, p in enumerate(phases_rel):
+        ax.annotate(f'{p:.0f}°', (j, p), textcoords='offset points',
+                    xytext=(0, 8), ha='center', fontsize=8)
+    
+    # Panel B: inter-joint phase lags bar chart
     ax2 = axes[1]
-    joint_pairs = [f'{k}→{k+1}' for k in range(len(lags_rad))]
-    bar_colors = ['steelblue' if l >= 0 else 'tomato' for l in lags_rad]
-    ax2.bar(joint_pairs, lags_rad, color=bar_colors)
+    lags_deg   = np.degrees(lags)
+    pair_labels = [f'J{k}→J{k+1}' for k in range(7)]
+    bar_colors  = ['steelblue' if v >= 0 else 'tomato' for v in lags_deg]
+    bars = ax2.bar(pair_labels, lags_deg, color=bar_colors,
+                   edgecolor='k', linewidth=0.6, zorder=3)
     ax2.axhline(0, color='black', lw=0.8)
-    ax2.axhline(2 * np.pi / 8, color='gray', linestyle='--', lw=1,
-                label='Ideal swim lag (2π/8)')
-    ax2.set_ylabel('Phase lag [rad]')
-    ax2.set_xlabel('Joint pair')
-    ax2.set_title('Inter-joint phase lags (positive = head leads tail)')
+    ax2.axhline(45, color='coral', lw=1.2, linestyle='--',
+                label='Ideal swim lag (360°/8 = 45°/joint)')
+    ax2.axhline(-45, color='coral', lw=1.2, linestyle='--')
+    ax2.set_ylabel('Phase lag [°]')
+    ax2.set_xlabel('Joint pair  (head → tail)')
+    ax2.set_title('B — Inter-joint phase lags  (positive = upstream leads downstream)')
     ax2.legend(fontsize=8)
-
+    ax2.grid(axis='y', alpha=0.3)
+    # Annotate bars
+    for bar, val in zip(bars, lags_deg):
+        ypos = val + (3 if val >= 0 else -10)
+        ax2.text(bar.get_x() + bar.get_width() / 2, ypos,
+                 f'{val:.1f}°', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    # Summary text box
+    summary = (
+        f'Mean lag / joint : {mean_lag_deg:.1f}°\n'
+        f'Total lag J0→J7  : {total_lag_deg:.1f}°\n'
+        f'Wavelength       : {wavelength:.1f} segments\n'
+        f'Frequency        : {dom_freq:.3f} Hz\n'
+        f'Pattern          : {pattern}'
+    )
+    ax2.text(0.02, 0.97, summary, transform=ax2.transAxes,
+             fontsize=8.5, va='top', ha='left',
+             bbox=dict(boxstyle='round,pad=0.4', fc='lightyellow', ec='gray', alpha=0.9))
+ 
     plt.tight_layout()
     os.makedirs('./logs/ex3_1/', exist_ok=True)
-    plt.savefig(f'./logs/ex3_1/spine_analysis_{mode_label}.png', dpi=150)
-    pylog.info(f'Saved figure: logs/ex3_1/spine_analysis_{mode_label}.png')
+    fname = f'./logs/ex3_1/phase_lag_analysis_{mode_label}.png'
+    plt.savefig(fname, dpi=150)
+    pylog.info(f'Saved: {fname}')
+    plt.show()
+
+    # Print clear answer to the assignment question
+    pylog.info(
+        f'\n{"="*60}\n'
+        f'  PHASE LAGS ALONG THE SPINE — {mode_label.upper()}\n'
+        f'{"="*60}\n'
+        f'  Drive            : {drive_val}\n'
+        f'  Per-joint lags   : {np.round(lags_deg, 1)} °\n'
+        f'  Mean lag/joint   : {mean_lag_deg:.1f}°  ({np.radians(mean_lag_deg):.3f} rad)\n'
+        f'  Total lag J0→J7  : {total_lag_deg:.1f}°  ({np.radians(total_lag_deg):.3f} rad)\n'
+        f'  Wavelength       : {wavelength:.1f} body segments\n'
+        f'  Frequency        : {dom_freq:.3f} Hz\n'
+        f'  Wave pattern     : {pattern}\n'
+        f'{"="*60}'
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -132,7 +214,7 @@ def exercise_3_1_spine_analysis(timestep):
             headless=True,
             output=f'./logs/ex3_1/{label}/',
         )
-        
+
         state_array = np.array(sim_data.state.array[:])
         phases_debug = state_array[:, :32]
         amps_debug   = state_array[:, 32:64]
@@ -165,9 +247,11 @@ def exercise_3_1_spine_analysis(timestep):
             body_left_idx=np.arange(0, 16, 2)
         )
         # ── Dominant frequency ───────────────────────────────────────────────
+        """
         fft = np.abs(np.fft.rfft(steady_pos[:, 0]))
         freqs_fft = np.fft.rfftfreq(len(steady_pos), d=timestep)
         dom_freq = freqs_fft[np.argmax(fft[1:]) + 1]
+        """
 
         # And update dominant frequency to use CPG phases directly:
         phase_signal = state_array[len(times)//2:, 0]  # joint 0, second half
@@ -206,6 +290,14 @@ def exercise_3_1_spine_analysis(timestep):
             mode_label=label,
             timestep=timestep,
         )
+        if label in ('walking', 'swimming'):
+            plot_phase_lags_analysis(
+                state_array=state_array,
+                drive_val=drive_val,
+                mode_label=label,
+                timestep=timestep,
+            )
+    """
     # ── Comparison plot: phase lags walking vs swimming ──────────────────────
     fig, ax = plt.subplots(figsize=(8, 4))
     x = np.arange(7)   # 7 pairs for 8 joints
@@ -223,6 +315,7 @@ def exercise_3_1_spine_analysis(timestep):
     plt.savefig('./logs/ex3_1/comparison_walk_vs_swim.png', dpi=150)
     pylog.info('Saved comparison figure: logs/ex3_1/comparison_walk_vs_swim.png')
     plt.show()
+    """
 
     return results
     #########################################################################
