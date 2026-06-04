@@ -40,37 +40,46 @@ def exercise_4a_transition(timestep):
         ...
 
     """
-    # Use exercise_example.py for reference
-    # Additional hints:
-    sim_parameters_walk2swim = SimulationParameters(
-        duration=90,  # Simulation duration in [s]
-        timestep=timestep,
-        spawn_position=[2.0, 0, 0.0],
-        spawn_orientation=[0, 0, 0],
-        update_drive = True,
-    )
-    _sim_walk2swim, _data_walk2swim = simulation(
-        sim_parameters=sim_parameters_walk2swim,
+    # --- Land to water (walk → swim) ---
+    # Spawn on land (x=2), facing water, drive starts in walking regime
+    os.makedirs('./logs/ex4_walk2swim/', exist_ok=True)
+    simulation(
+        sim_parameters=SimulationParameters(
+            duration=40,
+            timestep=timestep,
+            spawn_position=[-0.5, 0, 0.1],
+            spawn_orientation=[0, 0, -np.pi],
+            drive=4.0,
+            update_drive=True,
+        ),
         arena='amphibious',
         fast=True,
-        record=False,
-        record_path='walk2swim',  # or swim2walk
-    )
-    sim_parameters_swim2walk = SimulationParameters(
-        duration=90,  # Simulation duration in [s]
-        timestep=timestep,
-        spawn_position=[-1.0, 0, 0.0],
-        spawn_orientation=[0, 0, np.pi],
-        update_drive = True,
-    )
-    _sim_swim2walk, _data_swim2walk = simulation(
-        sim_parameters=sim_parameters_swim2walk,
-        arena='amphibious',
-        fast=True,
-        record=False,
-        record_path='swim2walk',  # or swim2walk
+        output='logs/ex4_walk2swim/sim_0',
+        record=True,
+        record_path='logs/ex4_walk2swim/video_walk2swim.mp4',
+        verbose=True,
     )
 
+    # --- Water to land (swim → walk) ---
+    # Spawn in water (x=-1), facing shore, drive starts in swimming regime
+    os.makedirs('./logs/ex4_swim2walk/', exist_ok=True)
+    simulation(
+        sim_parameters=SimulationParameters(
+            duration=40,
+            timestep=timestep,
+            spawn_position=[0.8, 0, 0.1],
+            spawn_orientation=[0, 0, 0],
+            drive=2.0,
+            update_drive=True,
+        ),
+
+        arena='amphibious',
+        fast=True,
+        output='logs/ex4_swim2walk/sim_0',
+        record=True,
+        record_path='logs/ex4_swim2walk/video_swim2walk.mp4',
+        verbose=True,
+    )
     return
 
 
