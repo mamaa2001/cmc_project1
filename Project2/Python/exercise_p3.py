@@ -2,10 +2,13 @@
 
 import os
 import numpy as np
-from salamandra_simulation.simulation import simulation
+from plot_results import *
+from salamandra_simulation.simulation import simulation, simulation_sweep
 from simulation_parameters import SimulationParameters
 #import farms_pylog as pylog
 import matplotlib.pyplot as plt
+from farms_amphibious.data.data import AmphibiousExperimentData
+from matplotlib.patches import Patch
 
 
 def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
@@ -155,7 +158,7 @@ def plot_emg_style(state_array, drive_val, mode_label, timestep, n_cycles=3):
     Dashed vertical lines mark every half-period for easy phase reading.
     Silent limbs (swimming) are shown as a dim tonic bar.
     """
-    from matplotlib.patches import Patch
+    
 
     phases = state_array[:, :32]
     amps   = state_array[:, 32:64]
@@ -459,7 +462,7 @@ def plot_stability_comparison(results, timestep):
 
     Figure 2 — summary bar charts: lateral-deviation σ | foot contact CV | speed.
     """
-    from farms_amphibious.data.data import AmphibiousExperimentData
+    
 
     keys   = ['coupled', 'decoupled']
     colors = {'coupled': 'steelblue', 'decoupled': 'tomato'}
@@ -658,7 +661,7 @@ def exercise_3_disable_limb_spine_coupling(timestep):
         times       = np.arange(n_iter) * timestep
 
         # Forward speed: load head-link world positions from the saved HDF5 file
-        from farms_amphibious.data.data import AmphibiousExperimentData
+        
         exp_data  = AmphibiousExperimentData.from_file(
             f'./logs/ex3_2/{key}/simulation.hdf5'
         )
@@ -874,7 +877,7 @@ def exercise_3b_coordination(timestep):
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             # Orientation in Euler angles [rad]
             spawn_orientation=[0, 0, np.pi/2],
-            drive=2.6,  # from previous grid search
+            drive=2.0,  # from previous grid search
             limb_body_phase_offset = 0, #from previous grid search
             position_body_gain = position_body_gain,
             position_limb_gain = position_limb_gain,
@@ -987,10 +990,10 @@ def analyze_exercise_3b_results(base_log_folder='./logs/sweep_3b/'):
     plt.show()
 
 if __name__ == '__main__':
-    exercise_3_disable_limb_spine_coupling(timestep=5e-3)
+    """exercise_3_disable_limb_spine_coupling(timestep=5e-3)
     exercise_3_limb_spine_antiphase(timestep=5e-3)
-    #exercise_3a_coordination(timestep=5e-3)
-    #analyze_exercise_3a_results()
-    #exercise_3b_coordination(timestep=5e-3)
-    #analyze_exercise_3b_results()
+    exercise_3a_coordination(timestep=5e-3)
+    analyze_exercise_3a_results()"""
+    exercise_3b_coordination(timestep=5e-3)
+    analyze_exercise_3b_results()
 

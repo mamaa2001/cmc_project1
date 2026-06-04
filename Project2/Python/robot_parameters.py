@@ -148,11 +148,15 @@ class RobotParameters(dict):
 
             current_drive = getattr(self.sim_parameters, 'drive', 2.0)
             self.sim_parameters.drive = current_drive + self.alpha_drive * (self.target_drive - current_drive)
-
+        drive_raw = getattr(self.sim_parameters, 'drive', 2.0)
+        self._drive_array = (
+            None if np.isscalar(drive_raw)
+            else np.asarray(drive_raw).copy()
+        )
             # Update CPG from gait state
-            self.set_frequencies(self.sim_parameters)
-            self.set_nominal_amplitudes(self.sim_parameters)
-            self.set_phase_bias(self.sim_parameters)
+        self.set_frequencies(self.sim_parameters)
+        self.set_nominal_amplitudes(self.sim_parameters)
+        self.set_phase_bias(self.sim_parameters)
 
 
     def set_frequencies(self, parameters):
@@ -201,8 +205,8 @@ class RobotParameters(dict):
         else:
             nu_limb = 0.0                 # above d=3 limbs are silenced
 
-        self.freqs[:self.n_oscillators_body] = nu_body
-        self.freqs[self.n_oscillators_body:] = nu_limb
+        self.freqs[:self.n_oscillators_body] = 2*np.pi*nu_body
+        self.freqs[self.n_oscillators_body:] = 2*np.pi*nu_limb
 
         
 
