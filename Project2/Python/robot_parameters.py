@@ -14,9 +14,24 @@ class RobotParameters(dict):
         super().__init__()
 
         # Initialise parameters
+        self.sim_parameters = parameters
         self.n_body_joints = parameters.n_body_joints
         self.n_legs_joints = parameters.n_legs_joints
         self.initial_phases = parameters.initial_phases
+        self.update_drive = getattr(parameters,'update_drive', False)
+        self.current_gait = 'walk'  # État initial (à changer en 'swim' si tu spawn dans l'eau)
+        self.target_drive = 2.0     # Drive cible selon l'état
+        self.alpha_drive = 0.05     # Vitesse de glissement du drive
+        self.alpha_filter = 0.1
+        self.filtered_head = 0.0
+        self.filtered_feet = 0.0
+
+        # Add debounce / hysteresis
+        self.transition_counter = 0
+        self.debounce_steps = 20
+        self.to_swim_threshold = 0.5
+        self.to_walk_threshold = 2.0
+
         self.n_joints = self.n_body_joints + self.n_legs_joints
         self.n_oscillators_body = 2*self.n_body_joints
         self.n_oscillators_legs = 2*self.n_legs_joints
@@ -51,7 +66,7 @@ class RobotParameters(dict):
         # # gains for final motor output
         self.position_body_gain = getattr(parameters,'position_body_gain', 1.0) 
         self.position_limb_gain = getattr(parameters,'position_limb_gain' , 1.0) 
-
+        
         self.update(parameters)
 
     def update(self, parameters):
@@ -89,6 +104,55 @@ class RobotParameters(dict):
         # self.set_nominal_amplitudes(self.sim_parameters)  # R_i
         # print("shoulder_frontGS: {}".format(shoulder_fronts[4, 0]))
         # print("drive: {}".format(self.sim_parameters.drive))
+        if self.update_drive:
+            index = 0 if iteration == 0 else (iteration - 1)
+            contacts_all = np.linalg.norm(np.array(
+                salamandra_data.sensors.contacts.totals()[index]
+            ), axis=1)
+            
+            contacts_body = contacts_all[:9]
+            contacts_feet = contacts_all[10:18:2]
+
+            contact_head = contacts_body[0]
+            total_feet = np.sum(contacts_feet > 0.1)   # binary foot contact count
+            total_body_rest = np.sum(contacts_body[1:] > 0.1)
+
+            self.filtered_head = self.alpha_filter * contact_head + (1.0 - self.alpha_filter) * self.filtered_head
+            self.filtered_feet = self.alpha_filter * total_feet + (1.0 - self.alpha_filter) * self.filtered_feet
+
+            want_swim = (
+                self.current_gait == 'walk'
+                and self.filtered_feet <= self.to_swim_threshold
+                and total_body_rest == 0
+                and self.filtered_head < 0.05
+            )
+
+            want_walk = (
+                self.current_gait == 'swim'
+                and (self.filtered_head > 0.05 or self.filtered_feet >= self.to_walk_threshold)
+            )
+
+            if want_swim or want_walk:
+                self.transition_counter += 1
+            else:
+                self.transition_counter = 0
+
+            if self.transition_counter >= self.debounce_steps:
+                if want_swim:
+                    self.current_gait = 'swim'
+                    self.target_drive = 4.0
+                elif want_walk:
+                    self.current_gait = 'walk'
+                    self.target_drive = 2.0
+                self.transition_counter = 0
+
+            current_drive = getattr(self.sim_parameters, 'drive', 2.0)
+            self.sim_parameters.drive = current_drive + self.alpha_drive * (self.target_drive - current_drive)
+
+            # Update CPG from gait state
+            self.set_frequencies(self.sim_parameters)
+            self.set_nominal_amplitudes(self.sim_parameters)
+            self.set_phase_bias(self.sim_parameters)
 
 
     def set_frequencies(self, parameters):
