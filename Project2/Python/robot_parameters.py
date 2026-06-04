@@ -21,16 +21,16 @@ class RobotParameters(dict):
         self.update_drive = getattr(parameters,'update_drive', False)
         self.current_gait = 'walk'  # État initial (à changer en 'swim' si tu spawn dans l'eau)
         self.target_drive = 2.0     # Drive cible selon l'état
-        self.alpha_drive = 0.05     # Vitesse de glissement du drive
-        self.alpha_filter = 0.1
+        self.alpha_drive = 0.15     # Vitesse de glissement du drive
+        self.alpha_filter = 0.3
         self.filtered_head = 0.0
         self.filtered_feet = 0.0
 
         # Add debounce / hysteresis
         self.transition_counter = 0
-        self.debounce_steps = 20
-        self.to_swim_threshold = 0.5
-        self.to_walk_threshold = 2.0
+        self.debounce_steps = 5
+        self.to_swim_threshold = 0.3
+        self.to_walk_threshold = 1.2
 
         self.n_joints = self.n_body_joints + self.n_legs_joints
         self.n_oscillators_body = 2*self.n_body_joints

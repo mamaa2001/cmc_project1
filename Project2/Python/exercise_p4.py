@@ -42,21 +42,35 @@ def exercise_4a_transition(timestep):
     """
     # Use exercise_example.py for reference
     # Additional hints:
-    sim_parameters = SimulationParameters(
+    sim_parameters_walk2swim = SimulationParameters(
         duration=90,  # Simulation duration in [s]
         timestep=timestep,
-        spawn_position=[-1.0, 0, 0.0],
-        spawn_orientation=[0, 0, np.pi],
-        update_drive = True
+        spawn_position=[2.0, 0, 0.0],
+        spawn_orientation=[0, 0, 0],
+        update_drive = True,
     )
-    _sim, _data = simulation(
-        sim_parameters=sim_parameters,
+    _sim_walk2swim, _data_walk2swim = simulation(
+        sim_parameters=sim_parameters_walk2swim,
         arena='amphibious',
         fast=True,
         record=False,
         record_path='walk2swim',  # or swim2walk
     )
-    pass
+    sim_parameters_swim2walk = SimulationParameters(
+        duration=90,  # Simulation duration in [s]
+        timestep=timestep,
+        spawn_position=[-1.0, 0, 0.0],
+        spawn_orientation=[0, 0, np.pi],
+        update_drive = True,
+    )
+    _sim_swim2walk, _data_swim2walk = simulation(
+        sim_parameters=sim_parameters_swim2walk,
+        arena='amphibious',
+        fast=True,
+        record=False,
+        record_path='swim2walk',  # or swim2walk
+    )
+
     return
 
 
