@@ -990,10 +990,10 @@ def analyze_exercise_3b_results(base_log_folder='./logs/sweep_3b/'):
     plt.show()
 
 if __name__ == '__main__':
-    """exercise_3_disable_limb_spine_coupling(timestep=5e-3)
-    exercise_3_limb_spine_antiphase(timestep=5e-3)
-    exercise_3a_coordination(timestep=5e-3)
-    analyze_exercise_3a_results()"""
-    exercise_3b_coordination(timestep=5e-3)
+    #exercise_3_disable_limb_spine_coupling(timestep=5e-3)
+    #exercise_3_limb_spine_antiphase(timestep=5e-3)
+    #exercise_3a_coordination(timestep=5e-3)
+    analyze_exercise_3a_results()
+    #exercise_3b_coordination(timestep=5e-3)
     analyze_exercise_3b_results()
 
