@@ -2,33 +2,10 @@
 
 import os
 import numpy as np
-from salamandra_simulation.simulation import simulation, simulation_sweep
+from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
 import farms_pylog as pylog
 import matplotlib.pyplot as plt
-from salamandra_simulation.data import SalamandraData
-
-
-def compute_phase_lags_from_phases(phases_array, body_left_idx):
-    """
-    Compute inter-joint phase lags directly from CPG oscillator phases.
-    Uses the second half (steady state) and computes mean phase difference.
-    
-    phases_array : shape [n_iter, 32]
-    body_left_idx: e.g. [0,2,4,6,8,10,12,14]
-    """
-    # Use second half for steady state
-    half = phases_array.shape[0] // 2
-    phases_body = phases_array[half:, body_left_idx]  # shape [n/2, 8]
-    
-    lags = []
-    for k in range(phases_body.shape[1] - 1):
-        # Phase difference between consecutive joints, wrapped to [-pi, pi]
-        diff = phases_body[:, k] - phases_body[:, k+1]
-        diff_wrapped = np.arctan2(np.sin(diff), np.cos(diff))  # wrap
-        lags.append(np.mean(diff_wrapped))
-    
-    return np.array(lags)
 
 
 def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
@@ -71,14 +48,11 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     # ── Summary stats ─────────────────────────────────────────────────────────
     mean_lag_deg  = np.degrees(np.mean(lags)) 
     total_lag_deg = np.degrees(np.sum(lags))
-    #wavelength    = 360.0 / abs(mean_lag_deg) if mean_lag_deg != 0 else np.inf
-    #pattern       = 'TRAVELING WAVE' if abs(mean_lag_deg) > 10 else 'STANDING WAVE'
-    pattern       = 'TRAVELING WAVE' if mode_label == "swimming" else 'STANDING WAVE'
+    pattern = 'TRAVELING WAVE' if mode_label == "swimming" else 'STANDING WAVE'
 
     # ── Figure ────────────────────────────────────────────────────────────────
     fig, axes = plt.subplots(2, 1, figsize=(9, 7))
     fig.suptitle(
-        #f'Phase-lag analysis along spine — {mode_label}  (drive={drive_val})',
         f'Phase-lag analysis along spine — {mode_label}  (drive={drive_val})',
         fontsize=13
     )
@@ -128,9 +102,7 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
                  f'{val:.1f}°', ha='center', va='bottom', fontsize=9, fontweight='bold')
     # Summary text box
     summary = (
-        #f'Mean lag / joint : {mean_lag_deg:.1f}°\n'  
         f'Total lag J0→J7  : {total_lag_deg:.1f}°\n'
-        #f'Wavelength       : {wavelength:.1f} segments\n'
         f'Frequency        : {dom_freq:.3f} Hz\n'
         f'Pattern          : {pattern}'
     )
@@ -320,17 +292,11 @@ def exercise_3_1_spine_analysis(timestep):
         (None, 'land',  'ramp',    20),
     ]
 
-    results = {}
-
     for drive_val, arena, label, duration in configs:
         pylog.info(f'Running {label} simulation (drive={drive_val}, arena={arena})')
         n_iter = int(duration / timestep)
 
-        # Build the drive array with exactly n_iter points
-        if label == 'ramp':
-            drive_input = np.linspace(0, 6, n_iter)
-        else:
-            drive_input = drive_val   # scalar, fine
+        drive_input = np.linspace(0, 6, n_iter) if label == 'ramp' else drive_val
 
         sim_parameters = SimulationParameters(
             duration=duration,
@@ -343,8 +309,7 @@ def exercise_3_1_spine_analysis(timestep):
         )
 
         os.makedirs(f'./logs/ex3_1/{label}/', exist_ok=True)
-
-        sim, sim_data = simulation(          # ← unpack the tuple
+        _, sim_data = simulation(
             sim_parameters=sim_parameters,
             arena=arena,
             fast=True,
@@ -352,70 +317,10 @@ def exercise_3_1_spine_analysis(timestep):
             output=f'./logs/ex3_1/{label}/',
         )
 
-        state_array = np.array(sim_data.state.array[:])
-
-        # Phases for left body oscillators (indices 0,2,4,6,8,10,12,14)
-        # Amplitudes for same
-        phases_all = state_array[:, :32]
-        amps_all = state_array[:, 32:64]
-
-        # Muscle output: M_i = r_i * (1 + cos(phi_i))  — Eq.3 from the assignment
-        # For body joints, use left-side oscillators (even indices 0..14)
-        body_left_idx = np.arange(0, 16, 2)   # [0,2,4,6,8,10,12,14]
-        muscle_output = amps_all[:, body_left_idx] * (1 + np.cos(phases_all[:, body_left_idx]))
-
-        # This is your "joint angle proxy" — shape (2000, 8)
-        all_joint_pos = muscle_output
-        times = np.arange(all_joint_pos.shape[0]) * timestep
-
-
-        # Use only the second half to avoid transient startup
-        half = len(times) // 2
-        steady_pos = all_joint_pos[half:, :8]   # body joints only
-        steady_times = times[half:]
-
-        # ── Phase lag computation ────────────────────────────────────────────
-        lags = compute_phase_lags_from_phases(
-            state_array[:, :32],   # full phases array
-            body_left_idx=np.arange(0, 16, 2)
-        )
-        # ── Dominant frequency ───────────────────────────────────────────────
-        """
-        fft = np.abs(np.fft.rfft(steady_pos[:, 0]))
-        freqs_fft = np.fft.rfftfreq(len(steady_pos), d=timestep)
-        dom_freq = freqs_fft[np.argmax(fft[1:]) + 1]
-        """
-
-        # And update dominant frequency to use CPG phases directly:
-        phase_signal = state_array[len(times)//2:, 0]  # joint 0, second half
-        # Frequency = d(phase)/dt / (2*pi)
-        phase_rate = np.diff(phase_signal) / timestep
-        dom_freq = np.mean(phase_rate) / (2 * np.pi)
-
-        # ── Summary log ─────────────────────────────────────────────────────
-        total_lag = np.sum(lags)
-        pylog.info(
-            f'\n{"="*55}\n'
-            f'  Mode          : {label.upper()}  (drive={drive_val})\n'
-            f'  Frequency     : {dom_freq:.3f} Hz\n'
-            f'  Per-joint lags: {np.round(lags, 3)} rad\n'
-            f'  Total lag     : {total_lag:.3f} rad  '
-            f'({np.degrees(total_lag):.1f}°)\n'
-            f'  Expected swim : {2*np.pi/8:.3f} rad/joint  '
-            f'→ {np.degrees(2*np.pi/8):.1f}° per joint\n'
-            f'{"="*55}'
-        )
-
-        results[label] = {
-            'times': steady_times,
-            'joint_positions': steady_pos,
-            'lags': lags,
-            'dominant_freq': dom_freq,
-            'drive': drive_val,
-        }
+        state_array    = np.array(sim_data.state.array[:])
+        times          = np.arange(state_array.shape[0]) * timestep
         drive_for_plot = drive_input if label == 'ramp' else np.full(len(times), drive_val)
 
-        #plot_spine_analysis(steady_times, steady_pos, lags, drive_val, label)
         plot_spine_analysis_paper_style(
             times=times,
             state_array=state_array,
@@ -437,9 +342,8 @@ def exercise_3_1_spine_analysis(timestep):
                 timestep=timestep,
             )
 
-    return results
-    #########################################################################
-    
+
+
 def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, timestep):
     """
     Reproduce Figure 2 style from Ijspeert 2007:
@@ -469,9 +373,7 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
     inst_freq = dphi / (2 * np.pi)                     # in Hz
     times_freq = times[1:]
 
-    # Index groups
     body_left  = np.arange(0, 16, 2)   # [0,2,4,6,8,10,12,14]
-    limb_oscs  = np.arange(16, 32)     # all limb oscillators
 
     # ── Panel A: body oscillator outputs (left side) ─────────────────────────
     ax = axes[0]
@@ -806,8 +708,6 @@ def exercise_3_disable_limb_spine_coupling(timestep):
             timestep=timestep,
         )
 
-    # ── Side-by-side comparison ───────────────────────────────────────────
-    #_plot_coupling_comparison(results, timestep)
     plot_stability_comparison(results, timestep)
     return results
 
