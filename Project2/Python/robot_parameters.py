@@ -14,9 +14,24 @@ class RobotParameters(dict):
         super().__init__()
 
         # Initialise parameters
+        self.sim_parameters = parameters
         self.n_body_joints = parameters.n_body_joints
         self.n_legs_joints = parameters.n_legs_joints
         self.initial_phases = parameters.initial_phases
+        self.update_drive = getattr(parameters,'update_drive', False)
+        self.current_gait = 'walk'  # État initial (à changer en 'swim' si tu spawn dans l'eau)
+        self.target_drive = 2.0     # Drive cible selon l'état
+        self.alpha_drive = 0.15     # Vitesse de glissement du drive
+        self.alpha_filter = 0.3
+        self.filtered_head = 0.0
+        self.filtered_feet = 0.0
+
+        # Add debounce / hysteresis
+        self.transition_counter = 0
+        self.debounce_steps = 5
+        self.to_swim_threshold = 0.3
+        self.to_walk_threshold = 1.2
+
         self.n_joints = self.n_body_joints + self.n_legs_joints
         self.n_oscillators_body = 2*self.n_body_joints
         self.n_oscillators_legs = 2*self.n_legs_joints
@@ -32,13 +47,26 @@ class RobotParameters(dict):
         ])
         self.rates = np.zeros(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
-        # self.feedback_gains_swim = np.zeros(self.n_oscillators)
-        # self.feedback_gains_walk = np.zeros(self.n_oscillators)
+        # ----- Limb oscillators -----
+        # Limb base indices: FL-L=16, FL-R=20, HL-L=24, HL-R=28
+        self.limb_bases = {
+            'FL_L': 16, # front limb left
+            'FL_R': 20, # front limb right
+            'HL_L': 24, # hind limb left
+            'HL_R': 28, # hind limb right
+        }
+        #link of limb to spine ooscilators
+        self.limb_to_body = [ 
+            (self.limb_bases['FL_L'], [0, 2,4,6]),   # FL-L shoulder+ → left body osc 0,2
+            (self.limb_bases['FL_R'], [1, 3,5,7]),   # FL-R shoulder+ → right body osc 1,3
+            (self.limb_bases['HL_L'], [8, 10,12,14]), # HL-L shoulder+ → left body osc 8,10
+            (self.limb_bases['HL_R'], [9, 11,13,15]), # HL-R shoulder+ → right body osc 9,11
+        ]
 
         # # gains for final motor output
-        self.position_body_gain = parameters.position_body_gain
-        self.position_limb_gain = parameters.position_limb_gain
-
+        self.position_body_gain = getattr(parameters,'position_body_gain', 1.0) 
+        self.position_limb_gain = getattr(parameters,'position_limb_gain' , 1.0) 
+        
         self.update(parameters)
 
     def update(self, parameters):
@@ -59,31 +87,73 @@ class RobotParameters(dict):
         salamanra_data: salamandra_simulation/data.py::SalamandraData
             Contains the robot data, including network and sensors.
 
-        girdle_fronts (within the method): Numpy array of shape [9x3]
-            Numpy array of size 9x3 relbow_frontresenting the girdle_frontS positions of each link
+        shoulder_fronts (within the method): Numpy array of shape [9x3]
+            Numpy array of size 9x3 relbow_frontresenting the shoulder_frontS positions of each link
             of the robot along the body. The first index [0-8] coressponds to
             the link number from head to tail, and the second index [0,1,2]
             coressponds to the XYZ axis in world coordinate.
 
         """
         # Example to get global coordinates of robot links
-        girdle_fronts = np.array(
+        shoulder_fronts = np.array(
             salamandra_data.sensors.links.urdf_positions()[iteration, :9],
         )
         # Example to update the drive
         # self.sim_parameters.drive = ...
         # self.set_frequencies(self.sim_parameters)  # f_i
         # self.set_nominal_amplitudes(self.sim_parameters)  # R_i
-        # print("girdle_frontGS: {}".format(girdle_fronts[4, 0]))
+        # print("shoulder_frontGS: {}".format(shoulder_fronts[4, 0]))
         # print("drive: {}".format(self.sim_parameters.drive))
+        if self.update_drive:
+            index = 0 if iteration == 0 else (iteration - 1)
+            contacts_all = np.linalg.norm(np.array(
+                salamandra_data.sensors.contacts.totals()[index]
+            ), axis=1)
+            
+            contacts_body = contacts_all[:9]
+            contacts_feet = contacts_all[10:18:2]
 
-        @staticmethod
-        def _get_drive(parameters):
-            drive = parameters.drive
-            if np.isscalar(drive):
-                return float(drive)
-            drive = np.asarray(drive)
-            return float(drive[0]) if drive.ndim > 0 else float(drive)
+            contact_head = contacts_body[0]
+            total_feet = np.sum(contacts_feet > 0.1)   # binary foot contact count
+            total_body_rest = np.sum(contacts_body[1:] > 0.1)
+
+            self.filtered_head = self.alpha_filter * contact_head + (1.0 - self.alpha_filter) * self.filtered_head
+            self.filtered_feet = self.alpha_filter * total_feet + (1.0 - self.alpha_filter) * self.filtered_feet
+
+            want_swim = (
+                self.current_gait == 'walk'
+                and self.filtered_feet <= self.to_swim_threshold
+                and total_body_rest == 0
+                and self.filtered_head < 0.05
+            )
+
+            want_walk = (
+                self.current_gait == 'swim'
+                and (self.filtered_head > 0.05 or self.filtered_feet >= self.to_walk_threshold)
+            )
+
+            if want_swim or want_walk:
+                self.transition_counter += 1
+            else:
+                self.transition_counter = 0
+
+            if self.transition_counter >= self.debounce_steps:
+                if want_swim:
+                    self.current_gait = 'swim'
+                    self.target_drive = 4.0
+                elif want_walk:
+                    self.current_gait = 'walk'
+                    self.target_drive = 2.0
+                self.transition_counter = 0
+
+            current_drive = getattr(self.sim_parameters, 'drive', 2.0)
+            self.sim_parameters.drive = current_drive + self.alpha_drive * (self.target_drive - current_drive)
+
+            # Update CPG from gait state
+            self.set_frequencies(self.sim_parameters)
+            self.set_nominal_amplitudes(self.sim_parameters)
+            self.set_phase_bias(self.sim_parameters)
+
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
@@ -119,7 +189,7 @@ class RobotParameters(dict):
         if 1.0 < d < 5.0:
             nu_body = 0.2 * d + 0.3
         elif d >= 5.0:
-            nu_body = 0.2 * 5.0 + 0.3   # saturate at d=5
+            nu_body = 0 #0.2 * 5.0 + 0.3   # saturate at d=5
         else:
             nu_body = 0.0                 # below threshold → silent
 
@@ -127,7 +197,7 @@ class RobotParameters(dict):
         if 1.0 < d < 3.0:
             nu_limb = 0.2 * d + 0.0
         elif d >= 3.0:
-            nu_limb = 0.2 * 3.0 + 0.0   # saturate at d=3
+            nu_limb =0 # 0.2 * 3.0 + 0.0   # saturate at d=3
         else:
             nu_limb = 0.0                 # above d=3 limbs are silenced
 
@@ -146,18 +216,18 @@ class RobotParameters(dict):
         #
         # Limb oscillators (indices 16-31):
         #   4 limbs × 4 oscillators each:
-        #     Forelimb L : 16(girdle+), 17(girdle-), 18(elbow+), 19(elbow-)
-        #     Forelimb R : 20(girdle+), 21(girdle-), 22(elbow+), 23(elbow-)
-        #     Hindlimb L : 24(girdle+), 25(girdle-), 26(knee+),  27(knee-)
-        #     Hindlimb R : 28(girdle+), 29(girdle-), 30(knee+),  31(knee-)
+        #     Forelimb L : 16(shoulder+), 17(shoulder-), 18(elbow+), 19(elbow-)
+        #     Forelimb R : 20(shoulder+), 21(shoulder-), 22(elbow+), 23(elbow-)
+        #     Hindlimb L : 24(shoulder+), 25(shoulder-), 26(knee+),  27(knee-)
+        #     Hindlimb R : 28(shoulder+), 29(shoulder-), 30(knee+),  31(knee-)
         #
         #   Between limbs:
         #     • diagonal (trot): FL-L ↔ HL-R  and  FL-R ↔ HL-L
-        #     • contralateral same girdle:  FL-L ↔ FL-R,  HL-L ↔ HL-R
+        #     • contralateral same shoulder:  FL-L ↔ FL-R,  HL-L ↔ HL-R
         #
         #   Limb → body coupling:
-        #     • each limb girdle+ couples to the nearest body oscillators
-        #       (forelimbs → segirdle_backents 0-1, hindlimbs → segirdle_backents 4-5 of the chain)
+        #     • each limb shoulder+ couples to the nearest body oscillators
+        #       (forelimbs → seshoulder_backents 0-1, hindlimbs → seshoulder_backents 4-5 of the chain)
 
         weight_axial_contra = getattr(parameters, 'spine_contra_weight', 10.0) #put 10 if no spine_limb_weight is given in parameters
         weight_axial_ipsi = getattr(parameters, 'spine_ipsi_weight', 10.0) #put 10 if no spine_limb_weight is given in parameters
@@ -181,7 +251,7 @@ class RobotParameters(dict):
             w[i_L, i_R] = weight_axial_contra
             w[i_R, i_L] = weight_axial_contra
 
-            # Ipsilateral coupling to next segirdle_backent
+            # Ipsilateral coupling to next seshoulder_backent
             if k < self.n_body_joints - 1:
                 i_L_next = 2 * (k + 1)
                 i_R_next = 2 * (k + 1) + 1
@@ -190,49 +260,41 @@ class RobotParameters(dict):
                 w[i_R, i_R_next] = weight_axial_ipsi
                 w[i_R_next, i_R] = weight_axial_ipsi
 
-        # ----- Limb oscillators -----
-        # Limb base indices: FL-L=16, FL-R=20, HL-L=24, HL-R=28
-        limb_bases = {
-            'FL_L': 16, # front limb left
-            'FL_R': 20, # front limb right
-            'HL_L': 24, # hind limb left
-            'HL_R': 28, # hind limb right
-        }
+        
 
-        for base in limb_bases.values():
-            girdle_front, girdle_back = base, base + 1       # girdle antagonists, for first leg : 16,17
+        for base in self.limb_bases.values():
+            shoulder_front, shoulder_back = base, base + 1       # shoulder antagonists, for first leg : 16,17
             elbow_front, elbow_back = base + 2, base + 3   # elbow antagonists, for first leg : 18,19
 
             # Antagonist pairs (strong anti-phase coupling)
-            w[girdle_front, girdle_back] = weight_intra_limb_contra
-            w[girdle_back, girdle_front] = weight_intra_limb_contra
+            w[shoulder_front, shoulder_back] = weight_intra_limb_contra
+            w[shoulder_back, shoulder_front] = weight_intra_limb_contra
             w[elbow_front, elbow_back] = weight_intra_limb_contra
             w[elbow_back, elbow_front] = weight_intra_limb_contra
 
-            # Girdle ↔ elbow/knee coupling (circular limb motion)
-            w[girdle_front, elbow_front] = weight_intra_limb_ipsi
-            w[elbow_front, girdle_front] = weight_intra_limb_ipsi
-            w[girdle_back, elbow_back] = weight_intra_limb_ipsi
-            w[elbow_back, girdle_back] = weight_intra_limb_ipsi
-            #w[girdle_front, elbow_back] = weight
-            #w[elbow_back, girdle_front] = weight
-            #w[girdle_back, elbow_front] = weight
-            #w[elbow_front, girdle_back] = weight
+            # shoulder ↔ elbow/knee coupling (circular limb motion)
+            w[shoulder_front, elbow_front] = weight_intra_limb_ipsi
+            w[elbow_front, shoulder_front] = weight_intra_limb_ipsi
+            w[shoulder_back, elbow_back] = weight_intra_limb_ipsi
+            w[elbow_back, shoulder_back] = weight_intra_limb_ipsi
+            #w[shoulder_front, elbow_back] = weight
+            #w[elbow_back, shoulder_front] = weight
+            #w[shoulder_back, elbow_front] = weight
+            #w[elbow_front, shoulder_back] = weight
 
         # Gait trot, diagonals in phase
-        """
-        trot_pairs = [
-            (limb_bases['FL_L'], limb_bases['HL_R']),
-            (limb_bases['FL_R'], limb_bases['HL_L']),
-        ]
-        """
+        
         contralateral_pairs = [
-            (limb_bases['FL_L'], limb_bases['FL_R']),
-            (limb_bases['HL_L'], limb_bases['HL_R']),
+            (self.limb_bases['FL_L'], self.limb_bases['FL_R']),
+            (self.limb_bases['HL_L'], self.limb_bases['HL_R']),
         ]
         ipsilateral_pairs = [
-            (limb_bases['FL_L'], limb_bases['HL_L']),
-            (limb_bases['FL_R'], limb_bases['HL_R']),
+            (self.limb_bases['FL_L'], self.limb_bases['HL_L']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_R']),
+        ]
+        trot_pairs = [
+            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
         ]
         for (a, b) in contralateral_pairs:
             w[a, b] = weight_inter_limb_contra
@@ -242,20 +304,18 @@ class RobotParameters(dict):
             w[a, b] = weight_inter_limb_ipsi
             w[b, a] = weight_inter_limb_ipsi
 
-        # Limb → body coupling (girdle+ only)
+        for (a, b) in trot_pairs:
+            w[a, b] = weight_inter_limb_contra
+            w[b, a] = weight_inter_limb_contra
+
+        # Limb → body coupling (shoulder+ only)
         # Forelimbs couple near the head (pair 0-1, body osc 0-3)
         # Hindlimbs couple near the tail (pair 4-5, body osc 8-11)
         
-        limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
-        ]
-        for (limb_osc, body_oscs) in limb_to_body:
+    
+        for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
-                w[limb_osc, b] = weight_limb_body
-                #w[b, limb_osc] = weight
+                w[b, limb_osc] = weight_limb_body
 
 
 
@@ -277,9 +337,9 @@ class RobotParameters(dict):
         #
         # Limbs:
         #   • Antagonist pair: π (anti-phase)
-        #   • Girdle → elbow/knee: π/2 (quarter-cycle ahead → circular motion)
+        #   • shoulder → elbow/knee: π/2 (quarter-cycle ahead → circular motion)
         #   • Trot diagonal pair: 0 (in phase)
-        #   • Contralateral same girdle: π (anti-phase)
+        #   • Contralateral same shoulder: π (anti-phase)
         #   • Limb → body: 0 (limb locks to body wave) # MIGHT DO THE OPPOSITE TO FIT THE PAPER
 
 
@@ -287,16 +347,28 @@ class RobotParameters(dict):
         psi[:] = 0.0
 
         # Default phase lag along the body (can be overridden via SimulationParameters)
-        phase_lag = (
-            parameters.phase_lag_body
-            if (hasattr(parameters, 'phase_lag_body') and parameters.phase_lag_body is not None)
-            else 2*np.pi / self.n_body_joints   # ~0.785 rad ≈ π/4
-        )
+        drive = getattr(parameters, 'drive', 2.0)
+        if np.isscalar(drive):
+            d = float(drive)
+        else:
+            drive = np.asarray(drive)
+            d = float(drive.flat[0])
+        if 1.0 < d < 3.0:
+            # Mode MARCHE : on veut une onde stationnaire (pas de décalage de phase le long du corps).
+            # Le couplage fort avec les membres (limb_body_weight) va naturellement 
+            # forcer le corps en "S" (opposition de phase entre le tronc et la queue).
+            phase_lag = 0.0 
+        else:
+            # Mode NAGE : on veut une onde progressive de la tête à la queue.
+            phase_lag = (
+                parameters.phase_lag_body
+                if (hasattr(parameters, 'phase_lag_body') and parameters.phase_lag_body is not None)
+                else -2*np.pi / self.n_body_joints   # ~0.785 rad ≈ π/4
+            )
         anti_phase = np.pi
         psi_intra_limb_contra = np.pi
-        psi_intra_limb_ipsi = np.pi/3
-        psi_limb_body = 0
-
+        psi_intra_limb_ipsi = np.pi/2
+        psi_limb_body = getattr(parameters, 'limb_body_phase_offset', 0.0)
         # ----- Axial chain -----
         for k in range(self.n_body_joints):
             i_L = 2 * k
@@ -313,62 +385,68 @@ class RobotParameters(dict):
             if k < self.n_body_joints - 1:
                 i_L_next = 2 * (k + 1)
                 i_R_next = 2 * (k + 1) + 1
-                psi[i_L, i_L_next] = phase_lag        # i leads i_next
-                psi[i_L_next, i_L] = -phase_lag
-                psi[i_R, i_R_next] = phase_lag
-                psi[i_R_next, i_R] = -phase_lag
+                if 1.0 < d < 3.0 and k == 3:
+                    current_lag = np.pi  # On coupe le corps en deux blocs opposés
+                else:
+                    current_lag = phase_lag # 0.0 pour la marche (ailleurs), ou l'onde progressive de nage
+                
+                psi[i_L, i_L_next] = current_lag
+                psi[i_L_next, i_L] = -current_lag
+                psi[i_R, i_R_next] = current_lag
+                psi[i_R_next, i_R] = -current_lag
 
-        # ----- Limb oscillators -----
-        limb_bases = {
-            'FL_L': 16, # front limb left
-            'FL_R': 20, # front limb right
-            'HL_L': 24, # hind limb left
-            'HL_R': 28, # hind limb right
-        }
 
-        for base in limb_bases.values():
-            girdle_front, girdle_back = base, base + 1
+
+        for base in self.limb_bases.values():
+            shoulder_front, shoulder_back = base, base + 1
             elbow_front, elbow_back = base + 2, base + 3
 
 
             # Antagonist pairs: anti-phase
-            psi[girdle_front, girdle_back] = -psi_intra_limb_contra
-            psi[girdle_back, girdle_front] = psi_intra_limb_contra
+            psi[shoulder_front, shoulder_back] = -psi_intra_limb_contra
+            psi[shoulder_back, shoulder_front] = psi_intra_limb_contra
             psi[elbow_front, elbow_back] = -psi_intra_limb_contra
             psi[elbow_back, elbow_front] = psi_intra_limb_contra
 
-            # Girdle leads elbow by π/2 (forward swing then stance)
-            psi[girdle_front, elbow_front] = -psi_intra_limb_ipsi
-            psi[elbow_front, girdle_front] = psi_intra_limb_ipsi
-            psi[girdle_back, elbow_back] = -psi_intra_limb_ipsi
-            psi[elbow_back, girdle_back] = psi_intra_limb_ipsi
+            # shoulder leads elbow by π/2 (forward swing then stance)
+            psi[shoulder_front, elbow_front] = -psi_intra_limb_ipsi
+            psi[elbow_front, shoulder_front] = psi_intra_limb_ipsi
+            psi[shoulder_back, elbow_back] = -psi_intra_limb_ipsi
+            psi[elbow_back, shoulder_back] = psi_intra_limb_ipsi
 
         # Inter-limb: trot diagonal → in phase (ψ=0, already zero)
-        # Contralateral same girdle → anti-phase
-        contra_pairs = [
-            (16, 20),   # FL-L ↔ FL-R
-            (24, 28),   # HL-L ↔ HL-R
-        ]
-        ipsi_pairs = [
-            (16, 24),   # FL-L ↔ FL-R
-            (20, 28),   # HL-L ↔ HL-R
-        ]
-        for (a, b) in contra_pairs:
-            psi[a, b] = np.pi
-            psi[b, a] = np.pi
-        for (a, b) in ipsi_pairs:
-            psi[a, b] = np.pi
-            psi[b, a] = np.pi
+        # Contralateral same shoulder → anti-phase
         
-        limb_to_body = [
-            (limb_bases['FL_L'], [0, 2, 4, 6]),   # FL-L girdle+ → left body osc 0,2
-            (limb_bases['FL_R'], [1, 3, 5, 7]),   # FL-R girdle+ → right body osc 1,3
-            (limb_bases['HL_L'], [8, 10, 12, 14]), # HL-L girdle+ → left body osc 8,10
-            (limb_bases['HL_R'], [9, 11, 13, 15]), # HL-R girdle+ → right body osc 9,11
+        contralateral_pairs = [
+            (self.limb_bases['FL_L'], self.limb_bases['FL_R']),
+            (self.limb_bases['HL_L'], self.limb_bases['HL_R']),
         ]
-        for (limb_osc, body_oscs) in limb_to_body:
+        ipsilateral_pairs = [
+            (self.limb_bases['FL_L'], self.limb_bases['HL_L']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_R']),
+        ]
+        trot_pairs = [
+            (self.limb_bases['FL_L'], self.limb_bases['HL_R']),
+            (self.limb_bases['FL_R'], self.limb_bases['HL_L']),
+        ]
+
+        for (a, b) in contralateral_pairs:
+            psi[a, b] = np.pi
+            psi[b, a] = np.pi
+
+        for (a, b) in ipsilateral_pairs:
+            psi[a, b] = np.pi
+            psi[b, a] = np.pi
+
+        for (a, b) in trot_pairs:
+            psi[a, b] = 0.0  # Force explicitement les diagonales à être en phase
+            psi[b, a] = 0.0
+        
+        
+        for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
-                psi[limb_osc, b] = psi_limb_body
+                psi[limb_osc, b] = -psi_limb_body
+                psi[b, limb_osc] = psi_limb_body
 
 
         # Limb → body: 0 phase bias (already zero, limb in phase with body)
@@ -382,14 +460,13 @@ class RobotParameters(dict):
         #pylog.error('Convergence rates must be set')
 
         #### estelle code #####
-        self.rates[:] = getattr(parameters,'rates', 3.0)
-        #self.rates[:] = 20.0 # from paper
+        self.rates[:] = getattr(parameters,'rates', 100.0)
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes from drive (Ijspeert 2007 Table S1)
 
-        Body:  R_body(d) = 0.065*d + 0.196  for 1 < d < 5  (saturates at d=5)
-        Limbs: R_limb(d) = 0.131*d + 0.131  for 1 < d < 3  (zero for d >= 3 or d <= 1)
+        #### estelle code ##########
+        drive = getattr(parameters,'drive', 2.0) #put 2 as a drive if no drive in parameter
 
         An optional amplitude_gradient linearly scales body amplitudes head→tail.
         """
@@ -406,7 +483,6 @@ class RobotParameters(dict):
 
         # Limb oscillators: active only in walking regime (1 < d < 3)
         if 1.0 < d < 3.0:
-           # R_limb = 0.131 * d + 0.131
            R_limb = 0.131 * d + 0.131
         else:
             R_limb = 0.0

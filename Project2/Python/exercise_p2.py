@@ -17,17 +17,13 @@ def exercise_walk(timestep, n_simulations = 1):
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             # Orientation in Euler angles [rad]
             spawn_orientation=[0, 0, np.pi/2],
-            drive=drive,  # An example of parameter part of the grid search
-            amplitudes=[1, 2, 3],  # Just an example
-            phase_lag_body=None,  # or np.zeros(n_joints) for example
-            turn=0,  # Another example
-            position_body_gain = 2,
-            position_limb_gain = 1.6,
+            drive=2,  # An example of parameter part of the grid search
+            
             # ...
         )
-        # for drive in np.linspace(2, 3, n_simulations)
-        # # for amplitudes in ...
-        # # for ...
+        #for drive in np.linspace(2, 3, n_simulations)
+        # for amplitudes in ...
+        # for ...
     ]
 
     # Run simulations

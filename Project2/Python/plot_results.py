@@ -165,6 +165,32 @@ def sum_torques(joints_data):
     """
     return np.sum(np.abs(joints_data[:, :]))
 
+def compute_mechanical_cot(joints_torques, joints_velocities, links_positions, timestep):
+    """
+    Calcule le Cost of Transport basé sur le vrai travail mécanique positif.
+    """
+    # 1. Calcul de la puissance mécanique (P = Torque * Omega)
+    # On ne garde que le travail positif (les moteurs qui "poussent", np.maximum(..., 0))
+    power = np.maximum(joints_torques * joints_velocities, 0)
+    
+    # Intégration sur le temps pour obtenir l'énergie (E = Somme(P * dt))
+    total_energy = timestep * np.sum(power)
+    
+    # 2. Distance parcourue par le Centre de Masse (CoM)
+    # On approxime le CoM par la moyenne de la position des 9 segments axiaux (xy)
+    com_initial = np.mean(links_positions[0, :9, :2], axis=0)
+    com_final = np.mean(links_positions[-1, :9, :2], axis=0)
+    
+    distance_fwd = np.linalg.norm(com_final - com_initial)
+    
+    # 3. Calcul final du CoT
+    if distance_fwd > 0.001:  # Sécurité pour éviter la division par zéro
+        cot = total_energy / distance_fwd
+    else:
+        cot = np.nan
+        
+    return cot
+
 def plot_network_dynamics(times, phases_log, amplitudes_log, freqs_log, drive_vec, title='Network dynamics (drive ramp 0→6)'):
     """
     Plots the network dynamics mirroring Figures 4 & 5 from Ijspeert 2007.
