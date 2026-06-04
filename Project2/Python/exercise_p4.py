@@ -45,7 +45,7 @@ def exercise_4a_transition(timestep):
     sim_parameters_walk2swim = SimulationParameters(
         duration=90,  # Simulation duration in [s]
         timestep=timestep,
-        spawn_position=[2.0, 0, 0.0],
+        spawn_position=[1.5, 0, 0.0],
         spawn_orientation=[0, 0, 0],
         update_drive = True,
     )
@@ -59,7 +59,7 @@ def exercise_4a_transition(timestep):
     sim_parameters_swim2walk = SimulationParameters(
         duration=90,  # Simulation duration in [s]
         timestep=timestep,
-        spawn_position=[-1.0, 0, 0.0],
+        spawn_position=[-0.75, 0, 0.0],
         spawn_orientation=[0, 0, np.pi],
         update_drive = True,
     )

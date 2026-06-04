@@ -4,7 +4,7 @@ import os
 import numpy as np
 from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
-import farms_pylog as pylog
+#import farms_pylog as pylog
 import matplotlib.pyplot as plt
 
 
@@ -114,11 +114,11 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     os.makedirs('./logs/ex3_1/', exist_ok=True)
     fname = f'./logs/ex3_1/phase_lag_analysis_{mode_label}.png'
     plt.savefig(fname, dpi=150)
-    pylog.info(f'Saved: {fname}')
+    print(f'Saved: {fname}')
     plt.show()
 
     # Print clear answer to the assignment question
-    pylog.info(
+    print(
         f'\n{"="*60}\n'
         f'  PHASE LAGS ALONG THE SPINE — {mode_label.upper()}\n'
         f'{"="*60}\n'
@@ -260,7 +260,7 @@ def plot_emg_style(state_array, drive_val, mode_label, timestep, n_cycles=3):
     os.makedirs('./logs/ex3_1/', exist_ok=True)
     fname = f'./logs/ex3_1/emg_style_{mode_label}.png'
     plt.savefig(fname, dpi=150)
-    pylog.info(f'Saved: {fname}')
+    print(f'Saved: {fname}')
     plt.show()
 
 
@@ -293,7 +293,7 @@ def exercise_3_1_spine_analysis(timestep):
     ]
 
     for drive_val, arena, label, duration in configs:
-        pylog.info(f'Running {label} simulation (drive={drive_val}, arena={arena})')
+        print(f'Running {label} simulation (drive={drive_val}, arena={arena})')
         n_iter = int(duration / timestep)
 
         drive_input = np.linspace(0, 6, n_iter) if label == 'ramp' else drive_val
@@ -440,7 +440,7 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
     os.makedirs('./logs/ex3_1/', exist_ok=True)
     fname = f'./logs/ex3_1/fig2_style_{mode_label}.png'
     plt.savefig(fname, dpi=150)
-    pylog.info(f'Saved: {fname}')
+    print(f'Saved: {fname}')
     plt.show()
 
     
@@ -559,7 +559,7 @@ def plot_stability_comparison(results, timestep):
     plt.tight_layout()
     os.makedirs('./logs/ex3_2/', exist_ok=True)
     plt.savefig('./logs/ex3_2/stability_comparison.png', dpi=150)
-    pylog.info('Saved: logs/ex3_2/stability_comparison.png')
+    print('Saved: logs/ex3_2/stability_comparison.png')
     plt.show()
 
     # ── Figure 2: summary bar charts (lateral dev | foot contact CV | speed) ──
@@ -601,7 +601,7 @@ def plot_stability_comparison(results, timestep):
 
     plt.tight_layout()
     plt.savefig('./logs/ex3_2/stability_metrics.png', dpi=150)
-    pylog.info('Saved: logs/ex3_2/stability_metrics.png')
+    print('Saved: logs/ex3_2/stability_metrics.png')
     plt.show()
 
 
@@ -631,7 +631,7 @@ def exercise_3_disable_limb_spine_coupling(timestep):
     results = {}
 
     for key, lsw, label in cases:
-        pylog.info(f'Running: {label}')
+        print(f'Running: {label}')
 
         sim_parameters = SimulationParameters(
             duration=duration,
@@ -678,7 +678,7 @@ def exercise_3_disable_limb_spine_coupling(timestep):
             hdf5_path=f'./logs/ex3_2/{key}/simulation.hdf5',
         )
 
-        pylog.info(f'  [{label}] forward speed = {fwd_speed:.4f} m/s')
+        print(f'  [{label}] forward speed = {fwd_speed:.4f} m/s')
 
         # ── Per-case plots ────────────────────────────────────────────────
         drive_vec = np.full(n_iter, drive)
@@ -825,6 +825,7 @@ def analyze_exercise_3a_results(base_log_folder='./logs/sweep_3a/'):
             cot_results.append([d, offset, cot])
 
         except Exception as e:
+            # Utile pour ne pas crasher si une des 441 simulations a échoué
             print(f"Erreur sur la simulation {i} : {e}")
 
     # Conversion finale en tableaux NumPy pour le plot
@@ -991,5 +992,5 @@ if __name__ == '__main__':
     #exercise_3a_coordination(timestep=5e-3)
     #analyze_exercise_3a_results()
     #exercise_3b_coordination(timestep=5e-3)
-    analyze_exercise_3b_results()
+    #analyze_exercise_3b_results()
 
