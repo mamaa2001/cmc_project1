@@ -240,7 +240,8 @@ class RobotParameters(dict):
     
         for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
-                w[b, limb_osc] = weight_limb_body
+                w[limb_osc, b] = weight_limb_body/3
+                w[b, limb_osc] = weight_limb_body # strong limb -> body
 
 
 
