@@ -61,7 +61,9 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     ref_idx   = phases_body.shape[0] // 2
     phases_ref = np.mod(phases_body[ref_idx, :], 2 * np.pi)
     phases_rel = np.degrees(np.mod(phases_ref - phases_ref[0], 2 * np.pi))
-   
+    # for plot continuity
+    phases_rel[0] = 360.0 if phases_rel[1] > 180 else 0.0
+
     # ── Dominant frequency from CPG phase rate ────────────────────────────────
     dphase    = np.diff(phases_ss[:, 0]) / timestep   # rad/s
     dom_freq  = np.nanmean(dphase[dphase > 0]) / (2 * np.pi)
@@ -75,6 +77,7 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     # ── Figure ────────────────────────────────────────────────────────────────
     fig, axes = plt.subplots(2, 1, figsize=(9, 7))
     fig.suptitle(
+        #f'Phase-lag analysis along spine — {mode_label}  (drive={drive_val})',
         f'Phase-lag analysis along spine — {mode_label}  (drive={drive_val})',
         fontsize=13
     )
@@ -83,7 +86,8 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     ax = axes[0]
     joints = np.arange(8)
     ax.plot(joints, phases_rel, 'o-', color='steelblue', lw=1.8, ms=8, zorder=3)
-    ax.fill_between(joints, phases_rel, alpha=0.15, color='steelblue')
+    fill_ref = 360 if phases_rel[0] == 360.0 else 0   # for plot continuity
+    ax.fill_between(joints, phases_rel, fill_ref, alpha=0.15, color='steelblue')
     ax.axhline(180, color='gray', lw=0.9, linestyle=':', label='180° (anti-phase to J0)')
     ax.axhline(0,   color='black', lw=0.5, linestyle='--')
     ax.set_xticks(joints)
@@ -112,7 +116,7 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     ax2.axhline(-45, color='coral', lw=1.2, linestyle='--')
     ax2.set_ylabel('Phase lag [°]')
     ax2.set_xlabel('Joint pair  (head → tail)')
-    ax2.set_title('B — Inter-joint phase lags  (positive = upstream leads downstream)')
+    ax2.set_title('B — Inter-joint phase lags ')
     ax2.legend(fontsize=8)
     ax2.grid(axis='y', alpha=0.3)
     # Annotate bars
@@ -124,7 +128,7 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     summary = (
         f'Mean lag / joint : {mean_lag_deg:.1f}°\n'
         f'Total lag J0→J7  : {total_lag_deg:.1f}°\n'
-        f'Wavelength       : {wavelength:.1f} segments\n'
+        #f'Wavelength       : {wavelength:.1f} segments\n'
         f'Frequency        : {dom_freq:.3f} Hz\n'
         f'Pattern          : {pattern}'
     )
@@ -148,7 +152,7 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
         f'  Per-joint lags   : {np.round(lags_deg, 1)} °\n'
         f'  Mean lag/joint   : {mean_lag_deg:.1f}°  ({np.radians(mean_lag_deg):.3f} rad)\n'
         f'  Total lag J0→J7  : {total_lag_deg:.1f}°  ({np.radians(total_lag_deg):.3f} rad)\n'
-        f'  Wavelength       : {wavelength:.1f} body segments\n'
+        #f'  Wavelength       : {wavelength:.1f} body segments\n'
         f'  Frequency        : {dom_freq:.3f} Hz\n'
         f'  Wave pattern     : {pattern}\n'
         f'{"="*60}'
@@ -447,9 +451,13 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
     C - Instantaneous frequencies
     D - Drive signal
     """
-    drive_label = 'ramp 0→6' if mode_label == 'ramp' else drive_val
+    if mode_label == 'ramp':
+        drive_label = 'ramp 0→6'
+    else:
+        drive_label = f'{float(np.asarray(drive_val).flat[0]):.1f}'
+    title_label = mode_label.replace('_', ' ')
     fig, axes = plt.subplots(4, 1, figsize=(10, 10), sharex=True)
-    fig.suptitle(f'CPG dynamics — {mode_label}  (drive={drive_label})', fontsize=13)
+    fig.suptitle(f'CPG dynamics — {title_label}  (drive={drive_label})', fontsize=13)
 
     phases = state_array[:, :32]      # shape [n_iter, 32]
     amps   = state_array[:, 32:64]    # shape [n_iter, 32]
@@ -545,53 +553,47 @@ def plot_spine_analysis_paper_style(times, state_array, drive_val, mode_label, t
 
 def plot_stability_comparison(results, timestep):
     """
-    Compare lateral deviation and contact regularity between coupled and decoupled walking.
+    Compare lateral deviation and limb-oscillator regularity between coupled and
+    decoupled walking.
+
+    All metrics come from the saved HDF5 file (smoothed contact forces).
 
     Figure 1 (3 rows × 2 columns):
-      Row 0 — head trajectory (top-down view)
+      Row 0 — head trajectory (top-down)
       Row 1 — lateral deviation over time
-      Row 2 — gait diagram (foot contact raster)
+      Row 2 — gait diagram (smoothed foot contacts)
 
-    Figure 2 — summary bar charts: lateral-deviation σ and contact-interval CV.
+    Figure 2 — summary bar charts: lateral-deviation σ | foot contact CV | speed.
     """
     from farms_amphibious.data.data import AmphibiousExperimentData
 
     keys       = ['coupled', 'decoupled']
-    foot_names = ['FL-L', 'FL-R', 'HL-L', 'HL-R']
-    foot_idx   = [10, 12, 14, 16]          # from exercise_p4 hints
+    limb_names = ['FL-L', 'FL-R', 'HL-L', 'HL-R']
     colors     = {'coupled': 'steelblue', 'decoupled': 'tomato'}
-    threshold  = 0.5                        # contact force threshold [N]
 
-    # ── Load HDF5 sensor data for each case ──────────────────────────────────
     sensor_data = {}
     for key in keys:
-        animat   = AmphibiousExperimentData.from_file(
+        # ── Foot contact CV from HDF5 (smoothed to remove physics noise) ────────
+        foot_idx   = [10, 12, 14, 16]
+        threshold  = 0.5
+        win        = max(1, int(0.05 / timestep))   # 50 ms smoothing window
+        animat     = AmphibiousExperimentData.from_file(
             results[key]['hdf5_path']
         ).animats[0]
+        links      = np.array(animat.sensors.links.urdf_positions())
+        contacts   = np.array(animat.sensors.contacts.totals())
+        n_links    = links.shape[0]
+        half_l     = n_links // 2
 
-        links    = np.array(animat.sensors.links.urdf_positions())   # [n, n_links, 3]
-        contacts = np.array(animat.sensors.contacts.totals())         # [n, n_links, 3]
+        forces_all  = np.linalg.norm(contacts[half_l:], axis=2)   # [n_ss, n_links]
+        feet_forces = forces_all[:, foot_idx]                       # [n_ss, 4]
 
-        n      = links.shape[0]
-        half   = n // 2
-
-        # Head xy trajectory (steady-state half only)
-        head_xy = links[half:, 0, :2]
-
-        # Lateral deviation: project onto axis perpendicular to net displacement
-        disp = head_xy[-1] - head_xy[0]
-        fwd  = disp / (np.linalg.norm(disp) + 1e-9)
-        lat  = np.array([-fwd[1], fwd[0]])
-        lat_dev = (head_xy - head_xy[0]) @ lat      # [n_ss]
-
-        # Contact forces per foot (steady state, [n_ss, 4])
-        forces_all  = np.linalg.norm(contacts[half:], axis=2)
-        feet_forces = forces_all[:, foot_idx]
-
-        # Coefficient of variation of inter-contact intervals per foot
-        foot_cv = []
+        foot_cv     = []
+        foot_active = []   # smoothed binary contact per foot, for gait diagram
         for fi in range(4):
-            active = feet_forces[:, fi] > threshold
+            fc_smooth = np.convolve(feet_forces[:, fi], np.ones(win) / win, mode='same')
+            active = fc_smooth > threshold
+            foot_active.append(active)
             padded = np.concatenate([[False], active, [False]])
             ch     = np.diff(padded.astype(int))
             starts = np.where(ch == 1)[0]
@@ -602,17 +604,25 @@ def plot_stability_comparison(results, timestep):
                 cv = np.nan
             foot_cv.append(cv)
 
+        # ── Lateral deviation from head link positions ────────────────────────
+        head_xy = links[half_l:, 0, :2]
+        disp    = head_xy[-1] - head_xy[0]
+        fwd     = disp / (np.linalg.norm(disp) + 1e-9)
+        lat     = np.array([-fwd[1], fwd[0]])
+        lat_dev = (head_xy - head_xy[0]) @ lat
+
         sensor_data[key] = dict(
+            foot_active = np.stack(foot_active, axis=1),   # [n_ss, 4] smoothed contacts
+            foot_cv     = np.array(foot_cv),
             head_xy     = head_xy,
             lat_dev     = lat_dev,
             lat_std     = np.std(lat_dev),
-            feet_forces = feet_forces,
-            foot_cv     = np.array(foot_cv),
         )
 
-    t_ss = np.arange(sensor_data[keys[0]]['lat_dev'].shape[0]) * timestep
+    t_ss   = np.arange(sensor_data[keys[0]]['foot_active'].shape[0]) * timestep
+    t_head = np.arange(sensor_data[keys[0]]['lat_dev'].shape[0]) * timestep
 
-    # ── Figure 1: trajectory / lateral deviation / gait diagram ──────────────
+    # ── Figure 1 ─────────────────────────────────────────────────────────────
     fig, axes = plt.subplots(3, 2, figsize=(13, 10))
     fig.suptitle('Stability comparison: with vs without limb-spine coupling', fontsize=13)
 
@@ -621,7 +631,7 @@ def plot_stability_comparison(results, timestep):
         label = results[key]['label']
         color = colors[key]
 
-        # Row 0: head trajectory top-down
+        # Row 0: head trajectory
         ax = axes[0, col]
         ax.plot(sd['head_xy'][:, 0], sd['head_xy'][:, 1], color=color, lw=1.0)
         ax.set_aspect('equal')
@@ -635,24 +645,25 @@ def plot_stability_comparison(results, timestep):
 
         # Row 1: lateral deviation over time
         ax1 = axes[1, col]
-        ax1.plot(t_ss, sd['lat_dev'] * 100, color=color, lw=0.8)
-        ax1.fill_between(t_ss, sd['lat_dev'] * 100, 0, alpha=0.15, color=color)
+        ax1.plot(t_head, sd['lat_dev'] * 100, color=color, lw=0.8)
+        ax1.fill_between(t_head, sd['lat_dev'] * 100, 0, alpha=0.15, color=color)
         ax1.axhline(0, color='k', lw=0.5, linestyle='--')
         ax1.set_xlabel('Time [s]')
         ax1.set_title(f'Lateral deviation  (σ = {sd["lat_std"]*100:.2f} cm)')
         if col == 0:
             ax1.set_ylabel('Lateral deviation [cm]')
 
-        # Row 2: gait diagram (contact raster)
+        # Row 2: limb oscillator burst diagram (clean, from CPG state)
         ax2 = axes[2, col]
-        for fi, (_, fc) in enumerate(zip(foot_names, sd['feet_forces'].T)):
-            _fill_bursts(ax2, t_ss, fc > threshold, fi, fi + 0.75, 'k', alpha=0.85)
+        for fi in range(4):
+            _fill_bursts(ax2, t_ss, sd['foot_active'][:, fi],
+                         fi, fi + 0.75, 'k', alpha=0.85)
         ax2.set_yticks([fi + 0.375 for fi in range(4)])
-        ax2.set_yticklabels(foot_names, fontsize=9)
+        ax2.set_yticklabels(limb_names, fontsize=9)
         ax2.set_xlim(0, t_ss[-1])
         ax2.set_ylim(-0.1, 4)
         ax2.set_xlabel('Time [s]')
-        ax2.set_title('Gait diagram — foot contacts')
+        ax2.set_title('Gait diagram — foot contacts  (50 ms smoothed)')
         ax2.spines['left'].set_visible(False)
 
     plt.tight_layout()
@@ -661,35 +672,41 @@ def plot_stability_comparison(results, timestep):
     pylog.info('Saved: logs/ex3_2/stability_comparison.png')
     plt.show()
 
-    # ── Figure 2: summary bar charts ─────────────────────────────────────────
+    # ── Figure 2: summary bar charts (lateral dev | foot contact CV | speed) ──
     bar_labels     = ['With coupling', 'No coupling']
     bar_color_list = [colors['coupled'], colors['decoupled']]
 
-    _, (ax_lat, ax_cv) = plt.subplots(1, 2, figsize=(9, 4))
-    plt.suptitle('Stability metrics summary', fontsize=12)
+    def _bar_panel(ax, values, ylabel, title, fmt):
+        bars = ax.bar(bar_labels, values, color=bar_color_list, edgecolor='k', width=0.4)
+        vmax = max(v for v in values if not (isinstance(v, float) and np.isnan(v)))
+        for bar, v in zip(bars, values):
+            if not (isinstance(v, float) and np.isnan(v)):
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        v + vmax * 0.04, fmt.format(v),
+                        ha='center', fontsize=10)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.set_ylim(0, vmax * 1.3)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+    _, (ax_lat, ax_cv, ax_spd) = plt.subplots(1, 3, figsize=(13, 4))
+    plt.suptitle('Stability and speed metrics summary', fontsize=12)
 
     lat_stds = [sensor_data[k]['lat_std'] * 100 for k in keys]
-    bars = ax_lat.bar(bar_labels, lat_stds, color=bar_color_list, edgecolor='k', width=0.4)
-    for bar, v in zip(bars, lat_stds):
-        ax_lat.text(bar.get_x() + bar.get_width()/2, v + max(lat_stds)*0.03,
-                    f'{v:.2f} cm', ha='center', fontsize=10)
-    ax_lat.set_ylabel('Lateral deviation σ [cm]')
-    ax_lat.set_title('Path straightness  (lower = straighter)')
-    ax_lat.set_ylim(0, max(lat_stds) * 1.3)
-    ax_lat.spines['top'].set_visible(False)
-    ax_lat.spines['right'].set_visible(False)
+    _bar_panel(ax_lat, lat_stds,
+               'Lateral deviation σ [cm]', 'Path straightness  (lower = straighter)',
+               '{:.2f} cm')
 
     mean_cvs = [float(np.nanmean(sensor_data[k]['foot_cv'])) for k in keys]
-    bars2 = ax_cv.bar(bar_labels, mean_cvs, color=bar_color_list, edgecolor='k', width=0.4)
-    for bar, v in zip(bars2, mean_cvs):
-        if not np.isnan(v):
-            ax_cv.text(bar.get_x() + bar.get_width()/2, v + max(mean_cvs)*0.03,
-                       f'{v:.3f}', ha='center', fontsize=10)
-    ax_cv.set_ylabel('Contact-interval CV  (lower = more regular)')
-    ax_cv.set_title('Footfall regularity  (lower = more regular)')
-    ax_cv.set_ylim(0, max(mean_cvs) * 1.3)
-    ax_cv.spines['top'].set_visible(False)
-    ax_cv.spines['right'].set_visible(False)
+    _bar_panel(ax_cv, mean_cvs,
+               'Foot contact interval CV', 'Footfall regularity  (lower = more regular)',
+               '{:.3f}')
+
+    speeds = [results[k]['speed'] for k in keys]
+    _bar_panel(ax_spd, speeds,
+               'Forward speed [m/s]', 'Walking speed  (higher = faster)',
+               '{:.4f} m/s')
 
     plt.tight_layout()
     plt.savefig('./logs/ex3_2/stability_metrics.png', dpi=150)
@@ -868,28 +885,31 @@ def exercise_3_disable_limb_spine_coupling(timestep):
 
         # ── Per-case plots ────────────────────────────────────────────────
         drive_vec = np.full(n_iter, drive)
+        mode_label_map = {
+            'coupled':   'walking_with_coupling',
+            'decoupled': 'limbs_decoupled_from_body_walking',
+        }
+        mlabel = mode_label_map[key]
 
         plot_spine_analysis_paper_style(
             times=times,
             state_array=state_array,
             drive_val=drive_vec,
-            mode_label=f'walk_{key}',
+            mode_label=mlabel,
             timestep=timestep,
         )
         plot_emg_style(
             state_array=state_array,
             drive_val=drive,
-            mode_label=f'walk_{key}',
+            mode_label=mlabel,
             timestep=timestep,
         )
-        """
         plot_phase_lags_analysis(
             state_array=state_array,
             drive_val=drive,
-            mode_label=f'walk_{key}',
+            mode_label=mlabel,
             timestep=timestep,
         )
-        """
 
     # ── Side-by-side comparison ───────────────────────────────────────────
     _plot_coupling_comparison(results, timestep)
