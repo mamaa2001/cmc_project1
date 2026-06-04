@@ -69,10 +69,11 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     dom_freq  = np.nanmean(dphase[dphase > 0]) / (2 * np.pi)
 
     # ── Summary stats ─────────────────────────────────────────────────────────
-    mean_lag_deg  = np.degrees(np.mean(lags))
+    mean_lag_deg  = np.degrees(np.mean(lags)) 
     total_lag_deg = np.degrees(np.sum(lags))
-    wavelength    = 360.0 / abs(mean_lag_deg) if mean_lag_deg != 0 else np.inf
-    pattern       = 'TRAVELING WAVE' if abs(mean_lag_deg) > 10 else 'STANDING WAVE'
+    #wavelength    = 360.0 / abs(mean_lag_deg) if mean_lag_deg != 0 else np.inf
+    #pattern       = 'TRAVELING WAVE' if abs(mean_lag_deg) > 10 else 'STANDING WAVE'
+    pattern       = 'TRAVELING WAVE' if mode_label == "swimming" else 'STANDING WAVE'
 
     # ── Figure ────────────────────────────────────────────────────────────────
     fig, axes = plt.subplots(2, 1, figsize=(9, 7))
@@ -111,9 +112,10 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
     bars = ax2.bar(pair_labels, lags_deg, color=bar_colors,
                    edgecolor='k', linewidth=0.6, zorder=3)
     ax2.axhline(0, color='black', lw=0.8)
-    ax2.axhline(45, color='coral', lw=1.2, linestyle='--',
-                label='Ideal swim lag (360°/8 = 45°/joint)')
-    ax2.axhline(-45, color='coral', lw=1.2, linestyle='--')
+    if mode_label == "swimming" :
+        ax2.axhline(45, color='coral', lw=1.2, linestyle='--',
+                    label='Ideal swim lag (360°/8 = 45°/joint)')
+        ax2.axhline(-45, color='coral', lw=1.2, linestyle='--')
     ax2.set_ylabel('Phase lag [°]')
     ax2.set_xlabel('Joint pair  (head → tail)')
     ax2.set_title('B — Inter-joint phase lags ')
@@ -126,7 +128,7 @@ def plot_phase_lags_analysis(state_array, drive_val, mode_label, timestep):
                  f'{val:.1f}°', ha='center', va='bottom', fontsize=9, fontweight='bold')
     # Summary text box
     summary = (
-        f'Mean lag / joint : {mean_lag_deg:.1f}°\n'
+        #f'Mean lag / joint : {mean_lag_deg:.1f}°\n'  
         f'Total lag J0→J7  : {total_lag_deg:.1f}°\n'
         #f'Wavelength       : {wavelength:.1f} segments\n'
         f'Frequency        : {dom_freq:.3f} Hz\n'
