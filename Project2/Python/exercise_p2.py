@@ -6,41 +6,28 @@ from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
 
 
-def exercise_walk(timestep, n_simulations = 1):
+def exercise_walk(timestep, n_simulations=1):
     "[Project 1] Q2 Walking with an increasing (ramp) drive"
-    # Use exercise_example.py for reference
-    # Parameters
     parameter_set = [
         SimulationParameters(
-            duration=15,  # Simulation duration in [s]
-            timestep=timestep,  # Simulation timestep in [s]
-            spawn_position=[0, 0, 0.1],  # Robot position in [m]
-            # Orientation in Euler angles [rad]
-            spawn_orientation=[0, 0, np.pi/2],
-            drive=2,  # An example of parameter part of the grid search
-            
-            # ...
+            duration=15,
+            timestep=timestep,
+            spawn_position=[0, 0, 0.1],
+            spawn_orientation=[0, 0, np.pi / 2],
+            drive=2,
         )
-        #for drive in np.linspace(2, 5, n_simulations)
-        # for amplitudes in ...
-        # for ...
     ]
 
-    # Run simulations
     os.makedirs('./logs/ex_2/', exist_ok=True)
     for simulation_i, sim_parameters in enumerate(parameter_set):
         sim, data = simulation(
-            sim_parameters=sim_parameters,  # Simulation parameters, see above
-            arena='land',  # Can also be 'water', give it a try!
-            # fast=True,  # For fast mode (not real-time)
-            # headless=True,  # For headless mode (No GUI, could be faster)
+            sim_parameters=sim_parameters,
+            arena='land',
             output=f'logs/example/sim_{simulation_i}',
-            record=True,  # Record video
-            # video savging path
+            record=False,
             record_path=f"logs/example/video_{simulation_i}.mp4",
             verbose=True,
         )
-    pass
     return
 
 
@@ -61,7 +48,7 @@ def exercise_ramp_swim(timestep):
         sim_parameters=sim_parameters,
         arena='water',
         output='logs/ex_ramp_swim/sim_0',
-        record=True,
+        record=False,
         record_path="logs/ex_ramp_swim/video_ramp_swim.mp4",
         verbose=True,
     )
@@ -85,7 +72,7 @@ def exercise_ramp_walk(timestep):
         sim_parameters=sim_parameters,
         arena='land',
         output='logs/ex_ramp_walk/sim_0',
-        record=True,
+        record=False,
         record_path="logs/ex_ramp_walk/video_ramp_walk.mp4",
         verbose=True,
     )
@@ -93,8 +80,5 @@ def exercise_ramp_walk(timestep):
 
 
 if __name__ == '__main__':
-# exercise_ramp_swim(timestep=5e-3)
-   # exercise_ramp_walk(timestep=5e-3)
-   exercise_walk(timestep=5e-3)
-
-    
+    exercise_walk(timestep=5e-3)
+    exercise_ramp_walk(timestep=5e-3)

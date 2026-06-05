@@ -12,7 +12,6 @@ from salamandra_simulation.save_figures import save_figures
 from simulation_parameters import SimulationParameters
 from network import SalamandraNetwork
 from plot_results import *
-from exercise_p3 import plot_spine_analysis_paper_style
 
 
 @dataclass
@@ -31,7 +30,6 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     drive: <float/array>
         Central drive to the oscillators
     """
-    # Simulation setup
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
 
@@ -44,11 +42,7 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         drive=drive,
         amplitude_gradient=None,
         phase_lag_body=None,
-        #test_value = 10,
-        # Feel free to include parameters
     )
-    #pylog.warning(
-    #    'Modify the scalar drive to be a vector of length n_iterations. By doing so the drive will be modified to be drive[i] at each time step i.')
     state = SalamandraState.salamandra_robot(n_iterations, n_oscillators=32)
     network = SalamandraNetwork(
         sim_parameters,
@@ -76,10 +70,6 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
     ])
     freqs_log[0, :] = network.robot_parameters.freqs
 
-    # comment below pass to run file
-    #pylog.warning('Remove the pass to run your code!!')
-    #pass
-
     pylog.warning(
         'Implement plots here, try to plot the various logged data to check the implementation')
     # Run network ODE and log data
@@ -105,19 +95,6 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         toc - tic
     ))
 
-    # Implement plots of network results
-    #pylog.warning('Implement plots')
-
-
-    fig, axes = plot_network_dynamics(
-        times=times,
-        phases_log=phases_log,
-        amplitudes_log=amplitudes_log,
-        freqs_log=freqs_log,
-        drive_vec=drive_vec,
-        title='Network dynamics (drive ramp 0→6)'
-    )
-
     # Prepare state_array for paper-style spine plot: [phases | amplitudes]
     state_array = np.concatenate([phases_log, amplitudes_log], axis=1)
     try:
@@ -136,17 +113,12 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
 
 def exercise_1a_networks(plot, timestep=1e-2):
     """[Project 1] Exercise 1: """
-
     duration = 60.0
     times = np.arange(0, duration, timestep)
     drive_ramp = np.linspace(0, 6, len(times))
 
     run_network(duration=duration, update=True, drive=drive_ramp, timestep=timestep)
 
-    
-    #run_network(duration=5)
-
-    # Show plots
     if True:
         if plot:
             plt.show()

@@ -5,8 +5,6 @@ import pickle
 import numpy as np
 from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
-#import farms_pylog as pylog
-
 
 def exercise_4a_transition(timestep):
     """4a Transitions
@@ -55,7 +53,7 @@ def exercise_4a_transition(timestep):
         sim_parameters=sim_parameters_walk2swim,
         arena='amphibious',
         fast=True,
-        record=True,
+        record=False,
        record_path='logs/ex4_walk2swim/video_walk2swim.mp4',
     )
     sim_parameters_swim2walk = SimulationParameters(
@@ -71,7 +69,7 @@ def exercise_4a_transition(timestep):
         sim_parameters=sim_parameters_swim2walk,
         arena='amphibious',
         fast=True,
-        record=True,
+        record=False,
         record_path='logs/ex4_swim2walk/video_swim2walk.mp4',
     )
 
