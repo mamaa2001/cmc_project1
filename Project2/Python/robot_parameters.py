@@ -104,15 +104,7 @@ class RobotParameters(dict):
         # self.set_nominal_amplitudes(self.sim_parameters)  # R_i
         # print("shoulder_frontGS: {}".format(shoulder_fronts[4, 0]))
         # print("drive: {}".format(self.sim_parameters.drive))
-        if getattr(self.sim_parameters, 'drive_ramp', False):
-            d_start = getattr(self.sim_parameters, 'drive_ramp_start', 1.0)
-            d_end   = getattr(self.sim_parameters, 'drive_ramp_end',   5.0)
-            duration = getattr(self.sim_parameters, 'duration', 40.0)
-            self.sim_parameters.drive = d_start + (d_end - d_start) * min(time / duration, 1.0)
-            self.set_frequencies(self.sim_parameters)
-            self.set_nominal_amplitudes(self.sim_parameters)
-            self.set_phase_bias(self.sim_parameters)
-        elif self.update_drive:
+        if self.update_drive:
             index = 0 if iteration == 0 else (iteration - 1)
             contacts_all = np.linalg.norm(np.array(
                 salamandra_data.sensors.contacts.totals()[index]
@@ -328,8 +320,6 @@ class RobotParameters(dict):
 
 
 
-        
-
     def set_phase_bias(self, parameters):
         """Set phase bias"""
         #shape fo the phase bias np.zeros([self.n_oscillators,self.n_oscillators,])
@@ -461,8 +451,6 @@ class RobotParameters(dict):
         # Limb → body: 0 phase bias (already zero, limb in phase with body)
 
 
-
-
     def set_amplitudes_rate(self, parameters):
         """Set amplitude rates"""
         #shape of the rate np.zeros(self.n_oscillators)
@@ -472,37 +460,32 @@ class RobotParameters(dict):
         self.rates[:] = getattr(parameters,'rates', 100.0)
 
     def set_nominal_amplitudes(self, parameters):
-        """Set nominal amplitudes from drive (Ijspeert 2007 Table S1)
+        """Set nominal amplitudes"""
+        #shape of the nominal amplitude np.zeros(self.n_oscillators)
+        #pylog.error('Nominal amplitudes must be set')
 
         #### estelle code ##########
         drive = getattr(parameters,'drive', 2.0) #put 2 as a drive if no drive in parameter
 
-        An optional amplitude_gradient linearly scales body amplitudes head→tail.
-        """
-        drive = getattr(parameters, 'drive', 2.0)
-        d = float(np.asarray(drive).flat[0])
-
-        # Body oscillators
-        if d <= 1.0:
-            R_body = 0.0
-        elif d < 5.0:
-            R_body = 0.065 * d + 0.196
+        if np.isscalar(drive):
+            d = float(drive)
         else:
-            R_body = 0.065 * 5.0 + 0.196  # saturate at d=5
+            drive = np.asarray(drive)
+            d = float(drive.flat[0])
 
-        # Limb oscillators: active only in walking regime (1 < d < 3)
+        # Body
+        if 1.0 < d < 5.0:
+            R_body = 0.065 * d + 0.196
+        elif d >= 5.0:
+            R_body = 0.065 * 5.0 + 0.196   # saturate
+        else:
+            R_body = 0.0
+
+        # Limbs: only active during walking regime
         if 1.0 < d < 3.0:
            R_limb = 0.131 * d + 0.131
         else:
-            R_limb = 0.0
+            R_limb = 0.0   # silenced during swimming (d≥3) or below threshold
 
         self.nominal_amplitudes[:self.n_oscillators_body] = R_body*self.position_body_gain # potentiellement boger dans le if pour seulement quand on marche
         self.nominal_amplitudes[self.n_oscillators_body:] = R_limb*self.position_limb_gain # potentiellement boger dans le if pour seulement quand on marche
-
-        # Optional linear gradient along the body axis (head→tail scaling)
-        gradient = getattr(parameters, 'amplitude_gradient', None)
-        if gradient is not None:
-            scale = np.linspace(1.0, 1.0 + float(gradient), self.n_body_joints)
-            for k in range(self.n_body_joints):
-                self.nominal_amplitudes[2 * k] *= scale[k]
-                self.nominal_amplitudes[2 * k + 1] *= scale[k]
