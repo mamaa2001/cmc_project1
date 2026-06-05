@@ -1071,7 +1071,8 @@ if __name__ == '__main__':
     #exercise_3_disable_limb_spine_coupling(timestep=5e-3)
     #exercise_3_limb_spine_antiphase(timestep=5e-3)
     #exercise_3a_coordination(timestep=5e-3)
-    analyze_exercise_3a_results()
+    #analyze_exercise_3a_results()
     #exercise_3b_coordination(timestep=5e-3)
-    analyze_exercise_3b_results()
-
+    #analyze_exercise_3b_results()
+    #exercise_3b_optimal_video(timestep=5e-3, optimal_body_gain=2.5, optimal_limb_gain=2.2, label='speed_optimal')
+    exercise_3b_optimal_video(timestep=5e-3, optimal_body_gain=1.0, optimal_limb_gain=1.0, label='cot_optimal')

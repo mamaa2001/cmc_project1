@@ -93,6 +93,8 @@ def exercise_ramp_walk(timestep):
 
 
 if __name__ == '__main__':
-   # exercise_ramp_swim(timestep=5e-3)
-    exercise_ramp_walk(timestep=5e-3)
+# exercise_ramp_swim(timestep=5e-3)
+   # exercise_ramp_walk(timestep=5e-3)
+   exercise_walk(timestep=5e-3)
 
+    
