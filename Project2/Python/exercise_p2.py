@@ -12,7 +12,7 @@ def exercise_walk(timestep, n_simulations = 1):
     # Parameters
     parameter_set = [
         SimulationParameters(
-            duration=50,  # Simulation duration in [s]
+            duration=15,  # Simulation duration in [s]
             timestep=timestep,  # Simulation timestep in [s]
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             # Orientation in Euler angles [rad]
@@ -21,7 +21,7 @@ def exercise_walk(timestep, n_simulations = 1):
             
             # ...
         )
-        #for drive in np.linspace(2, 3, n_simulations)
+        #for drive in np.linspace(2, 5, n_simulations)
         # for amplitudes in ...
         # for ...
     ]
@@ -35,7 +35,7 @@ def exercise_walk(timestep, n_simulations = 1):
             # fast=True,  # For fast mode (not real-time)
             # headless=True,  # For headless mode (No GUI, could be faster)
             output=f'logs/example/sim_{simulation_i}',
-            record=False,  # Record video
+            record=True,  # Record video
             # video savging path
             record_path=f"logs/example/video_{simulation_i}.mp4",
             verbose=True,
@@ -45,21 +45,56 @@ def exercise_walk(timestep, n_simulations = 1):
 
 
 def exercise_ramp_swim(timestep):
-    "[Project 1] Q2 Swimming with an increasing (ramp) drive"
-    # Use exercise_example.py for reference
-    pass
+    "[Project 1] Q2 Swimming with a linear drive ramp from 1 to 5 over 40s"
+    os.makedirs('./logs/ex_ramp_swim/', exist_ok=True)
+    sim_parameters = SimulationParameters(
+        duration=40,
+        timestep=timestep,
+        spawn_position=[0, 0, 0.1],
+        spawn_orientation=[0, 0, np.pi/2],
+        drive=1.0,
+        drive_ramp=True,
+        drive_ramp_start=1.0,
+        drive_ramp_end=5.0,
+    )
+    simulation(
+        sim_parameters=sim_parameters,
+        arena='water',
+        output='logs/ex_ramp_swim/sim_0',
+        record=True,
+        record_path="logs/ex_ramp_swim/video_ramp_swim.mp4",
+        verbose=True,
+    )
     return
 
 
 def exercise_ramp_walk(timestep):
-    "[Project 1] Q2 Walking with an increasing (ramp) drive"
-    # Use exercise_example.py for reference
-    pass
+    "[Project 1] Q2 Walking with a linear drive ramp from 1 to 5 over 40s"
+    os.makedirs('./logs/ex_ramp_walk/', exist_ok=True)
+    sim_parameters = SimulationParameters(
+        duration=40,
+        timestep=timestep,
+        spawn_position=[0, 0, 0.1],
+        spawn_orientation=[0, 0, np.pi/2],
+        drive=1.0,
+        drive_ramp=True,
+        drive_ramp_start=1.0,
+        drive_ramp_end=5.0,
+    )
+    simulation(
+        sim_parameters=sim_parameters,
+        arena='land',
+        output='logs/ex_ramp_walk/sim_0',
+        record=True,
+        record_path="logs/ex_ramp_walk/video_ramp_walk.mp4",
+        verbose=True,
+    )
     return
 
 
 if __name__ == '__main__':
-    exercise_walk(timestep=5e-3)
-    #exercise_ramp_swim(timestep=5e-3)
-    #exercise_ramp_walk(timestep=5e-3)
+# exercise_ramp_swim(timestep=5e-3)
+   # exercise_ramp_walk(timestep=5e-3)
+   exercise_walk(timestep=5e-3)
 
+    

@@ -610,6 +610,25 @@ def plot_stability_comparison(results, timestep):
 
 
 def exercise_3_disable_limb_spine_coupling(timestep):
+    """ Walk with disabled limb-spine coupling (limb_spine_weight=0) """
+    os.makedirs('./logs/ex3_no_coupling/', exist_ok=True)
+    sim_parameters = SimulationParameters(
+        duration=15,
+        timestep=timestep,
+        spawn_position=[0, 0, 0.1],
+        spawn_orientation=[0, 0, np.pi/2],
+        drive=2.5,
+        limb_spine_weight=0,  # disable spine-limb coupling
+    )
+    simulation(
+        sim_parameters=sim_parameters,
+        arena='land',
+        output='logs/ex3_no_coupling/sim_0',
+        record=True,
+        record_path='logs/ex3_no_coupling/video_no_coupling.mp4',
+        verbose=True,
+    )
+    return
     """
     Exercise 3.2 — Disable limb-spine coupling and compare with normal walking.
 
@@ -715,10 +734,45 @@ def exercise_3_disable_limb_spine_coupling(timestep):
     return results
 
 
-def exercise_3_limb_spine_antiphase(timestep):
-    """ Walk with limb-spine in anti-phase """
-    # Use exercise_example.py for reference
-    pass
+def exercise_3_limb_spine_antiphase(timestep, ideal_offset=0.0):
+    """ Two videos: ideal phase offset vs. anti-phase (ideal + pi) """
+
+    # ideal phase offset 
+    os.makedirs('./logs/ex3_ideal/', exist_ok=True)
+    simulation(
+        sim_parameters=SimulationParameters(
+            duration=15,
+            timestep=timestep,
+            spawn_position=[0, 0, 0.1],
+            spawn_orientation=[0, 0, np.pi/2],
+            drive=2.5,
+            limb_body_phase_offset=ideal_offset,
+        ),
+        arena='land',
+        output='logs/ex3_ideal/sim_0',
+        record=True,
+        record_path='logs/ex3_ideal/video_ideal.mp4',
+        verbose=True,
+    )
+
+    # anti-phase
+    antiphase_offset = ideal_offset + np.pi
+    os.makedirs('./logs/ex3_antiphase/', exist_ok=True)
+    simulation(
+        sim_parameters=SimulationParameters(
+            duration=15,
+            timestep=timestep,
+            spawn_position=[0, 0, 0.1],
+            spawn_orientation=[0, 0, np.pi/2],
+            drive=2.5,
+            limb_body_phase_offset=antiphase_offset,
+        ),
+        arena='land',
+        output='logs/ex3_antiphase/sim_0',
+        record=True,
+        record_path='logs/ex3_antiphase/video_antiphase.mp4',
+        verbose=True,
+    )
     return
 
 
@@ -989,11 +1043,41 @@ def analyze_exercise_3b_results(base_log_folder='./logs/sweep_3b/'):
 
     plt.show()
 
+def exercise_3b_optimal_video(timestep, optimal_body_gain=1.0, optimal_limb_gain=1.0, label='optimal'):
+    """Video of the optimal oscillator amplitudes found in the 3b sweep"""
+    folder = f'./logs/ex3b_{label}/'
+    os.makedirs(folder, exist_ok=True)
+    simulation(
+        sim_parameters=SimulationParameters(
+            duration=15,
+            timestep=timestep,
+            spawn_position=[0, 0, 0.1],
+            spawn_orientation=[0, 0, np.pi/2],
+            drive=2.6,
+            limb_body_phase_offset=0.0,
+            position_body_gain=optimal_body_gain,
+            position_limb_gain=optimal_limb_gain,
+        ),
+        arena='land',
+        output=f'{folder}sim_0',
+        record=True,
+        record_path=f'{folder}video_{label}.mp4',
+        verbose=True,
+    )
+    return
+
+
 if __name__ == '__main__':
+
+    #exercise_3a_coordination(timestep=5e-3)
+    #analyze_exercise_3a_results()
+    #exercise_3b_coordination(timestep=5e-3)
+    #analyze_exercise_3b_results()
+
+    # ----------------------------------------------------------------------------------------
+    # For videos : 
+    
     #exercise_3_disable_limb_spine_coupling(timestep=5e-3)
     #exercise_3_limb_spine_antiphase(timestep=5e-3)
-    #exercise_3a_coordination(timestep=5e-3)
-    analyze_exercise_3a_results()
-    #exercise_3b_coordination(timestep=5e-3)
-    analyze_exercise_3b_results()
-
+    #exercise_3b_optimal_video(timestep=5e-3, optimal_body_gain=2.5, optimal_limb_gain=2.2, label='speed_optimal')
+    exercise_3b_optimal_video(timestep=5e-3, optimal_body_gain=1.0, optimal_limb_gain=1.0, label='cot_optimal')

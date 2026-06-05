@@ -78,6 +78,29 @@ def get_sim_data(path):
 
     return freq, amp, ipls
 
+def get_sim_data(path):
+
+    with h5py.File(path, "r") as f:
+        sim_times = f['times'][:]
+        sensor_data_joints = f['FARMSLISTanimats']['0']['sensors']['joints']['array'][:]
+    sensor_data_joints_positions = sensor_data_joints[:, :, 0]
+
+    n_joints = 8
+
+    freq = np.zeros(n_joints)
+    amp = np.zeros(n_joints)
+    ipls = np.zeros(n_joints - 1)
+
+    for i in range(n_joints):
+        freq[i], amp[i], _ = get_frequency_and_amplitude(sim_times, sensor_data_joints_positions[:, i])
+
+    for i in range(n_joints - 1):
+        _, _, phase_i = get_frequency_and_amplitude(sim_times, sensor_data_joints_positions[:, i])
+        _, _, phase_i_plus_1 = get_frequency_and_amplitude(sim_times, sensor_data_joints_positions[:, i + 1])
+        ipls[i] = (phase_i_plus_1 - phase_i) % (2 * np.pi)
+
+    return freq, amp, ipls
+
 
 def exercise2_3(**kwargs):
     """ex2.3 main"""

@@ -56,6 +56,10 @@ class CPGNetwork(NeuralNetwork):
         # [phases, amplitudes, motor_outputs_storage]
         self.state = np.zeros((self.n_iterations, 3*self.n_oscillators))
 
+        #test pour les plots 
+        #self.state_log = []  # ajoute ça
+
+
         # init phase
         self.state[0, :self.n_oscillators] = init_phase
 
@@ -312,7 +316,14 @@ class CPGNetwork(NeuralNetwork):
             self.right_body_idx.step)
         self.state[iteration, left_storage_idx] = motor_output_left
         self.state[iteration, right_storage_idx] = motor_output_right
+        '''
+        if iteration + 1 >= self.n_iterations:
+            #test plots
+            log = np.array(self.state_log)
+            self.state[:len(log), :2*self.n_oscillators] = log
 
+            return
+        '''
         if iteration + 1 >= self.n_iterations:
             return
         # Update state with integrated values

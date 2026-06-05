@@ -104,7 +104,15 @@ class RobotParameters(dict):
         # self.set_nominal_amplitudes(self.sim_parameters)  # R_i
         # print("shoulder_frontGS: {}".format(shoulder_fronts[4, 0]))
         # print("drive: {}".format(self.sim_parameters.drive))
-        if self.update_drive:
+        if getattr(self.sim_parameters, 'drive_ramp', False):
+            d_start = getattr(self.sim_parameters, 'drive_ramp_start', 1.0)
+            d_end   = getattr(self.sim_parameters, 'drive_ramp_end',   5.0)
+            duration = getattr(self.sim_parameters, 'duration', 40.0)
+            self.sim_parameters.drive = d_start + (d_end - d_start) * min(time / duration, 1.0)
+            self.set_frequencies(self.sim_parameters)
+            self.set_nominal_amplitudes(self.sim_parameters)
+            self.set_phase_bias(self.sim_parameters)
+        elif self.update_drive:
             index = 0 if iteration == 0 else (iteration - 1)
             contacts_all = np.linalg.norm(np.array(
                 salamandra_data.sensors.contacts.totals()[index]
@@ -494,4 +502,3 @@ class RobotParameters(dict):
 
         self.nominal_amplitudes[:self.n_oscillators_body] = R_body*self.position_body_gain # potentiellement boger dans le if pour seulement quand on marche
         self.nominal_amplitudes[self.n_oscillators_body:] = R_limb*self.position_limb_gain # potentiellement boger dans le if pour seulement quand on marche
-

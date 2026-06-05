@@ -55,8 +55,8 @@ def exercise_4a_transition(timestep):
         sim_parameters=sim_parameters_walk2swim,
         arena='amphibious',
         fast=True,
-        record=False,
-        record_path='walk2swim',  # or swim2walk
+        record=True,
+       record_path='logs/ex4_walk2swim/video_walk2swim.mp4',
     )
     sim_parameters_swim2walk = SimulationParameters(
         duration=40,  # Simulation duration in [s]
@@ -71,8 +71,8 @@ def exercise_4a_transition(timestep):
         sim_parameters=sim_parameters_swim2walk,
         arena='amphibious',
         fast=True,
-        record=False,
-        record_path='swim2walk',  # or swim2walk
+        record=True,
+        record_path='logs/ex4_swim2walk/video_swim2walk.mp4',
     )
 
     return
@@ -80,4 +80,3 @@ def exercise_4a_transition(timestep):
 
 if __name__ == '__main__':
     exercise_4a_transition(timestep=5e-3)
-
