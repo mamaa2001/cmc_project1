@@ -148,11 +148,15 @@ class RobotParameters(dict):
 
             current_drive = getattr(self.sim_parameters, 'drive', 2.0)
             self.sim_parameters.drive = current_drive + self.alpha_drive * (self.target_drive - current_drive)
-
+        drive_raw = getattr(self.sim_parameters, 'drive', 2.0)
+        self._drive_array = (
+            None if np.isscalar(drive_raw)
+            else np.asarray(drive_raw).copy()
+        )
             # Update CPG from gait state
-            self.set_frequencies(self.sim_parameters)
-            self.set_nominal_amplitudes(self.sim_parameters)
-            self.set_phase_bias(self.sim_parameters)
+        self.set_frequencies(self.sim_parameters)
+        self.set_nominal_amplitudes(self.sim_parameters)
+        self.set_phase_bias(self.sim_parameters)
 
 
     def set_frequencies(self, parameters):
@@ -201,8 +205,8 @@ class RobotParameters(dict):
         else:
             nu_limb = 0.0                 # above d=3 limbs are silenced
 
-        self.freqs[:self.n_oscillators_body] = nu_body
-        self.freqs[self.n_oscillators_body:] = nu_limb
+        self.freqs[:self.n_oscillators_body] = 2*np.pi*nu_body
+        self.freqs[self.n_oscillators_body:] = 2*np.pi*nu_limb
 
         
 
@@ -236,6 +240,7 @@ class RobotParameters(dict):
         weight_intra_limb_contra = getattr(parameters, 'intra_limb_contra_weight', 10.0) #put 10 if no spine_limb_weight is given in parameters
         weight_intra_limb_ipsi = getattr(parameters, 'intra_limb_ipsi_weight', 10.0) #put 10 if no spine_limb_weight is given in parameters
         weight_limb_body = getattr(parameters, 'limb_spine_weight', 30.0) #put 10 if no spine_limb_weight is given in parameters
+        weight_body_limb = getattr(parameters, 'spine_limb_weight', 10.0)
 
         w = self.coupling_weights
         w[:] = 0.0
@@ -315,7 +320,7 @@ class RobotParameters(dict):
     
         for (limb_osc, body_oscs) in self.limb_to_body:
             for b in body_oscs:
-                w[limb_osc, b] = weight_limb_body/3
+                w[limb_osc, b] = weight_body_limb
                 w[b, limb_osc] = weight_limb_body # strong limb -> body
 
 
