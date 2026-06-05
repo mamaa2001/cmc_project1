@@ -12,6 +12,7 @@ from salamandra_simulation.save_figures import save_figures
 from simulation_parameters import SimulationParameters
 from network import SalamandraNetwork
 from plot_results import *
+from exercise_p3 import plot_spine_analysis_paper_style
 
 
 @dataclass
@@ -116,6 +117,20 @@ def run_network(duration, update=False, drive=0, timestep=1e-2):
         drive_vec=drive_vec,
         title='Network dynamics (drive ramp 0→6)'
     )
+
+    # Prepare state_array for paper-style spine plot: [phases | amplitudes]
+    state_array = np.concatenate([phases_log, amplitudes_log], axis=1)
+    try:
+        plot_spine_analysis_paper_style(
+            times=times,
+            state_array=state_array,
+            drive_val=drive_vec,
+            mode_label='ramp',
+            timestep=timestep,
+        )
+    except Exception as e:
+        pylog.warning(f'plot_spine_analysis_paper_style failed: {e}')
+
     return
 
 
